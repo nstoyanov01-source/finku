@@ -8,7 +8,7 @@ export default function LanguageSelect({ userId, onLanguageSet }) {
   async function handleContinue() {
     if (!selected) return
     setLoading(true)
-    await supabase.from('profiles').upsert({ id: userId, language: selected })
+    await supabase.from('profiles').update({ language: selected }).eq('id', userId)
     onLanguageSet(selected)
   }
 
@@ -19,16 +19,13 @@ export default function LanguageSelect({ userId, onLanguageSet }) {
 
   return (
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#f5f4f0',
-      padding: '1rem',
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: '#f5f4f0', padding: '1rem',
+      fontFamily: "'DM Sans', sans-serif",
     }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.5px' }}>Finku</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.5px', color: '#1a1a1a', fontFamily: "'DM Sans', sans-serif" }}>Finku</h1>
           <p style={{ fontSize: 15, color: '#888', marginTop: 8 }}>Choose your language / Изберете език</p>
         </div>
 
@@ -41,11 +38,8 @@ export default function LanguageSelect({ userId, onLanguageSet }) {
                 background: selected === opt.code ? '#1a1a1a' : '#fff',
                 color: selected === opt.code ? '#fff' : '#1a1a1a',
                 border: selected === opt.code ? '2px solid #1a1a1a' : '2px solid #eae9e3',
-                borderRadius: 14,
-                padding: '1.1rem 1.5rem',
-                textAlign: 'left',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
+                borderRadius: 14, padding: '1.1rem 1.5rem', textAlign: 'left',
+                cursor: 'pointer', transition: 'all 0.15s', fontFamily: "'DM Sans', sans-serif",
               }}
             >
               <div style={{ fontWeight: 600, fontSize: 16 }}>{opt.label}</div>

@@ -34,8 +34,14 @@ export default function Dashboard({ session, language, onLanguageChange }) {
   const [modal, setModal] = useState(null)
   const [balance, setBalance] = useState('')
   const [showBalanceInput, setShowBalanceInput] = useState(false)
+  const [firstName, setFirstName] = useState('')
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchData(); fetchName() }, [])
+
+  async function fetchName() {
+    const { data } = await supabase.from('profiles').select('first_name').eq('id', userId).single()
+    if (data?.first_name) setFirstName(data.first_name)
+  }
 
   async function fetchData() {
     setLoading(true)
@@ -81,7 +87,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.3px' }}>
-              {greeting(lang)}<span style={{ color: '#bbb' }}> ·</span> Finku
+              {greeting(lang)}{firstName ? `, ${firstName}` : ''}<span style={{ color: '#bbb' }}> ·</span> Finku
             </h1>
             <p style={{ fontSize: 13, color: '#888', marginTop: 3 }}>{lang.overview} · {currentYear}</p>
           </div>
@@ -246,7 +252,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
                 {monthlyData.map((d, i) => (
-                  <div key={i} style={{ flex: 1, display: 'flex', gap: 3, alignItems: 'flex-end' }}>
+                  <div key={i} style={{ flex: 1, display: 'flex', gap: 3, alignItems: 'flex-end', height: '100%' }}>
                     <div style={{ flex: 1, background: '#86efac', borderRadius: '3px 3px 0 0', height: `${(d.inc / maxBar) * 100}%`, minHeight: d.inc > 0 ? 3 : 0 }} />
                     <div style={{ flex: 1, background: '#fca5a5', borderRadius: '3px 3px 0 0', height: `${(d.exp / maxBar) * 100}%`, minHeight: d.exp > 0 ? 3 : 0 }} />
                   </div>

@@ -55,7 +55,7 @@ export const t = {
 
     description: 'Description',
     client: 'Client / source',
-    amount: 'Amount (лв)',
+    amount: 'Amount (€)',
     date: 'Date',
     category: 'Category',
     cancel: 'Cancel',
@@ -75,7 +75,7 @@ export const t = {
     months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
     logout: 'Log out',
     year: 'Year',
-    currency: 'лв',
+    currency: '€',
   },
 
   bg: {
@@ -134,7 +134,7 @@ export const t = {
 
     description: 'Описание',
     client: 'Клиент / източник',
-    amount: 'Сума (лв)',
+    amount: 'Сума (€)',
     date: 'Дата',
     category: 'Категория',
     cancel: 'Отказ',
@@ -154,6 +154,6 @@ export const t = {
     months: ['Ян','Фев','Мар','Апр','Май','Юни','Юли','Авг','Сеп','Окт','Ное','Дек'],
     logout: 'Изход',
     year: 'Година',
-    currency: 'лв',
+    currency: '€',
   },
 }
