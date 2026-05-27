@@ -34,6 +34,7 @@ export default function App() {
       .select('language, onboarded')
       .eq('id', userId)
       .single()
+    console.log('Profile data:', data)
     setLanguage(data?.language || 'en')
     setOnboarded(data?.onboarded ?? false)
     setLoading(false)
