@@ -8,37 +8,40 @@ import Dashboard from './pages/Dashboard'
 export default function App() {
   const [session, setSession] = useState(null)
   const [language, setLanguage] = useState(null)
+  const [onboarded, setOnboarded] = useState(null)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session) loadLanguage(session.user.id)
+      if (session) loadProfile(session.user.id)
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      if (session) loadLanguage(session.user.id)
-      else { setLanguage(null); setLoading(false) }
+      if (session) loadProfile(session.user.id)
+      else { setLanguage(null); setOnboarded(null); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  async function loadLanguage(userId) {
+  async function loadProfile(userId) {
     const { data } = await supabase
       .from('profiles')
-      .select('language')
+      .select('language, onboarded')
       .eq('id', userId)
       .single()
-    setLanguage(data?.language || null)
+    setLanguage(data?.language || 'en')
+    setOnboarded(data?.onboarded ?? false)
     setLoading(false)
   }
 
-  function handleLanguageSet(lang) {
+  async function handleLanguageSet(lang) {
     setLanguage(lang)
+    setOnboarded(true)
     navigate('/dashboard')
   }
 
@@ -55,7 +58,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={
         !session ? <Auth /> :
-        !language ? <Navigate to="/language" /> :
+        !onboarded ? <Navigate to="/language" /> :
         <Navigate to="/dashboard" />
       } />
       <Route path="/language" element={
@@ -64,7 +67,7 @@ export default function App() {
       } />
       <Route path="/dashboard" element={
         !session ? <Navigate to="/" /> :
-        !language ? <Navigate to="/language" /> :
+        !onboarded ? <Navigate to="/language" /> :
         <Dashboard session={session} language={language} onLanguageChange={setLanguage} />
       } />
       <Route path="*" element={<Navigate to="/" />} />

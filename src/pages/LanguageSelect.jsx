@@ -8,7 +8,7 @@ export default function LanguageSelect({ userId, onLanguageSet }) {
   async function handleContinue() {
     if (!selected) return
     setLoading(true)
-    await supabase.from('profiles').update({ language: selected }).eq('id', userId)
+    await supabase.from('profiles').update({ language: selected, onboarded: true }).eq('id', userId)
     onLanguageSet(selected)
   }
 
