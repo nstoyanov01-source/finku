@@ -5,6 +5,7 @@ import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import LanguageSelect from './pages/LanguageSelect'
 import Dashboard from './pages/Dashboard'
+import Privacy from './pages/Privacy'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -72,6 +73,7 @@ export default function App() {
         !onboarded ? <Navigate to="/language" /> :
         <Dashboard session={session} language={language} onLanguageChange={setLanguage} />
       } />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )

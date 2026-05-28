@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -370,6 +370,19 @@ export default function Landing() {
           color: rgba(240,237,228,0.2);
         }
 
+        .footer-links {
+          display: flex;
+          gap: 1.25rem;
+        }
+
+        .footer-link {
+          font-size: 13px;
+          color: rgba(240,237,228,0.25);
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .footer-link:hover { color: rgba(240,237,228,0.55); }
+
         @media (max-width: 600px) {
           nav { padding: 1.25rem 1.5rem; }
           .preview-body { grid-template-columns: 1fr 1fr; }
@@ -529,6 +542,10 @@ export default function Landing() {
         <footer>
           <div className="footer-logo">Finku</div>
           <div className="footer-note">Tax estimates are approximate and do not constitute tax advice.</div>
+          <div className="footer-links">
+            <Link to="/privacy" className="footer-link">Privacy Policy</Link>
+            <Link to="/terms" className="footer-link">Terms</Link>
+          </div>
         </footer>
       </div>
     </>
