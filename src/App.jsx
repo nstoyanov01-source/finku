@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
+import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import LanguageSelect from './pages/LanguageSelect'
 import Dashboard from './pages/Dashboard'
@@ -34,7 +35,6 @@ export default function App() {
       .select('language, onboarded')
       .eq('id', userId)
       .single()
-    console.log('Profile data:', data)
     setLanguage(data?.language || 'en')
     setOnboarded(data?.onboarded ?? false)
     setLoading(false)
@@ -48,8 +48,8 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <div style={{ width: 32, height: 32, border: '2px solid #eae9e3', borderTop: '2px solid #1a1a1a', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0e0e0c' }}>
+        <div style={{ width: 32, height: 32, border: '2px solid #222', borderTop: '2px solid #c8f03a', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     )
@@ -58,16 +58,17 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={
-        !session ? <Auth /> :
-        !onboarded ? <Navigate to="/language" /> :
-        <Navigate to="/dashboard" />
+        session && onboarded ? <Navigate to="/dashboard" /> : <Landing />
+      } />
+      <Route path="/auth" element={
+        session && onboarded ? <Navigate to="/dashboard" /> : <Auth />
       } />
       <Route path="/language" element={
-        !session ? <Navigate to="/" /> :
+        !session ? <Navigate to="/auth" /> :
         <LanguageSelect userId={session.user.id} onLanguageSet={handleLanguageSet} />
       } />
       <Route path="/dashboard" element={
-        !session ? <Navigate to="/" /> :
+        !session ? <Navigate to="/auth" /> :
         !onboarded ? <Navigate to="/language" /> :
         <Dashboard session={session} language={language} onLanguageChange={setLanguage} />
       } />

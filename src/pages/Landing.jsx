@@ -1,0 +1,536 @@
+import { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+export default function Landing() {
+  const navigate = useNavigate()
+  const heroRef = useRef(null)
+
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal')
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
+    }, { threshold: 0.1 })
+    els.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { background: #0e0e0c; }
+
+        .landing {
+          font-family: 'DM Sans', sans-serif;
+          background: #0e0e0c;
+          color: #f0ede4;
+          min-height: 100vh;
+          overflow-x: hidden;
+        }
+
+        .reveal {
+          opacity: 0;
+          transform: translateY(28px);
+          transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible { opacity: 1; transform: none; }
+
+        nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem 4rem;
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 50;
+          background: rgba(14,14,12,0.85);
+          backdrop-filter: blur(12px);
+          border-bottom: 0.5px solid rgba(240,237,228,0.08);
+        }
+
+        .nav-logo {
+          font-family: 'Instrument Serif', serif;
+          font-size: 22px;
+          color: #f0ede4;
+          letter-spacing: -0.3px;
+        }
+
+        .nav-right { display: flex; gap: 12px; align-items: center; }
+
+        .btn-ghost {
+          background: none;
+          border: none;
+          color: rgba(240,237,228,0.6);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          cursor: pointer;
+          padding: 8px 16px;
+          border-radius: 8px;
+          transition: color 0.2s;
+        }
+        .btn-ghost:hover { color: #f0ede4; }
+
+        .btn-cta {
+          background: #c8f03a;
+          color: #0e0e0c;
+          border: none;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 9px 20px;
+          border-radius: 8px;
+          transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .hero {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 8rem 2rem 4rem;
+          position: relative;
+        }
+
+        .hero-glow {
+          position: absolute;
+          top: 30%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, rgba(200,240,58,0.07) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .hero-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(200,240,58,0.1);
+          border: 0.5px solid rgba(200,240,58,0.3);
+          color: #c8f03a;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 5px 14px;
+          border-radius: 100px;
+          margin-bottom: 2rem;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+
+        .hero-title {
+          font-family: 'Instrument Serif', serif;
+          font-size: clamp(48px, 7vw, 88px);
+          line-height: 1.05;
+          letter-spacing: -1.5px;
+          color: #f0ede4;
+          max-width: 800px;
+          margin-bottom: 1.5rem;
+        }
+
+        .hero-title em {
+          font-style: italic;
+          color: #c8f03a;
+        }
+
+        .hero-sub {
+          font-size: 18px;
+          color: rgba(240,237,228,0.55);
+          max-width: 480px;
+          line-height: 1.65;
+          margin-bottom: 2.5rem;
+        }
+
+        .hero-actions {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .btn-primary-lg {
+          background: #c8f03a;
+          color: #0e0e0c;
+          border: none;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 13px 28px;
+          border-radius: 10px;
+          transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn-primary-lg:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .hero-note {
+          font-size: 13px;
+          color: rgba(240,237,228,0.35);
+        }
+
+        .dashboard-preview {
+          margin: 4rem auto 0;
+          max-width: 860px;
+          width: 100%;
+          background: #161614;
+          border: 0.5px solid rgba(240,237,228,0.1);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+        }
+
+        .preview-bar {
+          background: #1c1c1a;
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          border-bottom: 0.5px solid rgba(240,237,228,0.06);
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .preview-body {
+          padding: 1.5rem;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+        }
+
+        .preview-card {
+          background: rgba(240,237,228,0.04);
+          border: 0.5px solid rgba(240,237,228,0.08);
+          border-radius: 10px;
+          padding: 14px;
+        }
+
+        .preview-label { font-size: 11px; color: rgba(240,237,228,0.35); margin-bottom: 6px; }
+        .preview-value { font-size: 20px; font-weight: 500; }
+        .preview-green { color: #7ec95f; }
+        .preview-red { color: #e07070; }
+        .preview-amber { color: #e8a84a; }
+
+        .preview-tax {
+          grid-column: 1 / -1;
+          background: rgba(200,240,58,0.04);
+          border: 0.5px solid rgba(200,240,58,0.15);
+          border-radius: 10px;
+          padding: 14px 18px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .preview-tax-label { font-size: 13px; font-weight: 500; color: rgba(240,237,228,0.8); }
+        .preview-tax-sub { font-size: 11px; color: rgba(240,237,228,0.35); margin-top: 2px; }
+        .preview-tax-amount { font-size: 22px; font-weight: 500; color: #c8f03a; }
+
+        .features {
+          padding: 6rem 2rem;
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+
+        .section-label {
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          color: rgba(240,237,228,0.3);
+          margin-bottom: 1rem;
+        }
+
+        .section-title {
+          font-family: 'Instrument Serif', serif;
+          font-size: clamp(32px, 4vw, 48px);
+          letter-spacing: -0.5px;
+          line-height: 1.1;
+          color: #f0ede4;
+          max-width: 560px;
+          margin-bottom: 3.5rem;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 1.5px;
+          background: rgba(240,237,228,0.08);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+
+        .feature-card {
+          background: #0e0e0c;
+          padding: 2rem;
+          position: relative;
+          transition: background 0.2s;
+        }
+        .feature-card:hover { background: #161614; }
+
+        .feature-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.25rem;
+          font-size: 18px;
+        }
+
+        .icon-green { background: rgba(126,201,95,0.12); color: #7ec95f; }
+        .icon-red { background: rgba(224,112,112,0.12); color: #e07070; }
+        .icon-amber { background: rgba(200,240,58,0.12); color: #c8f03a; }
+
+        .feature-title {
+          font-size: 15px;
+          font-weight: 500;
+          color: #f0ede4;
+          margin-bottom: 8px;
+        }
+
+        .feature-desc {
+          font-size: 14px;
+          color: rgba(240,237,228,0.45);
+          line-height: 1.6;
+        }
+
+        .social-proof {
+          padding: 4rem 2rem 6rem;
+          text-align: center;
+        }
+
+        .proof-number {
+          font-family: 'Instrument Serif', serif;
+          font-size: 64px;
+          color: #c8f03a;
+          letter-spacing: -2px;
+        }
+
+        .proof-label {
+          font-size: 15px;
+          color: rgba(240,237,228,0.45);
+          margin-top: 6px;
+        }
+
+        .proof-grid {
+          display: flex;
+          justify-content: center;
+          gap: 4rem;
+          flex-wrap: wrap;
+          margin-top: 2rem;
+        }
+
+        .cta-section {
+          padding: 6rem 2rem;
+          text-align: center;
+          border-top: 0.5px solid rgba(240,237,228,0.08);
+        }
+
+        .cta-title {
+          font-family: 'Instrument Serif', serif;
+          font-size: clamp(36px, 5vw, 56px);
+          letter-spacing: -1px;
+          color: #f0ede4;
+          margin-bottom: 1rem;
+        }
+
+        .cta-sub {
+          font-size: 16px;
+          color: rgba(240,237,228,0.45);
+          margin-bottom: 2rem;
+        }
+
+        footer {
+          padding: 2rem 4rem;
+          border-top: 0.5px solid rgba(240,237,228,0.06);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+
+        .footer-logo {
+          font-family: 'Instrument Serif', serif;
+          font-size: 18px;
+          color: rgba(240,237,228,0.4);
+        }
+
+        .footer-note {
+          font-size: 13px;
+          color: rgba(240,237,228,0.2);
+        }
+
+        @media (max-width: 600px) {
+          nav { padding: 1.25rem 1.5rem; }
+          .preview-body { grid-template-columns: 1fr 1fr; }
+          footer { padding: 1.5rem; }
+        }
+      `}</style>
+
+      <div className="landing">
+        <nav>
+          <div className="nav-logo">Finku</div>
+          <div className="nav-right">
+            <button className="btn-ghost" onClick={() => navigate('/auth')}>Log in</button>
+            <button className="btn-cta" onClick={() => navigate('/auth')}>Get started free</button>
+          </div>
+        </nav>
+
+        <section className="hero" ref={heroRef}>
+          <div className="hero-glow" />
+
+          <div className="hero-badge reveal">Free to start · No card needed</div>
+
+          <h1 className="hero-title reveal" style={{ transitionDelay: '0.1s' }}>
+            Know exactly what<br />you owe, <em>always</em>
+          </h1>
+
+          <p className="hero-sub reveal" style={{ transitionDelay: '0.2s' }}>
+            Finku tracks your freelance income and expenses and shows your live tax estimate — so you're never caught off guard at year end.
+          </p>
+
+          <div className="hero-actions reveal" style={{ transitionDelay: '0.3s' }}>
+            <button className="btn-primary-lg" onClick={() => navigate('/auth')}>
+              Start for free
+            </button>
+            <span className="hero-note">No credit card · Takes 2 minutes</span>
+          </div>
+
+          <div className="dashboard-preview reveal" style={{ transitionDelay: '0.4s' }}>
+            <div className="preview-bar">
+              <div className="dot" style={{ background: '#ff5f57' }} />
+              <div className="dot" style={{ background: '#febc2e' }} />
+              <div className="dot" style={{ background: '#28c840' }} />
+              <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.25)', marginLeft: 8 }}>finku.eu/dashboard</span>
+            </div>
+            <div className="preview-body">
+              <div className="preview-card">
+                <div className="preview-label">Total income</div>
+                <div className="preview-value preview-green">18,400 €</div>
+              </div>
+              <div className="preview-card">
+                <div className="preview-label">Total expenses</div>
+                <div className="preview-value preview-red">3,210 €</div>
+              </div>
+              <div className="preview-card">
+                <div className="preview-label">Net income</div>
+                <div className="preview-value">15,190 €</div>
+              </div>
+              <div className="preview-card">
+                <div className="preview-label">Avg. monthly</div>
+                <div className="preview-value preview-amber">3,038 €</div>
+              </div>
+              <div className="preview-tax">
+                <div>
+                  <div className="preview-tax-label">Tax estimate</div>
+                  <div className="preview-tax-sub">Based on your income so far this year</div>
+                </div>
+                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                  <div>
+                    <div className="preview-label">Income tax (15%)</div>
+                    <div style={{ fontSize: 15, color: 'rgba(240,237,228,0.7)' }}>1,709 €</div>
+                  </div>
+                  <div>
+                    <div className="preview-label">Insurance</div>
+                    <div style={{ fontSize: 15, color: 'rgba(240,237,228,0.7)' }}>~725 €</div>
+                  </div>
+                  <div>
+                    <div className="preview-label">Total owed</div>
+                    <div className="preview-tax-amount">~2,434 €</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="features">
+          <p className="section-label reveal">What Finku does</p>
+          <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>
+            Everything a freelancer actually needs
+          </h2>
+          <div className="features-grid">
+            {[
+              {
+                icon: '↑', iconClass: 'icon-green',
+                title: 'Income tracking',
+                desc: 'Log payments as they come in. Add a client name, amount, and date — that\'s it. Or import directly from your Revolut CSV.'
+              },
+              {
+                icon: '↓', iconClass: 'icon-red',
+                title: 'Expense tracking',
+                desc: 'Track business expenses by category. Software, equipment, travel — see exactly where money goes.'
+              },
+              {
+                icon: '€', iconClass: 'icon-amber',
+                title: 'Live tax estimate',
+                desc: 'Based on your actual income, Finku calculates your income tax and insurance contributions in real time. No surprises.'
+              },
+              {
+                icon: '✓', iconClass: 'icon-green',
+                title: 'Set aside indicator',
+                desc: 'Tell Finku your current balance and it tells you whether you have enough set aside to cover your tax bill.'
+              },
+              {
+                icon: '↻', iconClass: 'icon-amber',
+                title: 'Revolut CSV import',
+                desc: 'Don\'t type everything manually. Export from Revolut and upload — Finku maps income and expenses automatically.'
+              },
+              {
+                icon: '⌘', iconClass: 'icon-red',
+                title: 'English & Bulgarian',
+                desc: 'Choose your language on first login. Switch any time. The app works the same way either way.'
+              },
+            ].map((f, i) => (
+              <div key={i} className={`feature-card reveal`} style={{ transitionDelay: `${i * 0.07}s` }}>
+                <div className={`feature-icon ${f.iconClass}`}>{f.icon}</div>
+                <div className="feature-title">{f.title}</div>
+                <div className="feature-desc">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="social-proof reveal">
+          <div className="proof-grid">
+            <div>
+              <div className="proof-number">€0</div>
+              <div className="proof-label">to get started</div>
+            </div>
+            <div>
+              <div className="proof-number">2min</div>
+              <div className="proof-label">to set up</div>
+            </div>
+            <div>
+              <div className="proof-number">15%</div>
+              <div className="proof-label">flat income tax, calculated live</div>
+            </div>
+          </div>
+        </section>
+
+        <section className="cta-section reveal">
+          <h2 className="cta-title">Start knowing your numbers.</h2>
+          <p className="cta-sub">Free to use. No credit card. Takes two minutes.</p>
+          <button className="btn-primary-lg" onClick={() => navigate('/auth')}>
+            Create your account
+          </button>
+        </section>
+
+        <footer>
+          <div className="footer-logo">Finku</div>
+          <div className="footer-note">Tax estimates are approximate and do not constitute tax advice.</div>
+        </footer>
+      </div>
+    </>
+  )
+}
