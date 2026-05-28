@@ -1,11 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: 'DM Sans', sans-serif;
   font-size: 15px;
   line-height: 1.6;
-  color: #1a1a1a;
-  background: #f5f4f0;
+  color: #f0ede4;
+  background: #0e0e0c;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -13,59 +15,61 @@ button { font-family: inherit; cursor: pointer; }
 input, select { font-family: inherit; }
 
 .btn-primary {
-  background: #1a1a1a;
-  color: #fff;
+  background: #c8f03a;
+  color: #0e0e0c;
   border: none;
   border-radius: 10px;
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.15s;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
-.btn-primary:hover { opacity: 0.85; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   background: transparent;
-  color: #1a1a1a;
-  border: 1px solid #ddd;
+  color: rgba(240,237,228,0.7);
+  border: 1px solid rgba(240,237,228,0.15);
   border-radius: 10px;
   padding: 9px 18px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.btn-secondary:hover { background: #f0efe9; }
+.btn-secondary:hover { background: rgba(240,237,228,0.06); color: #f0ede4; }
 
 .card {
-  background: #fff;
+  background: #161614;
   border-radius: 14px;
-  border: 1px solid #eae9e3;
+  border: 1px solid rgba(240,237,228,0.08);
   padding: 1.25rem;
 }
 
 .input-field {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(240,237,228,0.15);
   border-radius: 10px;
   font-size: 14px;
-  color: #1a1a1a;
-  background: #fff;
+  color: #f0ede4;
+  background: rgba(240,237,228,0.06);
   transition: border-color 0.15s;
   outline: none;
+  color-scheme: dark;
 }
-.input-field:focus { border-color: #1a1a1a; }
+.input-field:focus { border-color: rgba(200,240,58,0.5); }
+.input-field::placeholder { color: rgba(240,237,228,0.25); }
 
 .label {
   font-size: 13px;
   font-weight: 500;
-  color: #666;
+  color: rgba(240,237,228,0.6);
   margin-bottom: 5px;
   display: block;
 }

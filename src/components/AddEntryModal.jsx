@@ -32,7 +32,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
   }
 
   const overlay = {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 100, padding: '1rem',
   }
@@ -44,7 +44,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
           <h3 style={{ fontSize: 16, fontWeight: 600 }}>
             {type === 'income' ? lang.addIncome : lang.addExpense}
           </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#888', lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'rgba(240,237,228,0.4)', lineHeight: 1 }}>×</button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
@@ -82,7 +82,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
             </div>
           </div>
 
-          {error && <div style={{ fontSize: 13, color: '#b91c1c', background: '#fef2f2', padding: '8px 12px', borderRadius: 8 }}>{error}</div>}
+          {error && <div style={{ fontSize: 13, color: '#e07070', background: 'rgba(224,112,112,0.1)', border: '1px solid rgba(224,112,112,0.2)', padding: '8px 12px', borderRadius: 8 }}>{error}</div>}
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
             <button className="btn-secondary" onClick={onClose}>{lang.cancel}</button>

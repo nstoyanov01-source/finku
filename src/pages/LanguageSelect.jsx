@@ -18,45 +18,95 @@ export default function LanguageSelect({ userId, onLanguageSet }) {
   ]
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: '#f5f4f0', padding: '1rem',
-      fontFamily: "'DM Sans', sans-serif",
-    }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.5px', color: '#1a1a1a', fontFamily: "'DM Sans', sans-serif" }}>Finku</h1>
-          <p style={{ fontSize: 15, color: '#888', marginTop: 8 }}>Choose your language / Изберете език</p>
-        </div>
+    <>
+      <style>{`
+        .lang-page {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0e0e0c;
+          padding: 1rem;
+          font-family: 'DM Sans', sans-serif;
+        }
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1.5rem' }}>
-          {options.map(opt => (
-            <button
-              key={opt.code}
-              onClick={() => setSelected(opt.code)}
-              style={{
-                background: selected === opt.code ? '#1a1a1a' : '#fff',
-                color: selected === opt.code ? '#fff' : '#1a1a1a',
-                border: selected === opt.code ? '2px solid #1a1a1a' : '2px solid #eae9e3',
-                borderRadius: 14, padding: '1.1rem 1.5rem', textAlign: 'left',
-                cursor: 'pointer', transition: 'all 0.15s', fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              <div style={{ fontWeight: 600, fontSize: 16 }}>{opt.label}</div>
-              <div style={{ fontSize: 13, opacity: 0.7, marginTop: 2 }}>{opt.sub}</div>
-            </button>
-          ))}
-        </div>
+        .lang-logo {
+          font-family: 'Instrument Serif', serif;
+          font-size: 32px;
+          color: #f0ede4;
+          letter-spacing: -0.5px;
+          text-align: center;
+          margin-bottom: 6px;
+        }
 
-        <button
-          className="btn-primary"
-          onClick={handleContinue}
-          disabled={!selected || loading}
-          style={{ width: '100%', justifyContent: 'center' }}
-        >
-          {loading ? '…' : selected === 'bg' ? 'Продължи' : 'Continue'}
-        </button>
+        .lang-sub {
+          font-size: 15px;
+          color: rgba(240,237,228,0.45);
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .lang-option {
+          background: #161614;
+          border: 1px solid rgba(240,237,228,0.08);
+          border-radius: 14px;
+          padding: 1.1rem 1.5rem;
+          text-align: left;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+          font-family: 'DM Sans', sans-serif;
+          width: 100%;
+        }
+        .lang-option:hover {
+          border-color: rgba(240,237,228,0.2);
+          background: #1c1c1a;
+        }
+        .lang-option.selected {
+          border-color: #c8f03a;
+          background: rgba(200,240,58,0.06);
+        }
+
+        .lang-option-label {
+          font-weight: 500;
+          font-size: 16px;
+          color: #f0ede4;
+        }
+
+        .lang-option-sub {
+          font-size: 13px;
+          color: rgba(240,237,228,0.45);
+          margin-top: 2px;
+        }
+      `}</style>
+
+      <div className="lang-page">
+        <div style={{ width: '100%', maxWidth: 420 }}>
+          <div className="lang-logo">Finku</div>
+          <p className="lang-sub">Choose your language / Изберете език</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1.5rem' }}>
+            {options.map(opt => (
+              <button
+                key={opt.code}
+                className={`lang-option${selected === opt.code ? ' selected' : ''}`}
+                onClick={() => setSelected(opt.code)}
+              >
+                <div className="lang-option-label">{opt.label}</div>
+                <div className="lang-option-sub">{opt.sub}</div>
+              </button>
+            ))}
+          </div>
+
+          <button
+            className="btn-primary"
+            onClick={handleContinue}
+            disabled={!selected || loading}
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            {loading ? '…' : selected === 'bg' ? 'Продължи' : 'Continue'}
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

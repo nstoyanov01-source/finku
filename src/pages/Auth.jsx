@@ -28,84 +28,145 @@ export default function Auth() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: '#f5f4f0', padding: '1rem',
-      fontFamily: "'DM Sans', sans-serif",
-    }}>
-      <div style={{ width: '100%', maxWidth: 400 }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.5px', color: '#1a1a1a', fontFamily: "'DM Sans', sans-serif" }}>Finku</h1>
-          <p style={{ fontSize: 14, color: '#888', marginTop: 6 }}>Your freelance finances, simplified.</p>
-        </div>
+    <>
+      <style>{`
+        .auth-page {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0e0e0c;
+          padding: 1rem;
+          font-family: 'DM Sans', sans-serif;
+        }
 
-        <div className="card">
-          <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: '1.5rem', color: '#1a1a1a' }}>
-            {mode === 'login' ? 'Log in to your account' : 'Create your account'}
-          </h2>
+        .auth-logo {
+          font-family: 'Instrument Serif', serif;
+          font-size: 32px;
+          color: #f0ede4;
+          letter-spacing: -0.5px;
+          text-align: center;
+          margin-bottom: 6px;
+        }
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {mode === 'signup' && (
+        .auth-tagline {
+          font-size: 14px;
+          color: rgba(240,237,228,0.45);
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .auth-card {
+          background: #161614;
+          border-radius: 16px;
+          border: 1px solid rgba(240,237,228,0.08);
+          padding: 1.75rem;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+        }
+
+        .auth-card h2 {
+          font-size: 16px;
+          font-weight: 500;
+          color: #f0ede4;
+          margin-bottom: 1.5rem;
+        }
+
+        .auth-error {
+          background: rgba(224,112,112,0.1);
+          border: 1px solid rgba(224,112,112,0.25);
+          border-radius: 8px;
+          padding: 10px 14px;
+          font-size: 13px;
+          color: #e07070;
+        }
+
+        .auth-switch {
+          text-align: center;
+          font-size: 13px;
+          color: rgba(240,237,228,0.4);
+          margin-top: 1.25rem;
+        }
+
+        .auth-switch-btn {
+          background: none;
+          border: none;
+          color: #f0ede4;
+          font-weight: 500;
+          font-size: 13px;
+          cursor: pointer;
+          padding: 0;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .auth-switch-btn:hover { color: #c8f03a; }
+      `}</style>
+
+      <div className="auth-page">
+        <div style={{ width: '100%', maxWidth: 400 }}>
+          <div className="auth-logo">Finku</div>
+          <p className="auth-tagline">Your freelance finances, simplified.</p>
+
+          <div className="auth-card">
+            <h2>{mode === 'login' ? 'Log in to your account' : 'Create your account'}</h2>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {mode === 'signup' && (
+                <div>
+                  <label className="label">First name</label>
+                  <input
+                    className="input-field"
+                    type="text"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Nikola"
+                    required
+                    autoComplete="given-name"
+                  />
+                </div>
+              )}
               <div>
-                <label className="label">First name</label>
+                <label className="label">Email address</label>
                 <input
                   className="input-field"
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Nikola"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
                   required
-                  autoComplete="given-name"
+                  autoComplete="email"
                 />
               </div>
-            )}
-            <div>
-              <label className="label">Email address</label>
-              <input
-                className="input-field"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div>
-              <label className="label">Password</label>
-              <input
-                className="input-field"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              />
-            </div>
-
-            {error && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#b91c1c' }}>
-                {error}
+              <div>
+                <label className="label">Password</label>
+                <input
+                  className="input-field"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                />
               </div>
-            )}
 
-            <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
-              {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
-            </button>
-          </form>
+              {error && <div className="auth-error">{error}</div>}
 
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#888', marginTop: '1.25rem' }}>
-            {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-            <button
-              onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
-              style={{ background: 'none', border: 'none', color: '#1a1a1a', fontWeight: 500, fontSize: 13, cursor: 'pointer', padding: 0 }}
-            >
-              {mode === 'login' ? 'Sign up' : 'Log in'}
-            </button>
-          </p>
+              <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
+                {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
+              </button>
+            </form>
+
+            <p className="auth-switch">
+              {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+              <button
+                className="auth-switch-btn"
+                onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
+              >
+                {mode === 'login' ? 'Sign up' : 'Log in'}
+              </button>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

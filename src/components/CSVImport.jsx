@@ -58,21 +58,22 @@ export default function CSVImport({ userId, language, onImported }) {
   }
 
   return (
-    <div style={{ borderTop: '1px solid #eae9e3', marginTop: '1rem', paddingTop: '1rem', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+    <div style={{ borderTop: '1px solid rgba(240,237,228,0.07)', marginTop: '1rem', paddingTop: '1rem', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(240,237,228,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
       </svg>
-      <span style={{ fontSize: 12, color: '#888', flex: 1 }}>{lang.csvImport}</span>
+      <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.35)', flex: 1 }}>{lang.csvImport}</span>
       <label style={{
-        fontSize: 12, border: '1px solid #ddd', borderRadius: 8, padding: '5px 12px',
-        cursor: 'pointer', color: '#444', background: '#fff', whiteSpace: 'nowrap',
+        fontSize: 12, border: '1px solid rgba(240,237,228,0.12)', borderRadius: 8, padding: '5px 12px',
+        cursor: 'pointer', color: 'rgba(240,237,228,0.6)', background: 'rgba(240,237,228,0.06)', whiteSpace: 'nowrap',
         transition: 'background 0.15s',
+        fontFamily: 'DM Sans, sans-serif',
       }}>
         {lang.uploadFile}
         <input type="file" accept=".csv" onChange={handleFile} style={{ display: 'none' }} />
       </label>
-      {status && <span style={{ fontSize: 12, color: '#15803d', width: '100%' }}>{status}</span>}
-      {error && <span style={{ fontSize: 12, color: '#b91c1c', width: '100%' }}>{error}</span>}
+      {status && <span style={{ fontSize: 12, color: '#7ec95f', width: '100%' }}>{status}</span>}
+      {error && <span style={{ fontSize: 12, color: '#e07070', width: '100%' }}>{error}</span>}
     </div>
   )
 }

@@ -6,6 +6,7 @@ import Auth from './pages/Auth'
 import LanguageSelect from './pages/LanguageSelect'
 import Dashboard from './pages/Dashboard'
 import Privacy from './pages/Privacy'
+import Profile from './pages/Profile'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -74,6 +75,11 @@ export default function App() {
         <Dashboard session={session} language={language} onLanguageChange={setLanguage} />
       } />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/profile" element={
+        !session ? <Navigate to="/auth" /> :
+        !onboarded ? <Navigate to="/language" /> :
+        <Profile session={session} language={language} onLanguageChange={setLanguage} />
+      } />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )
