@@ -1,9 +1,29 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+
+const faqs = [
+  {
+    q: 'Is Finku really free?',
+    a: 'Yes — completely free during beta. No credit card, no hidden trial. We\'ll give plenty of notice before anything changes.',
+  },
+  {
+    q: 'How is the tax estimate calculated?',
+    a: 'Based on Bulgarian tax law for self-employed individuals: 75% of your gross income is taxable, then 15% income tax applies, plus fixed monthly insurance contributions. It\'s an estimate — always consult an accountant for your official declaration.',
+  },
+  {
+    q: 'Is my financial data safe?',
+    a: 'Your data is stored encrypted in EU-based servers (Ireland). Nobody else can access your entries — not even us. You can delete your account and all data at any time.',
+  },
+  {
+    q: 'Is this for VAT-registered businesses?',
+    a: 'Not yet. Finku is currently built for freelancers and sole traders who are not VAT registered. VAT tracking is on the roadmap.',
+  },
+]
 
 export default function Landing() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
+  const [openFaq, setOpenFaq] = useState(null)
 
   useEffect(() => {
     const els = document.querySelectorAll('.reveal')
@@ -154,6 +174,7 @@ export default function Landing() {
           align-items: center;
           flex-wrap: wrap;
           justify-content: center;
+          margin-bottom: 10px;
         }
 
         .btn-primary-lg {
@@ -175,8 +196,21 @@ export default function Landing() {
           color: rgba(240,237,228,0.35);
         }
 
+        .beta-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(200,240,58,0.07);
+          border: 0.5px solid rgba(200,240,58,0.18);
+          color: rgba(200,240,58,0.7);
+          font-size: 12px;
+          padding: 4px 12px;
+          border-radius: 100px;
+          letter-spacing: 0.2px;
+        }
+
         .dashboard-preview {
-          margin: 4rem auto 0;
+          margin: 3rem auto 0;
           max-width: 860px;
           width: 100%;
           background: #161614;
@@ -304,8 +338,9 @@ export default function Landing() {
         }
 
         .social-proof {
-          padding: 4rem 2rem 6rem;
+          padding: 4rem 2rem;
           text-align: center;
+          border-top: 0.5px solid rgba(240,237,228,0.06);
         }
 
         .proof-number {
@@ -329,6 +364,144 @@ export default function Landing() {
           margin-top: 2rem;
         }
 
+        /* How it works */
+        .how-section {
+          padding: 5rem 2rem;
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+
+        .how-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 2.5rem;
+          margin-top: 3.5rem;
+        }
+
+        .how-step {}
+
+        .how-number {
+          font-family: 'Instrument Serif', serif;
+          font-size: 52px;
+          color: #c8f03a;
+          opacity: 0.55;
+          line-height: 1;
+          margin-bottom: 1rem;
+          letter-spacing: -1px;
+        }
+
+        .how-title {
+          font-size: 16px;
+          font-weight: 500;
+          color: #f0ede4;
+          margin-bottom: 8px;
+        }
+
+        .how-desc {
+          font-size: 14px;
+          color: rgba(240,237,228,0.5);
+          line-height: 1.65;
+        }
+
+        /* Testimonial */
+        .testimonial-section {
+          padding: 3rem 2rem 4rem;
+          display: flex;
+          justify-content: center;
+        }
+
+        .testimonial-card {
+          background: #161614;
+          border: 1px solid rgba(240,237,228,0.08);
+          border-radius: 20px;
+          padding: 3rem 2.5rem;
+          max-width: 620px;
+          width: 100%;
+          text-align: center;
+          position: relative;
+        }
+
+        .testimonial-mark {
+          font-family: 'Instrument Serif', serif;
+          font-size: 64px;
+          color: #c8f03a;
+          opacity: 0.2;
+          line-height: 0.6;
+          margin-bottom: 1.5rem;
+          display: block;
+        }
+
+        .testimonial-quote {
+          font-family: 'Instrument Serif', serif;
+          font-style: italic;
+          font-size: clamp(20px, 3vw, 26px);
+          color: #f0ede4;
+          line-height: 1.45;
+          margin-bottom: 1.5rem;
+        }
+
+        .testimonial-attr {
+          font-size: 13px;
+          color: rgba(240,237,228,0.3);
+          letter-spacing: 0.2px;
+        }
+
+        /* FAQ */
+        .faq-section {
+          padding: 4rem 2rem 5rem;
+          max-width: 720px;
+          margin: 0 auto;
+        }
+
+        .faq-list {
+          margin-top: 3rem;
+          border: 1px solid rgba(240,237,228,0.08);
+          border-radius: 14px;
+          overflow: hidden;
+        }
+
+        .faq-item {
+          border-bottom: 0.5px solid rgba(240,237,228,0.07);
+        }
+        .faq-item:last-child { border-bottom: none; }
+
+        .faq-question {
+          width: 100%;
+          background: #161614;
+          border: none;
+          text-align: left;
+          padding: 1.25rem 1.5rem;
+          color: #f0ede4;
+          font-size: 15px;
+          font-weight: 500;
+          font-family: 'DM Sans', sans-serif;
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          transition: background 0.15s;
+        }
+        .faq-question:hover { background: #1a1a18; }
+
+        .faq-chevron {
+          font-size: 18px;
+          color: rgba(240,237,228,0.3);
+          transition: transform 0.2s;
+          flex-shrink: 0;
+          line-height: 1;
+        }
+        .faq-chevron.open { transform: rotate(180deg); color: #c8f03a; }
+
+        .faq-answer {
+          background: #161614;
+          padding: 0 1.5rem 1.25rem;
+          font-size: 14px;
+          color: rgba(240,237,228,0.5);
+          line-height: 1.75;
+        }
+
+        /* CTA */
         .cta-section {
           padding: 6rem 2rem;
           text-align: center;
@@ -383,9 +556,10 @@ export default function Landing() {
         }
         .footer-link:hover { color: rgba(240,237,228,0.55); }
 
-        @media (max-width: 600px) {
+        @media (max-width: 700px) {
           nav { padding: 1.25rem 1.5rem; }
           .preview-body { grid-template-columns: 1fr 1fr; }
+          .how-grid { grid-template-columns: 1fr; gap: 2rem; }
           footer { padding: 1.5rem; }
         }
       `}</style>
@@ -399,6 +573,7 @@ export default function Landing() {
           </div>
         </nav>
 
+        {/* Hero */}
         <section className="hero" ref={heroRef}>
           <div className="hero-glow" />
 
@@ -416,10 +591,14 @@ export default function Landing() {
             <button className="btn-primary-lg" onClick={() => navigate('/auth')}>
               Start for free
             </button>
-            <span className="hero-note">No credit card · Takes 2 minutes</span>
+            <span className="hero-note">No credit card · Takes 30 seconds</span>
           </div>
 
-          <div className="dashboard-preview reveal" style={{ transitionDelay: '0.4s' }}>
+          <div className="reveal" style={{ transitionDelay: '0.35s', marginBottom: '0.5rem' }}>
+            <span className="beta-tag">Currently free · Beta access open</span>
+          </div>
+
+          <div className="dashboard-preview reveal" style={{ transitionDelay: '0.45s' }}>
             <div className="preview-bar">
               <div className="dot" style={{ background: '#ff5f57' }} />
               <div className="dot" style={{ background: '#febc2e' }} />
@@ -467,6 +646,7 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* Features */}
         <section className="features">
           <p className="section-label reveal">What Finku does</p>
           <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>
@@ -477,35 +657,25 @@ export default function Landing() {
               {
                 icon: '↑', iconClass: 'icon-green',
                 title: 'Income tracking',
-                desc: 'Log payments as they come in. Add a client name, amount, and date — that\'s it. Or import directly from your Revolut CSV.'
+                desc: 'Log payments as they come in. Add a client name, amount, and date — that\'s it. Or import directly from your Revolut CSV.',
               },
               {
                 icon: '↓', iconClass: 'icon-red',
                 title: 'Expense tracking',
-                desc: 'Track business expenses by category. Software, equipment, travel — see exactly where money goes.'
+                desc: 'Track business expenses by category. Software, equipment, travel — see exactly where money goes.',
               },
               {
                 icon: '€', iconClass: 'icon-amber',
                 title: 'Live tax estimate',
-                desc: 'Based on your actual income, Finku calculates your income tax and insurance contributions in real time. No surprises.'
-              },
-              {
-                icon: '✓', iconClass: 'icon-green',
-                title: 'Set aside indicator',
-                desc: 'Tell Finku your current balance and it tells you whether you have enough set aside to cover your tax bill.'
+                desc: 'Based on your actual income, Finku calculates your income tax and insurance contributions in real time. No surprises.',
               },
               {
                 icon: '↻', iconClass: 'icon-amber',
                 title: 'Revolut CSV import',
-                desc: 'Don\'t type everything manually. Export from Revolut and upload — Finku maps income and expenses automatically.'
-              },
-              {
-                icon: '⌘', iconClass: 'icon-red',
-                title: 'English & Bulgarian',
-                desc: 'Choose your language on first login. Switch any time. The app works the same way either way.'
+                desc: 'Don\'t type everything manually. Export from Revolut and upload — Finku maps income and expenses automatically.',
               },
             ].map((f, i) => (
-              <div key={i} className={`feature-card reveal`} style={{ transitionDelay: `${i * 0.07}s` }}>
+              <div key={i} className="feature-card reveal" style={{ transitionDelay: `${i * 0.07}s` }}>
                 <div className={`feature-icon ${f.iconClass}`}>{f.icon}</div>
                 <div className="feature-title">{f.title}</div>
                 <div className="feature-desc">{f.desc}</div>
@@ -514,6 +684,7 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* Social proof */}
         <section className="social-proof reveal">
           <div className="proof-grid">
             <div>
@@ -521,19 +692,88 @@ export default function Landing() {
               <div className="proof-label">to get started</div>
             </div>
             <div>
-              <div className="proof-number">2min</div>
+              <div className="proof-number">30s</div>
               <div className="proof-label">to set up</div>
             </div>
             <div>
-              <div className="proof-number">15%</div>
-              <div className="proof-label">flat income tax, calculated live</div>
+              <div className="proof-number">5 min</div>
+              <div className="proof-label">of tracking per month, that's it</div>
             </div>
           </div>
         </section>
 
+        {/* How it works */}
+        <section className="how-section">
+          <p className="section-label reveal">How it works</p>
+          <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>
+            Up and running in three steps
+          </h2>
+          <div className="how-grid">
+            {[
+              {
+                n: '01',
+                title: 'Sign up free',
+                desc: 'Create your account in 30 seconds. No credit card, no setup fees, no catch.',
+              },
+              {
+                n: '02',
+                title: 'Log your income',
+                desc: 'Add payments as they come in, or import directly from a Revolut CSV export. Takes seconds per entry.',
+              },
+              {
+                n: '03',
+                title: 'See what you owe',
+                desc: 'Your live tax estimate updates automatically as you go. Check it anytime — no year-end surprises.',
+              },
+            ].map((s, i) => (
+              <div key={i} className="how-step reveal" style={{ transitionDelay: `${i * 0.1}s` }}>
+                <div className="how-number">{s.n}</div>
+                <div className="how-title">{s.title}</div>
+                <div className="how-desc">{s.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Testimonial */}
+        <section className="testimonial-section reveal">
+          <div className="testimonial-card">
+            <span className="testimonial-mark">"</span>
+            <p className="testimonial-quote">
+              Finally I know exactly what I owe before the year ends.
+            </p>
+            <p className="testimonial-attr">— Early beta user</p>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="faq-section">
+          <p className="section-label reveal">FAQ</p>
+          <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>
+            Common questions
+          </h2>
+          <div className="faq-list reveal" style={{ transitionDelay: '0.15s' }}>
+            {faqs.map((item, i) => (
+              <div key={i} className="faq-item">
+                <button
+                  className="faq-question"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                >
+                  {item.q}
+                  <span className={`faq-chevron${openFaq === i ? ' open' : ''}`}>›</span>
+                </button>
+                {openFaq === i && (
+                  <div className="faq-answer">{item.a}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA */}
         <section className="cta-section reveal">
           <h2 className="cta-title">Start knowing your numbers.</h2>
-          <p className="cta-sub">Free to use. No credit card. Takes two minutes.</p>
+          <p className="cta-sub">Free to use. No credit card. Takes 30 seconds.</p>
           <button className="btn-primary-lg" onClick={() => navigate('/auth')}>
             Create your account
           </button>

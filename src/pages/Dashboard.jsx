@@ -79,6 +79,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
 
   async function handleLogout() {
     await supabase.auth.signOut()
+    navigate('/')
   }
 
   return (

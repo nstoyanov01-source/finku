@@ -98,6 +98,7 @@ export default function Profile({ session, language, onLanguageChange }) {
           font-size: 20px;
           color: #f0ede4;
           letter-spacing: -0.3px;
+          text-decoration: none;
         }
 
         .profile-back-btn {
@@ -271,7 +272,7 @@ export default function Profile({ session, language, onLanguageChange }) {
 
       <div className="profile-page">
         <nav className="profile-nav">
-          <div className="profile-nav-logo">Finku</div>
+          <Link to="/dashboard" className="profile-nav-logo">Finku</Link>
           <button className="profile-back-btn" onClick={() => navigate('/dashboard')}>
             {pl.back}
           </button>
