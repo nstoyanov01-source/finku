@@ -51,6 +51,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
   const [modal, setModal] = useState(null)
   const [showAllIncome, setShowAllIncome] = useState(false)
   const [showAllExpenses, setShowAllExpenses] = useState(false)
+  const [showTaxTooltip, setShowTaxTooltip] = useState(false)
   const { toasts, showToast } = useToast()
 
   useEffect(() => { document.title = 'Dashboard · Finku' }, [])
@@ -85,6 +86,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
   const avgMonthly = currentMonth > 0 ? totalIncome / currentMonth : 0
 
   const tax = calcTax(totalIncome, currentMonth)
+  const projectedAnnual = (totalIncome / currentMonth) * 12
   const balanceNum = parseFloat(balance) || 0
   const hasEnough = balanceNum >= tax.total
 
@@ -430,6 +432,25 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                 ))}
               </div>
 
+              {/* Projected Annual Banner */}
+              {currentMonth >= 2 && totalIncome > 0 && (
+                <div style={{
+                  background: '#161614',
+                  border: '1px solid rgba(240,237,228,0.06)',
+                  borderRadius: 12,
+                  padding: '0.9rem 1.25rem',
+                  marginBottom: '1.25rem',
+                  fontSize: 13,
+                  color: 'rgba(240,237,228,0.5)',
+                }}>
+                  {language === 'bg' ? (
+                    <>При текущото темпо ще спечелите <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> тази година</>
+                  ) : (
+                    <>At your current rate you're on track to earn <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> this year</>
+                  )}
+                </div>
+              )}
+
               {/* Tax Banner */}
               <div className="tax-banner">
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
@@ -439,7 +460,35 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                     </svg>
                   </div>
                   <div>
-                    <div className="tax-title">{lang.taxEstimate}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                      <div className="tax-title">{lang.taxEstimate}</div>
+                      <button
+                        onMouseEnter={() => setShowTaxTooltip(true)}
+                        onMouseLeave={() => setShowTaxTooltip(false)}
+                        onClick={() => setShowTaxTooltip(v => !v)}
+                        style={{
+                          width: 16, height: 16, border: '1px solid rgba(240,237,228,0.2)',
+                          borderRadius: '50%', background: 'none', fontSize: 11,
+                          color: 'rgba(240,237,228,0.4)', cursor: 'help', marginLeft: 6,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: 0, flexShrink: 0, fontFamily: 'DM Sans, sans-serif', lineHeight: 1,
+                        }}
+                      >?</button>
+                      {showTaxTooltip && (
+                        <div style={{
+                          position: 'absolute', top: 'calc(100% + 8px)', left: 0,
+                          background: '#1e1e1c', border: '1px solid rgba(240,237,228,0.1)',
+                          borderRadius: 8, padding: '10px 14px', fontSize: 12,
+                          maxWidth: 280, zIndex: 50, color: 'rgba(240,237,228,0.7)',
+                          lineHeight: 1.6, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                          whiteSpace: 'normal',
+                        }}>
+                          {language === 'bg'
+                            ? 'Брутен доход × 75% = облагаем доход. Облагаем доход × 15% = данък. Плюс 145 € месечни осигуровки.'
+                            : 'Gross income × 75% = taxable income. Taxable income × 15% = income tax. Plus 145 € fixed monthly insurance contributions.'}
+                        </div>
+                      )}
+                    </div>
                     <div className="tax-desc">{lang.taxDesc}</div>
                   </div>
                 </div>

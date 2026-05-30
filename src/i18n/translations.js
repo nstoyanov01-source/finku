@@ -85,6 +85,8 @@ export const t = {
     amountNegative: 'Amount cannot be negative',
     amountTooLarge: 'Amount too large',
     descriptionRequired: 'Description required',
+    duplicateWarning: 'An entry with this description, amount and date already exists. Are you sure you want to add it?',
+    addAnyway: 'Add anyway',
   },
 
   bg: {
@@ -173,5 +175,7 @@ export const t = {
     amountNegative: 'Сумата не може да е отрицателна',
     amountTooLarge: 'Сумата е твърде голяма',
     descriptionRequired: 'Описанието е задължително',
+    duplicateWarning: 'Вече съществува запис с това описание, сума и дата. Сигурни ли сте, че искате да го добавите?',
+    addAnyway: 'Добави въпреки това',
   },
 }

@@ -22,10 +22,11 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
 
   function update(key, val) { setForm(f => ({ ...f, [key]: val })) }
 
-  async function handleSave() {
+  async function handleSave(force = false) {
     if (submitting.current) return
     const desc = form.description.trim()
     const amt = parseFloat(form.amount)
@@ -35,6 +36,20 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     if (amt < 0) { setError(lang.amountNegative); return }
     if (amt > 9999999) { setError(lang.amountTooLarge); return }
 
+    if (!isEdit && !force) {
+      const table = type === 'income' ? 'income' : 'expenses'
+      const escaped = desc.replace(/%/g, '\\%').replace(/_/g, '\\_')
+      const { count } = await supabase
+        .from(table)
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .ilike('description', escaped)
+        .eq('amount', amt)
+        .eq('date', form.date)
+      if (count > 0) { setShowDuplicateWarning(true); return }
+    }
+
+    setShowDuplicateWarning(false)
     submitting.current = true
     setLoading(true)
     setError('')
@@ -124,29 +139,47 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
 
           {error && <div style={{ fontSize: 13, color: '#e07070', background: 'rgba(224,112,112,0.1)', border: '1px solid rgba(224,112,112,0.2)', padding: '8px 12px', borderRadius: 8 }}>{error}</div>}
 
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 4 }}>
-            {isEdit ? (
-              <button
-                onClick={handleDelete}
-                disabled={loading}
-                style={{
-                  background: 'none', border: '1px solid rgba(224,112,112,0.3)', color: '#e07070',
-                  fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 500,
-                  padding: '8px 14px', borderRadius: 8, cursor: 'pointer', transition: 'background 0.15s',
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(224,112,112,0.08)'}
-                onMouseOut={e => e.currentTarget.style.background = 'none'}
-              >
-                {lang.deleteEntry}
-              </button>
-            ) : <div />}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn-secondary" onClick={onClose}>{lang.cancel}</button>
-              <button className="btn-primary" onClick={handleSave} disabled={loading || !form.description || !form.amount}>
-                {loading ? (isEdit ? lang.updating : lang.saving) : (isEdit ? lang.update : lang.save)}
-              </button>
+          {showDuplicateWarning ? (
+            <div>
+              <div style={{
+                background: 'rgba(200,240,58,0.08)', border: '0.5px solid rgba(200,240,58,0.3)',
+                borderRadius: 8, padding: '10px 14px', fontSize: 13,
+                color: 'rgba(240,237,228,0.7)', marginBottom: 10, lineHeight: 1.6,
+              }}>
+                {lang.duplicateWarning}
+              </div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button className="btn-secondary" onClick={() => setShowDuplicateWarning(false)}>{lang.cancel}</button>
+                <button className="btn-primary" onClick={() => handleSave(true)} disabled={loading}>
+                  {loading ? lang.saving : lang.addAnyway}
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 4 }}>
+              {isEdit ? (
+                <button
+                  onClick={handleDelete}
+                  disabled={loading}
+                  style={{
+                    background: 'none', border: '1px solid rgba(224,112,112,0.3)', color: '#e07070',
+                    fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 500,
+                    padding: '8px 14px', borderRadius: 8, cursor: 'pointer', transition: 'background 0.15s',
+                  }}
+                  onMouseOver={e => e.currentTarget.style.background = 'rgba(224,112,112,0.08)'}
+                  onMouseOut={e => e.currentTarget.style.background = 'none'}
+                >
+                  {lang.deleteEntry}
+                </button>
+              ) : <div />}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn-secondary" onClick={onClose}>{lang.cancel}</button>
+                <button className="btn-primary" onClick={handleSave} disabled={loading || !form.description || !form.amount}>
+                  {loading ? (isEdit ? lang.updating : lang.saving) : (isEdit ? lang.update : lang.save)}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
