@@ -4,8 +4,8 @@
   "description": "Your freelance finances, simplified.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0e0e0c",
-  "theme_color": "#0e0e0c",
+  "background_color": "#c8f03a",
+  "theme_color": "#c8f03a",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

@@ -5,6 +5,7 @@ import { t } from '../i18n/translations'
 import AddEntryModal from '../components/AddEntryModal'
 import CSVImport from '../components/CSVImport'
 import Toast, { useToast } from '../components/Toast'
+import EntryDrawer from '../components/EntryDrawer'
 
 function greeting(lang) {
   const h = new Date().getHours()
@@ -49,6 +50,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
+  const [drawer, setDrawer] = useState(null)
   const [showAllIncome, setShowAllIncome] = useState(false)
   const [showAllExpenses, setShowAllExpenses] = useState(false)
   const [showTaxTooltip, setShowTaxTooltip] = useState(false)
@@ -311,22 +313,8 @@ export default function Dashboard({ session, language, onLanguageChange }) {
           position: relative;
         }
 
-        .entry-edit-btn {
-          opacity: 0;
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 4px 5px;
-          border-radius: 6px;
-          color: rgba(240,237,228,0.4);
-          transition: opacity 0.15s, color 0.15s, background 0.15s;
-          display: flex;
-          align-items: center;
-          flex-shrink: 0;
-          line-height: 0;
-        }
-        .entry-row:hover .entry-edit-btn { opacity: 1; }
-        .entry-edit-btn:hover { color: #f0ede4; background: rgba(240,237,228,0.08); }
+        .entry-row { cursor: pointer; }
+        .entry-row:hover { background: rgba(240,237,228,0.07); }
 
         .entry-dot {
           width: 6px;
@@ -605,7 +593,11 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {col.data.map(row => (
-                          <div key={row.id} className="entry-row">
+                          <div
+                            key={row.id}
+                            className="entry-row"
+                            onClick={() => setDrawer({ entry: row, type: col.type })}
+                          >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                               <div className="entry-dot" style={{ background: col.dot }} />
                               <div style={{ minWidth: 0 }}>
@@ -613,20 +605,8 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                                 <div className="entry-date">{formatDate(row.date, language)}</div>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
-                              <div style={{ fontSize: 13, fontWeight: 500, color: col.color }}>
-                                {col.type === 'income' ? '+' : '-'}{fmt(row.amount)} {lang.currency}
-                              </div>
-                              <button
-                                className="entry-edit-btn"
-                                onClick={() => setModal({ type: col.type, entry: row })}
-                                title="Edit"
-                              >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
-                              </button>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: col.color, flexShrink: 0, marginLeft: 8 }}>
+                              {col.type === 'income' ? '+' : '−'}{fmt(row.amount)} {lang.currency}
                             </div>
                           </div>
                         ))}
@@ -677,6 +657,25 @@ export default function Dashboard({ session, language, onLanguageChange }) {
           )}
         </div>
       </div>
+
+      {drawer && (
+        <EntryDrawer
+          entry={drawer.entry}
+          type={drawer.type}
+          language={language}
+          onClose={() => setDrawer(null)}
+          onEdit={() => {
+            const { entry, type } = drawer
+            setDrawer(null)
+            setModal({ type, entry })
+          }}
+          onDeleted={() => {
+            setDrawer(null)
+            fetchData()
+            showToast('Entry deleted', 'success')
+          }}
+        />
+      )}
 
       {modal && (
         <AddEntryModal
