@@ -22,8 +22,8 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     setError('')
     const table = type === 'income' ? 'income' : 'expenses'
     const payload = type === 'income'
-      ? { user_id: userId, description: form.description, client: form.client, amount: parseFloat(form.amount), date: form.date }
-      : { user_id: userId, description: form.description, category: form.category, amount: parseFloat(form.amount), date: form.date }
+      ? { user_id: userId, description: form.description.trim(), client: form.client.trim(), amount: parseFloat(form.amount), date: form.date }
+      : { user_id: userId, description: form.description.trim(), category: form.category, amount: parseFloat(form.amount), date: form.date }
 
     const { error } = await supabase.from(table).insert(payload)
     if (error) { setError(error.message); setLoading(false); return }
@@ -50,13 +50,13 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
           <div>
             <label className="label">{lang.description}</label>
-            <input className="input-field" value={form.description} onChange={e => update('description', e.target.value)} placeholder={type === 'income' ? 'Website project' : 'Adobe Creative Cloud'} />
+            <input className="input-field" value={form.description} onChange={e => update('description', e.target.value)} placeholder={type === 'income' ? 'Website project' : 'Adobe Creative Cloud'} maxLength={200} />
           </div>
 
           {type === 'income' && (
             <div>
               <label className="label">{lang.client}</label>
-              <input className="input-field" value={form.client} onChange={e => update('client', e.target.value)} placeholder="Client name" />
+              <input className="input-field" value={form.client} onChange={e => update('client', e.target.value)} placeholder="Client name" maxLength={100} />
             </div>
           )}
 
@@ -74,7 +74,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label className="label">{lang.amount}</label>
-              <input className="input-field" type="number" min="0" step="0.01" value={form.amount} onChange={e => update('amount', e.target.value)} placeholder="1200.00" />
+              <input className="input-field" type="number" min="0" max="9999999" step="0.01" value={form.amount} onChange={e => update('amount', e.target.value)} placeholder="1200.00" />
             </div>
             <div>
               <label className="label">{lang.date}</label>

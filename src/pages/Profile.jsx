@@ -14,7 +14,9 @@ const profileLabels = {
     deleteAccount: 'Delete account',
     deleteTitle: 'Delete your account?',
     deleteDesc: 'This will permanently delete all your data. This action cannot be undone.',
-    deleteNote: 'Account deletion is not yet available in-app. Email us at hello@finku.eu to request deletion.',
+    deleteTypeTip: 'Type DELETE to confirm',
+    deleteConfirmBtn: 'Confirm deletion',
+    deleteNote: 'Your data has been deleted. Email privacy@finku.eu to fully remove your account.',
     back: '← Back to dashboard',
     legal: 'Legal',
     privacyPolicy: 'Privacy Policy',
@@ -30,7 +32,9 @@ const profileLabels = {
     deleteAccount: 'Изтрий акаунта',
     deleteTitle: 'Изтриване на акаунта?',
     deleteDesc: 'Това ще изтрие постоянно всичките ви данни. Тази операция не може да бъде отменена.',
-    deleteNote: 'Изтриването на акаунт все още не е достъпно в приложението. Изпратете ни имейл на hello@finku.eu за заявка.',
+    deleteTypeTip: 'Напишете DELETE за потвърждение',
+    deleteConfirmBtn: 'Потвърди изтриването',
+    deleteNote: 'Данните ви са изтрити. Изпратете имейл на privacy@finku.eu за пълно премахване на акаунта.',
     back: '← Обратно към таблото',
     legal: 'Правни документи',
     privacyPolicy: 'Политика за поверителност',
@@ -49,6 +53,9 @@ export default function Profile({ session, language, onLanguageChange }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteSuccess, setDeleteSuccess] = useState(false)
 
   useEffect(() => {
     supabase.from('profiles').select('first_name').eq('id', userId).single()
@@ -62,6 +69,19 @@ export default function Profile({ session, language, onLanguageChange }) {
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmText !== 'DELETE') return
+    setDeleting(true)
+    await supabase.from('income').delete().eq('user_id', userId)
+    await supabase.from('expenses').delete().eq('user_id', userId)
+    await supabase.from('profiles').delete().eq('id', userId)
+    setDeleteSuccess(true)
+    setTimeout(async () => {
+      await supabase.auth.signOut()
+      navigate('/')
+    }, 2500)
   }
 
   async function handleLanguageChange(l) {
@@ -255,6 +275,37 @@ export default function Profile({ session, language, onLanguageChange }) {
         }
         .delete-cancel-btn:hover { background: rgba(240,237,228,0.06); }
 
+        .delete-input {
+          width: 100%;
+          padding: 10px 14px;
+          border: 1px solid rgba(224,112,112,0.2);
+          border-radius: 10px;
+          background: rgba(0,0,0,0.25);
+          color: #f0ede4;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          margin-bottom: 10px;
+          box-sizing: border-box;
+          letter-spacing: 0.5px;
+        }
+        .delete-input::placeholder { color: rgba(240,237,228,0.25); letter-spacing: 0; }
+        .delete-input:focus { outline: none; border-color: rgba(224,112,112,0.5); }
+
+        .delete-confirm-btn {
+          padding: 8px 16px;
+          border-radius: 8px;
+          border: none;
+          background: #e07070;
+          color: #fff;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .delete-confirm-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .delete-confirm-btn:not(:disabled):hover { background: #c95555; }
+
         .profile-legal-links {
           display: flex;
           gap: 1.25rem;
@@ -337,12 +388,38 @@ export default function Profile({ session, language, onLanguageChange }) {
             <div className="profile-section-title">Danger zone</div>
             {showDeleteConfirm ? (
               <div className="delete-confirm">
-                <div className="delete-confirm-title">{pl.deleteTitle}</div>
-                <div className="delete-confirm-desc">{pl.deleteDesc}</div>
-                <div className="delete-confirm-note">{pl.deleteNote}</div>
-                <button className="delete-cancel-btn" onClick={() => setShowDeleteConfirm(false)}>
-                  {lang.cancel}
-                </button>
+                {deleteSuccess ? (
+                  <div className="delete-confirm-note" style={{ marginBottom: 0 }}>{pl.deleteNote}</div>
+                ) : (
+                  <>
+                    <div className="delete-confirm-title">{pl.deleteTitle}</div>
+                    <div className="delete-confirm-desc">{pl.deleteDesc}</div>
+                    <input
+                      className="delete-input"
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={e => setDeleteConfirmText(e.target.value)}
+                      placeholder={pl.deleteTypeTip}
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className="delete-cancel-btn"
+                        onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }}
+                      >
+                        {lang.cancel}
+                      </button>
+                      <button
+                        className="delete-confirm-btn"
+                        onClick={handleDeleteAccount}
+                        disabled={deleteConfirmText !== 'DELETE' || deleting}
+                      >
+                        {deleting ? '…' : pl.deleteConfirmBtn}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <button className="delete-btn" onClick={() => setShowDeleteConfirm(true)}>
