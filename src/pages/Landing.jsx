@@ -294,7 +294,7 @@ export default function Landing() {
 
         .features-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: 1fr 1fr;
           gap: 1.5px;
           background: rgba(240,237,228,0.08);
           border-radius: 16px;
@@ -401,49 +401,6 @@ export default function Landing() {
           font-size: 14px;
           color: rgba(240,237,228,0.5);
           line-height: 1.65;
-        }
-
-        /* Testimonial */
-        .testimonial-section {
-          padding: 3rem 2rem 4rem;
-          display: flex;
-          justify-content: center;
-        }
-
-        .testimonial-card {
-          background: #161614;
-          border: 1px solid rgba(240,237,228,0.08);
-          border-radius: 20px;
-          padding: 3rem 2.5rem;
-          max-width: 620px;
-          width: 100%;
-          text-align: center;
-          position: relative;
-        }
-
-        .testimonial-mark {
-          font-family: 'Instrument Serif', serif;
-          font-size: 64px;
-          color: #c8f03a;
-          opacity: 0.2;
-          line-height: 0.6;
-          margin-bottom: 1.5rem;
-          display: block;
-        }
-
-        .testimonial-quote {
-          font-family: 'Instrument Serif', serif;
-          font-style: italic;
-          font-size: clamp(20px, 3vw, 26px);
-          color: #f0ede4;
-          line-height: 1.45;
-          margin-bottom: 1.5rem;
-        }
-
-        .testimonial-attr {
-          font-size: 13px;
-          color: rgba(240,237,228,0.3);
-          letter-spacing: 0.2px;
         }
 
         /* FAQ */
@@ -732,17 +689,6 @@ export default function Landing() {
                 <div className="how-desc">{s.desc}</div>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* Testimonial */}
-        <section className="testimonial-section reveal">
-          <div className="testimonial-card">
-            <span className="testimonial-mark">"</span>
-            <p className="testimonial-quote">
-              Finally I know exactly what I owe before the year ends.
-            </p>
-            <p className="testimonial-attr">— Early beta user</p>
           </div>
         </section>
 
