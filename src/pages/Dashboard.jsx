@@ -286,7 +286,25 @@ export default function Dashboard({ session, language, onLanguageChange }) {
           background: rgba(240,237,228,0.04);
           border-radius: 9px;
           padding: 8px 10px;
+          position: relative;
         }
+
+        .entry-edit-btn {
+          opacity: 0;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 4px 5px;
+          border-radius: 6px;
+          color: rgba(240,237,228,0.4);
+          transition: opacity 0.15s, color 0.15s, background 0.15s;
+          display: flex;
+          align-items: center;
+          flex-shrink: 0;
+          line-height: 0;
+        }
+        .entry-row:hover .entry-edit-btn { opacity: 1; }
+        .entry-edit-btn:hover { color: #f0ede4; background: rgba(240,237,228,0.08); }
 
         .entry-dot {
           width: 6px;
@@ -456,7 +474,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                       <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{col.label}</span>
                       <button
                         className="btn-primary"
-                        onClick={() => setModal(col.type)}
+                        onClick={() => setModal({ type: col.type })}
                         style={{ padding: '5px 12px', fontSize: 12 }}
                       >
                         + {col.addLabel}
@@ -476,8 +494,20 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                                 <div className="entry-date">{row.date}</div>
                               </div>
                             </div>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: col.color, flexShrink: 0, marginLeft: 8 }}>
-                              {col.type === 'income' ? '+' : '-'}{fmt(row.amount)} {lang.currency}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: col.color }}>
+                                {col.type === 'income' ? '+' : '-'}{fmt(row.amount)} {lang.currency}
+                              </div>
+                              <button
+                                className="entry-edit-btn"
+                                onClick={() => setModal({ type: col.type, entry: row })}
+                                title="Edit"
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -530,11 +560,13 @@ export default function Dashboard({ session, language, onLanguageChange }) {
 
       {modal && (
         <AddEntryModal
-          type={modal}
+          type={modal.type}
           userId={userId}
           language={language}
           onClose={() => setModal(null)}
           onSaved={fetchData}
+          initialData={modal.entry}
+          entryId={modal.entry?.id}
         />
       )}
     </>

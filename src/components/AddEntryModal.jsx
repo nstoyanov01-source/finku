@@ -2,9 +2,17 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
 
-export default function AddEntryModal({ type, userId, language, onClose, onSaved }) {
+export default function AddEntryModal({ type, userId, language, onClose, onSaved, initialData, entryId }) {
   const lang = t[language]
-  const [form, setForm] = useState({
+  const isEdit = !!entryId
+
+  const [form, setForm] = useState(initialData ? {
+    description: initialData.description || '',
+    client: initialData.client || '',
+    amount: String(initialData.amount || ''),
+    date: initialData.date || new Date().toISOString().split('T')[0],
+    category: initialData.category || 'other',
+  } : {
     description: '',
     client: '',
     amount: '',
@@ -17,19 +25,48 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
   function update(key, val) { setForm(f => ({ ...f, [key]: val })) }
 
   async function handleSave() {
-    if (!form.description || !form.amount || !form.date) return
+    const desc = form.description.trim()
+    const amt = parseFloat(form.amount)
+
+    if (!desc) { setError(lang.descriptionRequired); return }
+    if (!form.amount || isNaN(amt)) { setError(lang.descriptionRequired); return }
+    if (amt < 0) { setError(lang.amountNegative); return }
+    if (amt > 9999999) { setError(lang.amountTooLarge); return }
+
     setLoading(true)
     setError('')
     const table = type === 'income' ? 'income' : 'expenses'
-    const payload = type === 'income'
-      ? { user_id: userId, description: form.description.trim(), client: form.client.trim(), amount: parseFloat(form.amount), date: form.date }
-      : { user_id: userId, description: form.description.trim(), category: form.category, amount: parseFloat(form.amount), date: form.date }
 
-    const { error } = await supabase.from(table).insert(payload)
+    if (isEdit) {
+      const patch = type === 'income'
+        ? { description: desc, client: form.client.trim(), amount: amt, date: form.date }
+        : { description: desc, category: form.category, amount: amt, date: form.date }
+      const { error } = await supabase.from(table).update(patch).eq('id', entryId)
+      if (error) { setError(error.message); setLoading(false); return }
+    } else {
+      const payload = type === 'income'
+        ? { user_id: userId, description: desc, client: form.client.trim(), amount: amt, date: form.date }
+        : { user_id: userId, description: desc, category: form.category, amount: amt, date: form.date }
+      const { error } = await supabase.from(table).insert(payload)
+      if (error) { setError(error.message); setLoading(false); return }
+    }
+
+    onSaved()
+    onClose()
+  }
+
+  async function handleDelete() {
+    setLoading(true)
+    const table = type === 'income' ? 'income' : 'expenses'
+    const { error } = await supabase.from(table).delete().eq('id', entryId)
     if (error) { setError(error.message); setLoading(false); return }
     onSaved()
     onClose()
   }
+
+  const title = isEdit
+    ? (type === 'income' ? lang.editIncome : lang.editExpense)
+    : (type === 'income' ? lang.addIncome : lang.addExpense)
 
   const overlay = {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
@@ -41,9 +78,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     <div style={overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="card" style={{ width: '100%', maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600 }}>
-            {type === 'income' ? lang.addIncome : lang.addExpense}
-          </h3>
+          <h3 style={{ fontSize: 16, fontWeight: 600 }}>{title}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'rgba(240,237,228,0.4)', lineHeight: 1 }}>×</button>
         </div>
 
@@ -84,11 +119,28 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
 
           {error && <div style={{ fontSize: 13, color: '#e07070', background: 'rgba(224,112,112,0.1)', border: '1px solid rgba(224,112,112,0.2)', padding: '8px 12px', borderRadius: 8 }}>{error}</div>}
 
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-            <button className="btn-secondary" onClick={onClose}>{lang.cancel}</button>
-            <button className="btn-primary" onClick={handleSave} disabled={loading || !form.description || !form.amount}>
-              {loading ? lang.saving : lang.save}
-            </button>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 4 }}>
+            {isEdit ? (
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                style={{
+                  background: 'none', border: '1px solid rgba(224,112,112,0.3)', color: '#e07070',
+                  fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 500,
+                  padding: '8px 14px', borderRadius: 8, cursor: 'pointer', transition: 'background 0.15s',
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(224,112,112,0.08)'}
+                onMouseOut={e => e.currentTarget.style.background = 'none'}
+              >
+                {lang.deleteEntry}
+              </button>
+            ) : <div />}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn-secondary" onClick={onClose}>{lang.cancel}</button>
+              <button className="btn-primary" onClick={handleSave} disabled={loading || !form.description || !form.amount}>
+                {loading ? (isEdit ? lang.updating : lang.saving) : (isEdit ? lang.update : lang.save)}
+              </button>
+            </div>
           </div>
         </div>
       </div>

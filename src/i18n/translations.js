@@ -76,6 +76,15 @@ export const t = {
     logout: 'Log out',
     year: 'Year',
     currency: '€',
+
+    editIncome: 'Edit income',
+    editExpense: 'Edit expense',
+    update: 'Update',
+    updating: 'Updating…',
+    deleteEntry: 'Delete',
+    amountNegative: 'Amount cannot be negative',
+    amountTooLarge: 'Amount too large',
+    descriptionRequired: 'Description required',
   },
 
   bg: {
@@ -155,5 +164,14 @@ export const t = {
     logout: 'Изход',
     year: 'Година',
     currency: '€',
+
+    editIncome: 'Редактиране на приход',
+    editExpense: 'Редактиране на разход',
+    update: 'Обнови',
+    updating: 'Обновяване…',
+    deleteEntry: 'Изтрий',
+    amountNegative: 'Сумата не може да е отрицателна',
+    amountTooLarge: 'Сумата е твърде голяма',
+    descriptionRequired: 'Описанието е задължително',
   },
 }
