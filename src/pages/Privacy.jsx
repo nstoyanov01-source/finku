@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function Privacy() {
+  useEffect(() => { document.title = 'Privacy Policy · Finku' }, [])
   return (
     <>
       <style>{`

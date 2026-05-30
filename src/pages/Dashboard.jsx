@@ -25,6 +25,12 @@ function formatDate(dateStr, language) {
   })
 }
 
+function formatCurrentDate(language) {
+  return new Date().toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
+
 function calcTax(grossIncome, monthsActive) {
   const taxableIncome = grossIncome * 0.75
   const ddfl = taxableIncome * 0.15
@@ -43,7 +49,11 @@ export default function Dashboard({ session, language, onLanguageChange }) {
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
+  const [showAllIncome, setShowAllIncome] = useState(false)
+  const [showAllExpenses, setShowAllExpenses] = useState(false)
   const { toasts, showToast } = useToast()
+
+  useEffect(() => { document.title = 'Dashboard · Finku' }, [])
   const [balance, setBalance] = useState('')
   const [showBalanceInput, setShowBalanceInput] = useState(false)
   const [firstName, setFirstName] = useState('')
@@ -397,7 +407,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
             <div className="dash-greeting">
               {greeting(lang)}{firstName ? `, ${firstName}` : ''}
             </div>
-            <div className="dash-subheading">{lang.overview} · {currentYear}</div>
+            <div className="dash-subheading">{formatCurrentDate(language)}</div>
           </div>
 
           {loading ? (
@@ -514,12 +524,24 @@ export default function Dashboard({ session, language, onLanguageChange }) {
               ) : (
               <div className="entries-grid">
                 {[
-                  { type: 'income', label: lang.recentIncome, data: income.slice(0, 5), addLabel: lang.addIncome, emptyMsg: lang.noIncome, color: '#7ec95f', dot: '#7ec95f' },
-                  { type: 'expense', label: lang.recentExpenses, data: expenses.slice(0, 5), addLabel: lang.addExpense, emptyMsg: lang.noExpenses, color: '#e07070', dot: '#e07070' },
+                  { type: 'income', label: lang.recentIncome, data: showAllIncome ? income : income.slice(0, 5), total: income.length, showAll: showAllIncome, toggleShowAll: () => setShowAllIncome(v => !v), addLabel: lang.addIncome, emptyMsg: lang.noIncome, color: '#7ec95f', dot: '#7ec95f' },
+                  { type: 'expense', label: lang.recentExpenses, data: showAllExpenses ? expenses : expenses.slice(0, 5), total: expenses.length, showAll: showAllExpenses, toggleShowAll: () => setShowAllExpenses(v => !v), addLabel: lang.addExpense, emptyMsg: lang.noExpenses, color: '#e07070', dot: '#e07070' },
                 ].map(col => (
                   <div key={col.type} className="card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{col.label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{col.label}</span>
+                        {col.total > 5 && (
+                          <button
+                            onClick={col.toggleShowAll}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0, transition: 'color 0.15s' }}
+                            onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.7)'}
+                            onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
+                          >
+                            {col.showAll ? 'Show less' : 'View all'}
+                          </button>
+                        )}
+                      </div>
                       <button
                         className="btn-primary"
                         onClick={() => setModal({ type: col.type })}

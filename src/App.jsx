@@ -9,6 +9,7 @@ import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Profile from './pages/Profile'
 import UpdatePassword from './pages/UpdatePassword'
+import NotFound from './pages/NotFound'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -89,7 +90,7 @@ export default function App() {
         <Profile session={session} language={language} onLanguageChange={setLanguage} />
       } />
       <Route path="/update-password" element={<UpdatePassword />} />
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }

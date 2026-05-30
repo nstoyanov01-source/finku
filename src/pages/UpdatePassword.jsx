@@ -11,6 +11,8 @@ export default function UpdatePassword() {
   const [checking, setChecking] = useState(true)
   const [hasSession, setHasSession] = useState(false)
 
+  useEffect(() => { document.title = 'Reset Password · Finku' }, [])
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setHasSession(!!session)

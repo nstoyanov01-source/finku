@@ -90,13 +90,13 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
           <div>
             <label className="label">{lang.description}</label>
-            <input className="input-field" value={form.description} onChange={e => update('description', e.target.value)} placeholder={type === 'income' ? 'Website project' : 'Adobe Creative Cloud'} maxLength={200} />
+            <input className="input-field" value={form.description} onChange={e => update('description', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()} placeholder={type === 'income' ? 'Website project' : 'Adobe Creative Cloud'} maxLength={200} />
           </div>
 
           {type === 'income' && (
             <div>
               <label className="label">{lang.client}</label>
-              <input className="input-field" value={form.client} onChange={e => update('client', e.target.value)} placeholder="Client name" maxLength={100} />
+              <input className="input-field" value={form.client} onChange={e => update('client', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()} placeholder="Client name" maxLength={100} />
             </div>
           )}
 
@@ -114,7 +114,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label className="label">{lang.amount}</label>
-              <input className="input-field" type="number" min="0" max="9999999" step="0.01" value={form.amount} onChange={e => update('amount', e.target.value)} placeholder="1200.00" />
+              <input className="input-field" type="number" min="0" max="9999999" step="0.01" value={form.amount} onChange={e => update('amount', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()} placeholder="1200.00" />
             </div>
             <div>
               <label className="label">{lang.date}</label>

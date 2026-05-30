@@ -1,8 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+function translateError(msg) {
+  if (msg.includes('Invalid login credentials')) return 'Wrong email or password. Please try again.'
+  if (msg.includes('Email not confirmed')) return 'Please check your email and confirm your account first.'
+  if (msg.includes('User already registered')) return 'An account with this email already exists. Try logging in.'
+  if (msg.includes('Password should be at least 6 characters')) return 'Password must be at least 6 characters.'
+  return 'Something went wrong. Please try again.'
+}
+
 export default function Auth() {
-  const [mode, setMode] = useState('login') // 'login' | 'signup' | 'reset'
+  const [searchParams] = useSearchParams()
+  const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -10,7 +20,16 @@ export default function Auth() {
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)
 
+  useEffect(() => { document.title = 'Sign in · Finku' }, [])
+
   function switchMode(next) { setMode(next); setError(''); setResetSent(false) }
+
+  async function handleGoogleSignIn() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'https://finku.eu/dashboard' },
+    })
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -21,7 +40,7 @@ export default function Auth() {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/update-password`,
       })
-      if (error) setError(error.message)
+      if (error) setError(translateError(error.message))
       else setResetSent(true)
       setLoading(false)
       return
@@ -29,10 +48,10 @@ export default function Auth() {
 
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      if (error) setError(translateError(error.message))
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password })
-      if (error) { setError(error.message); setLoading(false); return }
+      if (error) { setError(translateError(error.message)); setLoading(false); return }
       if (data?.user) {
         await supabase.from('profiles').upsert({ id: data.user.id, first_name: name.trim() })
       }
@@ -137,6 +156,34 @@ export default function Auth() {
           transition: color 0.15s;
         }
         .auth-forgot:hover { color: rgba(240,237,228,0.7); }
+
+        .google-btn {
+          width: 100%;
+          background: #161614;
+          border: 1px solid rgba(240,237,228,0.15);
+          border-radius: 10px;
+          padding: 11px 16px;
+          color: #f0ede4;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .google-btn:hover { border-color: rgba(240,237,228,0.3); background: rgba(240,237,228,0.04); }
+
+        .auth-divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 1rem 0;
+        }
+        .auth-divider-line { flex: 1; height: 1px; background: rgba(240,237,228,0.08); }
+        .auth-divider-text { font-size: 12px; color: rgba(240,237,228,0.3); }
       `}</style>
 
       <div className="auth-page">
@@ -187,6 +234,19 @@ export default function Auth() {
             ) : (
               <>
                 <h2>{mode === 'login' ? 'Log in to your account' : 'Create your account'}</h2>
+
+                <button type="button" className="google-btn" onClick={handleGoogleSignIn}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                    <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <div className="auth-divider">
+                  <div className="auth-divider-line" />
+                  <span className="auth-divider-text">or</span>
+                  <div className="auth-divider-line" />
+                </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {mode === 'signup' && (

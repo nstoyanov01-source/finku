@@ -25,6 +25,8 @@ export default function Landing() {
   const heroRef = useRef(null)
   const [openFaq, setOpenFaq] = useState(null)
 
+  useEffect(() => { document.title = 'Finku — Your freelance finances, simplified' }, [])
+
   useEffect(() => {
     const els = document.querySelectorAll('.reveal')
     const observer = new IntersectionObserver((entries) => {
@@ -507,11 +509,11 @@ export default function Landing() {
 
         .footer-link {
           font-size: 13px;
-          color: rgba(240,237,228,0.25);
+          color: rgba(240,237,228,0.45);
           text-decoration: none;
           transition: color 0.2s;
         }
-        .footer-link:hover { color: rgba(240,237,228,0.55); }
+        .footer-link:hover { color: rgba(240,237,228,0.75); }
 
         @media (max-width: 700px) {
           nav { padding: 1.25rem 1.5rem; }
@@ -534,7 +536,7 @@ export default function Landing() {
           <div className="nav-logo">Finku</div>
           <div className="nav-right">
             <button className="btn-ghost" onClick={() => navigate('/auth')}>Log in</button>
-            <button className="btn-cta" onClick={() => navigate('/auth')}>Get started free</button>
+            <button className="btn-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
           </div>
         </nav>
 
@@ -553,7 +555,7 @@ export default function Landing() {
           </p>
 
           <div className="hero-actions reveal" style={{ transitionDelay: '0.3s' }}>
-            <button className="btn-primary-lg" onClick={() => navigate('/auth')}>
+            <button className="btn-primary-lg" onClick={() => navigate('/auth?mode=signup')}>
               Start for free
             </button>
             <span className="hero-note">No credit card · Takes 30 seconds</span>
@@ -728,13 +730,16 @@ export default function Landing() {
         <section className="cta-section reveal">
           <h2 className="cta-title">Start knowing your numbers.</h2>
           <p className="cta-sub">Free to use. No credit card. Takes 30 seconds.</p>
-          <button className="btn-primary-lg" onClick={() => navigate('/auth')}>
+          <button className="btn-primary-lg" onClick={() => navigate('/auth?mode=signup')}>
             Create your account
           </button>
         </section>
 
         <footer>
-          <div className="footer-logo">Finku</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div className="footer-logo">Finku</div>
+            <span className="footer-note">© 2026</span>
+          </div>
           <div className="footer-note">Tax estimates are approximate and do not constitute tax advice.</div>
           <div className="footer-links">
             <Link to="/privacy" className="footer-link">Privacy Policy</Link>

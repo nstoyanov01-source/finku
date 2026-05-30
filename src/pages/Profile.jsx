@@ -53,6 +53,10 @@ export default function Profile({ session, language, onLanguageChange }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [pwResetSent, setPwResetSent] = useState(false)
+  const [pwResetLoading, setPwResetLoading] = useState(false)
+
+  useEffect(() => { document.title = 'Profile · Finku' }, [])
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteSuccess, setDeleteSuccess] = useState(false)
@@ -82,6 +86,15 @@ export default function Profile({ session, language, onLanguageChange }) {
       await supabase.auth.signOut()
       navigate('/')
     }, 2500)
+  }
+
+  async function handleChangePassword() {
+    setPwResetLoading(true)
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://finku.eu/update-password',
+    })
+    setPwResetLoading(false)
+    setPwResetSent(true)
   }
 
   async function handleLanguageChange(l) {
@@ -362,6 +375,32 @@ export default function Profile({ session, language, onLanguageChange }) {
               <label className="label">{pl.emailLabel}</label>
               <div className="profile-readonly">{email}</div>
             </div>
+          </div>
+
+          {/* Change password */}
+          <div className="profile-section">
+            <div className="profile-section-title">Security</div>
+            {pwResetSent ? (
+              <p style={{ fontSize: 13, color: '#c8f03a', lineHeight: 1.6 }}>
+                Password reset email sent. Check your inbox.
+              </p>
+            ) : (
+              <button
+                onClick={handleChangePassword}
+                disabled={pwResetLoading}
+                style={{
+                  width: '100%', padding: '10px 16px', borderRadius: 10,
+                  border: '1px solid rgba(240,237,228,0.12)',
+                  background: 'none', color: 'rgba(240,237,228,0.7)',
+                  fontFamily: 'DM Sans, sans-serif', fontSize: 14, fontWeight: 500,
+                  cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+                }}
+                onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.25)'; e.currentTarget.style.color = '#f0ede4' }}
+                onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.12)'; e.currentTarget.style.color = 'rgba(240,237,228,0.7)' }}
+              >
+                {pwResetLoading ? '…' : 'Change password'}
+              </button>
+            )}
           </div>
 
           {/* Language */}
