@@ -1,0 +1,12 @@
+{
+  "name": "Finku",
+  "short_name": "Finku",
+  "description": "Your freelance finances, simplified.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0e0c",
+  "theme_color": "#0e0e0c",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
