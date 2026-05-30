@@ -519,6 +519,14 @@ export default function Landing() {
           .how-grid { grid-template-columns: 1fr; gap: 2rem; }
           footer { padding: 1.5rem; }
         }
+
+        @media (max-width: 640px) {
+          .dashboard-preview { display: none; }
+          .hero { padding: 6rem 1.5rem 3rem; }
+          .hero-sub { font-size: 16px; }
+          .features-grid { grid-template-columns: 1fr; }
+          nav .nav-right .btn-ghost { display: none; }
+        }
       `}</style>
 
       <div className="landing">

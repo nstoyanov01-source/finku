@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
 
-export default function AddEntryModal({ type, userId, language, onClose, onSaved, initialData, entryId }) {
+export default function AddEntryModal({ type, userId, language, onClose, onSaved, onDeleted, initialData, entryId }) {
   const lang = t[language]
   const isEdit = !!entryId
+  const submitting = useRef(false)
 
   const [form, setForm] = useState(initialData ? {
     description: initialData.description || '',
@@ -25,6 +26,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
   function update(key, val) { setForm(f => ({ ...f, [key]: val })) }
 
   async function handleSave() {
+    if (submitting.current) return
     const desc = form.description.trim()
     const amt = parseFloat(form.amount)
 
@@ -33,6 +35,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     if (amt < 0) { setError(lang.amountNegative); return }
     if (amt > 9999999) { setError(lang.amountTooLarge); return }
 
+    submitting.current = true
     setLoading(true)
     setError('')
     const table = type === 'income' ? 'income' : 'expenses'
@@ -42,13 +45,13 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
         ? { description: desc, client: form.client.trim(), amount: amt, date: form.date }
         : { description: desc, category: form.category, amount: amt, date: form.date }
       const { error } = await supabase.from(table).update(patch).eq('id', entryId)
-      if (error) { setError(error.message); setLoading(false); return }
+      if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
     } else {
       const payload = type === 'income'
         ? { user_id: userId, description: desc, client: form.client.trim(), amount: amt, date: form.date }
         : { user_id: userId, description: desc, category: form.category, amount: amt, date: form.date }
       const { error } = await supabase.from(table).insert(payload)
-      if (error) { setError(error.message); setLoading(false); return }
+      if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
     }
 
     onSaved()
@@ -56,11 +59,13 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
   }
 
   async function handleDelete() {
+    if (submitting.current) return
+    submitting.current = true
     setLoading(true)
     const table = type === 'income' ? 'income' : 'expenses'
     const { error } = await supabase.from(table).delete().eq('id', entryId)
-    if (error) { setError(error.message); setLoading(false); return }
-    onSaved()
+    if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
+    if (onDeleted) onDeleted(); else onSaved()
     onClose()
   }
 

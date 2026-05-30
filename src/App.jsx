@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Profile from './pages/Profile'
+import UpdatePassword from './pages/UpdatePassword'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -24,6 +25,11 @@ export default function App() {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setSession(session)
+        navigate('/update-password')
+        return
+      }
       setSession(session)
       if (session) loadProfile(session.user.id)
       else { setLanguage(null); setOnboarded(null); setLoading(false) }
@@ -82,6 +88,7 @@ export default function App() {
         !onboarded ? <Navigate to="/language" /> :
         <Profile session={session} language={language} onLanguageChange={setLanguage} />
       } />
+      <Route path="/update-password" element={<UpdatePassword />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )

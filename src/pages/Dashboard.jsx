@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
 import AddEntryModal from '../components/AddEntryModal'
 import CSVImport from '../components/CSVImport'
+import Toast, { useToast } from '../components/Toast'
 
 function greeting(lang) {
   const h = new Date().getHours()
@@ -13,7 +14,15 @@ function greeting(lang) {
 }
 
 function fmt(n) {
-  return Math.round(n).toLocaleString('bg-BG')
+  return Math.round(n).toLocaleString('en-US')
+}
+
+function formatDate(dateStr, language) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return date.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
 }
 
 function calcTax(grossIncome, monthsActive) {
@@ -34,6 +43,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
+  const { toasts, showToast } = useToast()
   const [balance, setBalance] = useState('')
   const [showBalanceInput, setShowBalanceInput] = useState(false)
   const [firstName, setFirstName] = useState('')
@@ -334,7 +344,24 @@ export default function Dashboard({ session, language, onLanguageChange }) {
           border-radius: 50%;
         }
 
-        @media (max-width: 600px) {
+        .entries-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .welcome-card {
+          background: #161614;
+          border: 1px solid rgba(240,237,228,0.08);
+          border-radius: 16px;
+          padding: 3rem 2rem;
+          text-align: center;
+          margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+          .entries-grid { grid-template-columns: 1fr; }
           .dash-nav { padding: 0 1rem; }
           .dash-content { padding: 1.5rem 1rem 3rem; }
         }
@@ -464,7 +491,28 @@ export default function Dashboard({ session, language, onLanguageChange }) {
               </div>
 
               {/* Income + Expenses columns */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+              {income.length === 0 && expenses.length === 0 ? (
+                <div className="welcome-card">
+                  <div style={{ fontSize: 32, marginBottom: '0.75rem' }}>👋</div>
+                  <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 24, color: '#f0ede4', letterSpacing: '-0.3px', marginBottom: '0.75rem' }}>
+                    Welcome to Finku
+                  </h2>
+                  <p style={{ fontSize: 14, color: 'rgba(240,237,228,0.45)', lineHeight: 1.7, maxWidth: 400, margin: '0 auto 1.75rem' }}>
+                    Start by adding your first income entry or uploading a Revolut CSV. Your tax estimate will update automatically.
+                  </p>
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      className="btn-primary"
+                      onClick={() => setModal({ type: 'income' })}
+                      style={{ padding: '10px 20px' }}
+                    >
+                      + {lang.addIncome}
+                    </button>
+                    <CSVImport userId={userId} language={language} onImported={fetchData} />
+                  </div>
+                </div>
+              ) : (
+              <div className="entries-grid">
                 {[
                   { type: 'income', label: lang.recentIncome, data: income.slice(0, 5), addLabel: lang.addIncome, emptyMsg: lang.noIncome, color: '#7ec95f', dot: '#7ec95f' },
                   { type: 'expense', label: lang.recentExpenses, data: expenses.slice(0, 5), addLabel: lang.addExpense, emptyMsg: lang.noExpenses, color: '#e07070', dot: '#e07070' },
@@ -491,7 +539,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                               <div className="entry-dot" style={{ background: col.dot }} />
                               <div style={{ minWidth: 0 }}>
                                 <div className="entry-desc">{row.description}</div>
-                                <div className="entry-date">{row.date}</div>
+                                <div className="entry-date">{formatDate(row.date, language)}</div>
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
@@ -518,6 +566,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                   </div>
                 ))}
               </div>
+              )}
 
               {/* Bar Chart */}
               <div className="card" style={{ marginBottom: '1.5rem' }}>
@@ -564,11 +613,17 @@ export default function Dashboard({ session, language, onLanguageChange }) {
           userId={userId}
           language={language}
           onClose={() => setModal(null)}
-          onSaved={fetchData}
+          onSaved={() => {
+            fetchData()
+            if (modal.entry) showToast('Entry updated ✓', 'success')
+            else showToast(modal.type === 'income' ? 'Income added ✓' : 'Expense added ✓', 'success')
+          }}
+          onDeleted={() => { fetchData(); showToast('Entry deleted', 'success') }}
           initialData={modal.entry}
           entryId={modal.entry?.id}
         />
       )}
+      <Toast toasts={toasts} />
     </>
   )
 }

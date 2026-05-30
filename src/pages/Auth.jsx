@@ -2,17 +2,30 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function Auth() {
-  const [mode, setMode] = useState('login')
+  const [mode, setMode] = useState('login') // 'login' | 'signup' | 'reset'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resetSent, setResetSent] = useState(false)
+
+  function switchMode(next) { setMode(next); setError(''); setResetSent(false) }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    if (mode === 'reset') {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      })
+      if (error) setError(error.message)
+      else setResetSent(true)
+      setLoading(false)
+      return
+    }
 
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -80,6 +93,16 @@ export default function Auth() {
           color: #e07070;
         }
 
+        .auth-success {
+          background: rgba(200,240,58,0.07);
+          border: 1px solid rgba(200,240,58,0.2);
+          border-radius: 8px;
+          padding: 12px 14px;
+          font-size: 13px;
+          color: #c8f03a;
+          line-height: 1.6;
+        }
+
         .auth-switch {
           text-align: center;
           font-size: 13px;
@@ -98,6 +121,22 @@ export default function Auth() {
           font-family: 'DM Sans', sans-serif;
         }
         .auth-switch-btn:hover { color: #c8f03a; }
+
+        .auth-forgot {
+          background: none;
+          border: none;
+          color: rgba(240,237,228,0.35);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          cursor: pointer;
+          padding: 0;
+          margin-top: 4px;
+          display: block;
+          text-align: right;
+          width: 100%;
+          transition: color 0.15s;
+        }
+        .auth-forgot:hover { color: rgba(240,237,228,0.7); }
       `}</style>
 
       <div className="auth-page">
@@ -106,64 +145,112 @@ export default function Auth() {
           <p className="auth-tagline">Your freelance finances, simplified.</p>
 
           <div className="auth-card">
-            <h2>{mode === 'login' ? 'Log in to your account' : 'Create your account'}</h2>
+            {mode === 'reset' ? (
+              <>
+                <h2>Reset your password</h2>
+                {resetSent ? (
+                  <>
+                    <div className="auth-success">
+                      Check your email — we've sent a password reset link to <strong>{email}</strong>.
+                    </div>
+                    <p className="auth-switch">
+                      <button className="auth-switch-btn" onClick={() => switchMode('login')}>← Back to login</button>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div>
+                        <label className="label">Email address</label>
+                        <input
+                          className="input-field"
+                          type="email"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          required
+                          autoFocus
+                          autoComplete="email"
+                        />
+                      </div>
+                      {error && <div className="auth-error">{error}</div>}
+                      <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
+                        {loading ? 'Sending…' : 'Send reset link'}
+                      </button>
+                    </form>
+                    <p className="auth-switch">
+                      <button className="auth-switch-btn" onClick={() => switchMode('login')}>← Back to login</button>
+                    </p>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <h2>{mode === 'login' ? 'Log in to your account' : 'Create your account'}</h2>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {mode === 'signup' && (
-                <div>
-                  <label className="label">First name</label>
-                  <input
-                    className="input-field"
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Nikola"
-                    required
-                    autoComplete="given-name"
-                  />
-                </div>
-              )}
-              <div>
-                <label className="label">Email address</label>
-                <input
-                  className="input-field"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  autoComplete="email"
-                />
-              </div>
-              <div>
-                <label className="label">Password</label>
-                <input
-                  className="input-field"
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                />
-              </div>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {mode === 'signup' && (
+                    <div>
+                      <label className="label">First name</label>
+                      <input
+                        className="input-field"
+                        type="text"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder="Nikola"
+                        required
+                        autoComplete="given-name"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="label">Email address</label>
+                    <input
+                      className="input-field"
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Password</label>
+                    <input
+                      className="input-field"
+                      type="password"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    />
+                    {mode === 'login' && (
+                      <button type="button" className="auth-forgot" onClick={() => switchMode('reset')}>
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
 
-              {error && <div className="auth-error">{error}</div>}
+                  {error && <div className="auth-error">{error}</div>}
 
-              <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
-                {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
-              </button>
-            </form>
+                  <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
+                    {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
+                  </button>
+                </form>
 
-            <p className="auth-switch">
-              {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-              <button
-                className="auth-switch-btn"
-                onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
-              >
-                {mode === 'login' ? 'Sign up' : 'Log in'}
-              </button>
-            </p>
+                <p className="auth-switch">
+                  {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+                  <button
+                    className="auth-switch-btn"
+                    onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
+                  >
+                    {mode === 'login' ? 'Sign up' : 'Log in'}
+                  </button>
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>
