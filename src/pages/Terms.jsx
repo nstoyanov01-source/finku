@@ -75,7 +75,7 @@ export default function Terms() {
             <p className="terms-p">We are Nikola Stoyanov, doing business as Finku, a company registered in Bulgaria at Sava Radulov 3, Varna 9002.</p>
             <p className="terms-p">We operate the website finku.eu as well as any other related products and services that refer or link to these legal terms (collectively, the "Services").</p>
             <p className="terms-p">Finku is a financial tracking web application for freelancers and self-employed individuals. It allows users to log income and expenses, view a live tax estimate based on their earnings, and understand their approximate tax obligations throughout the year.</p>
-            <p className="terms-p">You can contact us by phone at +359886559511, email at <a href="mailto:privacy@finku.eu" style={{ color: '#c8f03a' }}>privacy@finku.eu</a>, or by mail to Sava Radulov 3, Varna 9002, Bulgaria.</p>
+            <p className="terms-p">You can contact us by phone at +359886559511, email at <a href="mailto:support@finku.eu" style={{ color: '#c8f03a' }}>support@finku.eu</a>, or by mail to Sava Radulov 3, Varna 9002, Bulgaria.</p>
             <p className="terms-p">These Legal Terms constitute a legally binding agreement between you and Nikola Stoyanov concerning your access to and use of the Services. By accessing the Services, you confirm you have read, understood, and agreed to be bound by all of these Legal Terms. IF YOU DO NOT AGREE, YOU MUST DISCONTINUE USE IMMEDIATELY.</p>
             <p className="terms-p">We will provide prior notice of any scheduled changes. Changes become effective 30 days after notice, except security updates and court orders which are effective immediately. The Services are intended for users who are at least 18 years old.</p>
           </div>
@@ -210,7 +210,7 @@ export default function Terms() {
               <p><strong>Nikola Stoyanov (Finku)</strong></p>
               <p>Sava Radulov 3, Varna 9002, Bulgaria</p>
               <p>Phone: +359886559511</p>
-              <p>Email: <a href="mailto:privacy@finku.eu">privacy@finku.eu</a></p>
+              <p>Email: <a href="mailto:support@finku.eu">support@finku.eu</a></p>
               <p>Website: <a href="https://finku.eu">finku.eu</a></p>
             </div>
           </div>
