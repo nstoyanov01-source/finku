@@ -16,6 +16,23 @@
     <meta name="apple-mobile-web-app-title" content="Finku" />
   </head>
   <body>
+    <div id="initial-loader" style="position:fixed;inset:0;background:#0e0e0c;display:flex;align-items:center;justify-content:center;z-index:9999;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+        <svg width="48" height="48" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="14" fill="#c8f03a"/>
+          <text x="32" y="46" font-family="Georgia,serif" font-size="42" font-style="italic" fill="#0e0e0c" text-anchor="middle">f</text>
+        </svg>
+        <div style="width:32px;height:2px;background:rgba(240,237,228,0.1);border-radius:2px;overflow:hidden;">
+          <div id="loader-bar" style="width:0%;height:100%;background:#c8f03a;border-radius:2px;transition:width 0.3s ease;"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      setTimeout(function() {
+        var bar = document.getElementById('loader-bar')
+        if (bar) bar.style.width = '70%'
+      }, 100)
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 const faqs = [
   {
@@ -24,8 +25,17 @@ export default function Landing() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
   const [openFaq, setOpenFaq] = useState(null)
+  const [returning, setReturning] = useState(false)
 
   useEffect(() => { document.title = 'Finku — Your freelance finances, simplified' }, [])
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) { navigate('/dashboard'); return }
+      if (localStorage.getItem('finku_visited')) setReturning(true)
+      localStorage.setItem('finku_visited', 'true')
+    })
+  }, [])
 
   useEffect(() => {
     const els = document.querySelectorAll('.reveal')
@@ -557,10 +567,23 @@ export default function Landing() {
           </p>
 
           <div className="hero-actions reveal" style={{ transitionDelay: '0.3s' }}>
+            {returning && (
+              <button
+                onClick={() => navigate('/auth')}
+                style={{
+                  background: 'none', border: '1px solid rgba(240,237,228,0.2)', color: '#f0ede4',
+                  fontFamily: 'DM Sans, sans-serif', fontSize: 15, fontWeight: 500,
+                  padding: '13px 28px', borderRadius: 10, cursor: 'pointer',
+                  transition: 'border-color 0.15s',
+                }}
+              >
+                Log in
+              </button>
+            )}
             <button className="btn-primary-lg" onClick={() => navigate('/auth?mode=signup')}>
-              Start for free
+              {returning ? 'Create free account' : 'Start for free'}
             </button>
-            <span className="hero-note">No credit card · Takes 30 seconds</span>
+            {!returning && <span className="hero-note">No credit card · Takes 30 seconds</span>}
           </div>
 
           <div className="reveal" style={{ transitionDelay: '0.35s', marginBottom: '0.5rem' }}>
