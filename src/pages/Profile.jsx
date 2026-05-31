@@ -49,12 +49,16 @@ export default function Profile({ session, language, onLanguageChange }) {
   const userId = session.user.id
   const email = session.user.email
 
+  const isBg = language === 'bg'
   const [firstName, setFirstName] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [pwResetSent, setPwResetSent] = useState(false)
   const [pwResetLoading, setPwResetLoading] = useState(false)
+  const [currentLegalForm, setCurrentLegalForm] = useState(null)
+  const [showLegalFormEdit, setShowLegalFormEdit] = useState(false)
+  const [legalFormSaved, setLegalFormSaved] = useState(false)
 
   useEffect(() => { document.title = 'Profile · Finku' }, [])
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -62,8 +66,11 @@ export default function Profile({ session, language, onLanguageChange }) {
   const [deleteSuccess, setDeleteSuccess] = useState(false)
 
   useEffect(() => {
-    supabase.from('profiles').select('first_name').eq('id', userId).single()
-      .then(({ data }) => { if (data?.first_name) setFirstName(data.first_name) })
+    supabase.from('profiles').select('first_name, legal_form').eq('id', userId).single()
+      .then(({ data }) => {
+        if (data?.first_name) setFirstName(data.first_name)
+        if (data?.legal_form) setCurrentLegalForm(data.legal_form)
+      })
   }, [userId])
 
   async function handleSaveName() {
@@ -95,6 +102,13 @@ export default function Profile({ session, language, onLanguageChange }) {
     })
     setPwResetLoading(false)
     setPwResetSent(true)
+  }
+
+  async function handleLegalFormChange(value) {
+    await supabase.from('profiles').update({ legal_form: value }).eq('id', userId)
+    setCurrentLegalForm(value)
+    setLegalFormSaved(true)
+    setTimeout(() => { setShowLegalFormEdit(false); setLegalFormSaved(false) }, 1500)
   }
 
   async function handleLanguageChange(l) {
@@ -332,6 +346,22 @@ export default function Profile({ session, language, onLanguageChange }) {
           transition: color 0.15s;
         }
         .profile-legal-link:hover { color: rgba(240,237,228,0.6); }
+
+        .lf-option {
+          background: rgba(240,237,228,0.03);
+          border: 1px solid rgba(240,237,228,0.08);
+          border-radius: 12px;
+          padding: 0.85rem 1.25rem;
+          text-align: left;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+          font-family: 'DM Sans', sans-serif;
+          width: 100%;
+        }
+        .lf-option:hover { border-color: rgba(240,237,228,0.2); background: rgba(240,237,228,0.05); }
+        .lf-option.lf-active { border-color: #c8f03a; background: rgba(200,240,58,0.06); }
+        .lf-option-label { font-weight: 500; font-size: 14px; color: #f0ede4; }
+        .lf-option-sub { font-size: 12px; color: rgba(240,237,228,0.4); margin-top: 2px; }
       `}</style>
 
       <div className="profile-page">
@@ -400,6 +430,52 @@ export default function Profile({ session, language, onLanguageChange }) {
               >
                 {pwResetLoading ? '…' : 'Change password'}
               </button>
+            )}
+          </div>
+
+          {/* Legal form */}
+          <div className="profile-section">
+            <div className="profile-section-title">{isBg ? 'Правен статус' : 'Legal form'}</div>
+            {showLegalFormEdit ? (
+              <>
+                {legalFormSaved ? (
+                  <p style={{ fontSize: 13, color: '#c8f03a' }}>Updated ✓</p>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                      {[
+                        { value: 'svobodna_profesiya', label: 'Свободна професия', sub: isBg ? 'Фрийлансър, консултант, дизайнер, разработчик' : 'Freelancer, consultant, designer, developer' },
+                        { value: 'ET', label: 'ЕТ (Едноличен търговец)', sub: isBg ? 'Регистриран едноличен търговец' : 'Registered sole trader' },
+                        { value: 'just_tracking', label: isBg ? 'Само проследяване' : 'Just tracking', sub: isBg ? 'Искам само да проследявам приходи и разходи' : 'I just want to track income and expenses' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          className={`lf-option${currentLegalForm === opt.value ? ' lf-active' : ''}`}
+                          onClick={() => handleLegalFormChange(opt.value)}
+                        >
+                          <div className="lf-option-label">{opt.label}</div>
+                          <div className="lf-option-sub">{opt.sub}</div>
+                        </button>
+                      ))}
+                    </div>
+                    <button className="delete-cancel-btn" onClick={() => setShowLegalFormEdit(false)}>
+                      {lang.cancel}
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 14, color: 'rgba(240,237,228,0.65)' }}>
+                  {currentLegalForm === 'svobodna_profesiya' && 'Свободна професия'}
+                  {currentLegalForm === 'ET' && 'ЕТ (Едноличен търговец)'}
+                  {currentLegalForm === 'just_tracking' && (isBg ? 'Само проследяване' : 'Just tracking')}
+                  {!currentLegalForm && <span style={{ color: 'rgba(240,237,228,0.3)' }}>{isBg ? 'Не е зададено' : 'Not set'}</span>}
+                </span>
+                <button className="delete-cancel-btn" onClick={() => setShowLegalFormEdit(true)}>
+                  {isBg ? 'Промени' : 'Change'}
+                </button>
+              </div>
             )}
           </div>
 

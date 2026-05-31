@@ -18,6 +18,7 @@ export default function App() {
   const [language, setLanguage] = useState(null)
   const [onboarded, setOnboarded] = useState(null)
   const [legalForm, setLegalForm] = useState(null)
+  const [needsLegalForm, setNeedsLegalForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -36,7 +37,7 @@ export default function App() {
       }
       setSession(session)
       if (session) loadProfile(session.user.id)
-      else { setLanguage(null); setOnboarded(null); setLegalForm(null); setLoading(false) }
+      else { setLanguage(null); setOnboarded(null); setLegalForm(null); setNeedsLegalForm(false); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
@@ -51,6 +52,7 @@ export default function App() {
     setLanguage(data?.language || 'en')
     setOnboarded(data?.onboarded ?? false)
     setLegalForm(data?.legal_form || null)
+    setNeedsLegalForm(data?.onboarded === true && !data?.legal_form)
     setLoading(false)
   }
 
@@ -61,6 +63,7 @@ export default function App() {
 
   async function handleLegalFormComplete() {
     setOnboarded(true)
+    setNeedsLegalForm(false)
     navigate('/dashboard')
   }
 
@@ -87,12 +90,12 @@ export default function App() {
       } />
       <Route path="/legal-form" element={
         !session ? <Navigate to="/auth" /> :
-        onboarded ? <Navigate to="/dashboard" /> :
         <LegalFormSelect userId={session.user.id} language={language || 'en'} onComplete={handleLegalFormComplete} />
       } />
       <Route path="/dashboard" element={
         !session ? <Navigate to="/auth" /> :
         !onboarded ? <Navigate to="/language" /> :
+        needsLegalForm ? <Navigate to="/legal-form" /> :
         <Dashboard session={session} language={language} legalForm={legalForm} onLanguageChange={setLanguage} />
       } />
       <Route path="/privacy" element={<Privacy />} />
