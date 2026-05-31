@@ -32,15 +32,17 @@ function formatCurrentDate(language) {
   })
 }
 
-function calcTax(grossIncome, monthsActive) {
-  const taxableIncome = grossIncome * 0.75
+function calcTax(grossIncome, totalExpenses, monthsActive, legalForm) {
+  const insurancePerMonth = 153
+  const taxableIncome = legalForm === 'ET'
+    ? Math.max(0, grossIncome - totalExpenses)
+    : grossIncome * 0.75
   const ddfl = taxableIncome * 0.15
-  const insurancePerMonth = 145
   const insurance = insurancePerMonth * Math.max(1, monthsActive)
   return { ddfl: Math.round(ddfl), insurance: Math.round(insurance), total: Math.round(ddfl + insurance) }
 }
 
-export default function Dashboard({ session, language, onLanguageChange }) {
+export default function Dashboard({ session, language, legalForm, onLanguageChange }) {
   const lang = t[language]
   const navigate = useNavigate()
   const userId = session.user.id
@@ -87,7 +89,8 @@ export default function Dashboard({ session, language, onLanguageChange }) {
   const currentMonth = new Date().getMonth() + 1
   const avgMonthly = currentMonth > 0 ? totalIncome / currentMonth : 0
 
-  const tax = calcTax(totalIncome, currentMonth)
+  const legalFormEff = legalForm || 'svobodna_profesiya'
+  const tax = calcTax(totalIncome, totalExpenses, currentMonth, legalFormEff)
   const projectedAnnual = (totalIncome / currentMonth) * 12
   const balanceNum = parseFloat(balance) || 0
   const hasEnough = balanceNum >= tax.total
@@ -383,6 +386,16 @@ export default function Dashboard({ session, language, onLanguageChange }) {
               <option value="en">EN</option>
               <option value="bg">БГ</option>
             </select>
+            <button
+              onClick={() => navigate('/invoice/new')}
+              style={{
+                background: 'rgba(200,240,58,0.1)', border: '1px solid rgba(200,240,58,0.2)',
+                color: '#c8f03a', fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 500,
+                padding: '6px 14px', borderRadius: 8, cursor: 'pointer', transition: 'background 0.15s',
+              }}
+            >
+              + {language === 'bg' ? 'Нова фактура' : 'New invoice'}
+            </button>
             <button className="dash-nav-btn" onClick={() => navigate('/profile')}>
               Profile
             </button>
@@ -440,7 +453,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
               )}
 
               {/* Tax Banner */}
-              <div className="tax-banner">
+              {legalFormEff !== 'just_tracking' && <div className="tax-banner">
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <div className="tax-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c8f03a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -471,13 +484,21 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                           lineHeight: 1.6, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
                           whiteSpace: 'normal',
                         }}>
-                          {language === 'bg'
-                            ? 'Брутен доход × 75% = облагаем доход. Облагаем доход × 15% = данък. Плюс 145 € месечни осигуровки.'
-                            : 'Gross income × 75% = taxable income. Taxable income × 15% = income tax. Plus 145 € fixed monthly insurance contributions.'}
+                          {legalFormEff === 'ET'
+                            ? (language === 'bg'
+                              ? 'Печалба (приходи − разходи) × 15% = данък. Плюс 153 € месечни осигуровки.'
+                              : 'Profit (income − expenses) × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')
+                            : (language === 'bg'
+                              ? 'Брутен доход × 75% = облагаем доход. Облагаем доход × 15% = данък. Плюс 153 € месечни осигуровки.'
+                              : 'Gross income × 75% = taxable income. Taxable income × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')}
                         </div>
                       )}
                     </div>
-                    <div className="tax-desc">{lang.taxDesc}</div>
+                    <div className="tax-desc">
+                      {legalFormEff === 'ET'
+                        ? (language === 'bg' ? 'На база реална печалба (приходи − разходи) × 15%' : 'Based on actual profit (income − expenses) × 15%')
+                        : lang.taxDesc}
+                    </div>
                   </div>
                 </div>
 
@@ -535,7 +556,7 @@ export default function Dashboard({ session, language, onLanguageChange }) {
                     )}
                   </div>
                 </div>
-              </div>
+              </div>}
 
               {/* Income + Expenses columns */}
               {income.length === 0 && expenses.length === 0 ? (

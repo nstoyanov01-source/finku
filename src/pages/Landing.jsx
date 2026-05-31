@@ -296,7 +296,7 @@ export default function Landing() {
 
         .features-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(3, 1fr);
           gap: 1.5px;
           background: rgba(240,237,228,0.08);
           border-radius: 16px;
@@ -522,11 +522,13 @@ export default function Landing() {
           footer { padding: 1.5rem; }
         }
 
+        @media (max-width: 700px) {
+          .features-grid { grid-template-columns: 1fr !important; }
+        }
         @media (max-width: 640px) {
           .dashboard-preview { display: none; }
           .hero { padding: 6rem 1.5rem 3rem; }
           .hero-sub { font-size: 16px; }
-          .features-grid { grid-template-columns: 1fr; }
           nav .nav-right .btn-ghost { display: none; }
         }
       `}</style>
@@ -622,14 +624,9 @@ export default function Landing() {
           <div className="features-grid">
             {[
               {
-                icon: '↑', iconClass: 'icon-green',
-                title: 'Income tracking',
-                desc: 'Log payments as they come in. Add a client name, amount, and date — that\'s it. Or import directly from your Revolut CSV.',
-              },
-              {
-                icon: '↓', iconClass: 'icon-red',
-                title: 'Expense tracking',
-                desc: 'Track business expenses by category. Software, equipment, travel — see exactly where money goes.',
+                icon: '↑↓', iconClass: 'icon-green',
+                title: 'Income & expense tracking',
+                desc: 'Log payments and business expenses as they happen. Add a client, amount, and date — or import directly from your Revolut CSV.',
               },
               {
                 icon: '€', iconClass: 'icon-amber',
@@ -637,9 +634,16 @@ export default function Landing() {
                 desc: 'Based on your actual income, Finku calculates your income tax and insurance contributions in real time. No surprises.',
               },
               {
-                icon: '↻', iconClass: 'icon-amber',
-                title: 'Revolut CSV import',
-                desc: 'Don\'t type everything manually. Export from Revolut and upload — Finku maps income and expenses automatically.',
+                icon: (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                ), iconClass: 'icon-amber',
+                title: 'Invoice generator',
+                desc: 'Create professional EUR invoices to send to your clients in seconds. Auto-numbered, downloadable as PDF, income tracked automatically.',
               },
             ].map((f, i) => (
               <div key={i} className="feature-card reveal" style={{ transitionDelay: `${i * 0.07}s` }}>
@@ -647,6 +651,11 @@ export default function Landing() {
                 <div className="feature-title">{f.title}</div>
                 <div className="feature-desc">{f.desc}</div>
               </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '1.75rem', flexWrap: 'wrap', marginTop: '1.25rem', paddingLeft: 2 }}>
+            {['✓ Revolut CSV import', '✓ English & Bulgarian', '✓ EU data storage'].map(item => (
+              <span key={item} style={{ fontSize: 13, color: 'rgba(240,237,228,0.35)' }}>{item}</span>
             ))}
           </div>
         </section>
