@@ -51,6 +51,9 @@ export const t = {
     incomeLabel: 'Income',
     expensesLabel: 'Expenses',
 
+    taxAuthority: 'NRA',
+    taxAuthorityFull: 'National Revenue Agency (NRA)',
+
     disclaimer: 'Tax estimate is approximate and does not constitute tax advice. Consult an accountant for accurate figures.',
 
     description: 'Description',
@@ -140,6 +143,9 @@ export const t = {
     chartTitle: 'Приходи и разходи по месеци',
     incomeLabel: 'Приходи',
     expensesLabel: 'Разходи',
+
+    taxAuthority: 'НАП',
+    taxAuthorityFull: 'Национална агенция за приходите (НАП)',
 
     disclaimer: 'Прогнозата за данъци е ориентировъчна и не представлява данъчен съвет. Консултирайте се със счетоводител за точни изчисления.',
 
