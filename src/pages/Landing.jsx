@@ -76,7 +76,7 @@ export default function Landing({ language = 'en' }) {
     totalOwed: 'Total owed so far',
     projected: 'Projected annual income',
     ctaCalc: 'Track this automatically, free →',
-    forms: { svobodna: 'Свободна професия', ET: 'ЕТ', tracking: 'Just tracking' },
+    forms: { svobodna: 'Freelancer', ET: 'Sole trader', tracking: 'Just tracking' },
     taxmanTitle: 'Finally know what you owe',
     withoutFinku: 'Without Finku',
     withFinku: 'With Finku',
@@ -641,18 +641,22 @@ export default function Landing({ language = 'en' }) {
 
                   {/* Taxman chasing */}
                   <g style={{ animation: 'chase 2s ease-in-out infinite' }}>
+                    {/* Body with € on chest */}
                     <rect x="170" y="56" width="30" height="40" fill="#c0392b" rx="4"/>
+                    <text x="185" y="80" textAnchor="middle" fill="rgba(255,255,255,0.55)" fontSize="15" fontWeight="700" fontFamily="DM Sans, sans-serif">€</text>
+                    {/* Head — no label */}
                     <circle cx="185" cy="46" r="14" fill="#c0392b"/>
-                    {/* Badge */}
-                    <rect x="176" y="38" width="18" height="16" fill="white" rx="2"/>
-                    <text x="185" y="48" textAnchor="middle" fill="#c0392b" fontSize="6.5" fontWeight="700" fontFamily="DM Sans, sans-serif">{taxAuth}</text>
                     {/* Angry eyes */}
                     <circle cx="181" cy="47" r="2" fill="#7f0000"/>
                     <circle cx="189" cy="47" r="2" fill="#7f0000"/>
-                    {/* Arm with bill */}
+                    {/* Arm holding document */}
                     <line x1="170" y1="67" x2="150" y2="60" stroke="#c0392b" strokeWidth="3.5" strokeLinecap="round"/>
-                    <rect x="114" y="52" width="38" height="20" fill="#f0ede4" rx="3"/>
-                    <text x="133" y="66" textAnchor="middle" fill="#0e0e0c" fontSize="8.5" fontWeight="700" fontFamily="DM Sans, sans-serif">3,240 €</text>
+                    {/* Document: white rect + TAX title + content lines */}
+                    <rect x="112" y="48" width="40" height="28" fill="#f0ede4" rx="3"/>
+                    <text x="132" y="61" textAnchor="middle" fill="#0e0e0c" fontSize="8" fontWeight="700" fontFamily="DM Sans, sans-serif">TAX</text>
+                    <line x1="117" y1="66" x2="147" y2="66" stroke="rgba(0,0,0,0.18)" strokeWidth="1.2"/>
+                    <line x1="117" y1="70" x2="143" y2="70" stroke="rgba(0,0,0,0.12)" strokeWidth="1.2"/>
+                    <line x1="117" y1="73" x2="138" y2="73" stroke="rgba(0,0,0,0.1)" strokeWidth="1.2"/>
                     {/* Other arm */}
                     <line x1="200" y1="67" x2="212" y2="60" stroke="#c0392b" strokeWidth="3.5" strokeLinecap="round"/>
                     {/* Running legs */}

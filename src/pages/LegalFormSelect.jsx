@@ -16,12 +16,12 @@ export default function LegalFormSelect({ userId, language, onComplete }) {
   const options = [
     {
       value: 'svobodna_profesiya',
-      label: 'Свободна професия',
-      sub: isBg ? 'Фрийлансър, консултант, дизайнер, разработчик' : 'Freelancer, consultant, designer, developer',
+      label: isBg ? 'Свободна професия' : 'Freelancer',
+      sub: isBg ? 'Дизайнер, разработчик, консултант' : 'Designer, developer, consultant, creator',
     },
     {
       value: 'ET',
-      label: 'ЕТ (Едноличен търговец)',
+      label: isBg ? 'ЕТ' : 'Sole trader (ЕТ)',
       sub: isBg ? 'Регистриран едноличен търговец' : 'Registered sole trader',
     },
     {
