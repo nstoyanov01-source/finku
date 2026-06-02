@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     q: 'Is this for VAT-registered businesses?',
-    a: 'Not yet. Finku is currently built for freelancers and sole traders who are not VAT registered. VAT tracking is on the roadmap.',
+    a: 'Not yet. Finku is currently built for the self-employed who are not VAT registered. VAT tracking is on the roadmap.',
   },
 ]
 
@@ -25,15 +25,16 @@ function fmt(n) {
   return Math.round(n).toLocaleString('en-US')
 }
 
-function calcEstimate(monthlyIncome, legalForm, months) {
-  const earned = monthlyIncome * months
+function calcEstimate(totalEarned, legalForm) {
+  const currentMonth = new Date().getMonth() + 1
+  const insurance = Math.round(153 * currentMonth)
   if (legalForm === 'tracking') {
-    return { earned: Math.round(earned), taxable: 0, ddfl: 0, insurance: 0, total: 0, annual: Math.round(monthlyIncome * 12) }
+    const projected = Math.round((totalEarned / Math.max(currentMonth, 1)) * 12)
+    return { earned: Math.round(totalEarned), taxable: 0, incomeTax: 0, insurance: 0, total: 0, projected }
   }
-  const taxable = legalForm === 'ET' ? earned : earned * 0.75
-  const ddfl = Math.round(taxable * 0.15)
-  const insurance = Math.round(153 * months)
-  return { earned: Math.round(earned), taxable: Math.round(taxable), ddfl, insurance, total: ddfl + insurance, annual: Math.round(monthlyIncome * 12) }
+  const taxable = legalForm === 'ET' ? totalEarned : totalEarned * 0.75
+  const incomeTax = Math.round(taxable * 0.15)
+  return { earned: Math.round(totalEarned), taxable: Math.round(taxable), incomeTax, insurance, total: incomeTax + insurance }
 }
 
 export default function Landing({ language = 'en' }) {
@@ -45,14 +46,15 @@ export default function Landing({ language = 'en' }) {
   const [calcForm, setCalcForm] = useState('svobodna')
 
   const currentMonth = new Date().getMonth() + 1
-  const monthly = parseFloat(calcIncome) || 0
-  const res = calcEstimate(monthly, calcForm, currentMonth)
+  const earned = parseFloat(calcIncome) || 0
+  const res = calcEstimate(earned, calcForm)
 
   const lx = language === 'bg' ? {
     calcTitle: 'Колко дължиш?',
-    calcSub: 'Въведи месечния си приход — виж прогнозата мигновено. Без регистрация.',
-    placeholder: 'Месечен приход (€)',
-    earned: 'Спечелено досега',
+    calcSub: 'Въведи приходите си за тази година — виж прогнозата мигновено. Без регистрация.',
+    placeholder: 'Приход досега в 2026 (€)',
+    inputHelper: 'Общият ти приход от началото на годината',
+    earned: 'Приход досега',
     taxable: 'Облагаем доход',
     incomeTax: 'Данък (15%)',
     insurance: 'Осигуровки',
@@ -67,9 +69,10 @@ export default function Landing({ language = 'en' }) {
     withLines: ['Жива прогноза за данъци', 'Приходи и разходи проследени', 'Без изненади в края на годината'],
   } : {
     calcTitle: 'How much do you owe?',
-    calcSub: 'Enter your monthly income — see your estimate instantly. No signup needed.',
-    placeholder: 'Monthly income (€)',
-    earned: 'Earned so far',
+    calcSub: 'Enter your income so far this year — see your estimate instantly. No signup needed.',
+    placeholder: 'Earned so far in 2026 (€)',
+    inputHelper: 'Your total income this year to date',
+    earned: 'Your income so far',
     taxable: 'Taxable income',
     incomeTax: 'Income tax (15%)',
     insurance: 'Insurance',
@@ -86,7 +89,7 @@ export default function Landing({ language = 'en' }) {
 
   const taxAuth = language === 'bg' ? 'НАП' : 'NRA'
 
-  useEffect(() => { document.title = 'Finku — Your freelance finances, simplified' }, [])
+  useEffect(() => { document.title = 'Finku — Know what you owe, always' }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -300,7 +303,7 @@ export default function Landing({ language = 'en' }) {
                 Know exactly what<br />you owe, <em>always</em>
               </h1>
               <p className="hero-sub reveal" style={{ transitionDelay: '0.2s' }}>
-                Finku tracks your freelance income and expenses and shows your live tax estimate — so you're never caught off guard at year end.
+                Finku tracks your income and expenses and shows your live tax estimate — so you're never caught off guard at year end.
               </p>
               <div className="hero-actions reveal" style={{ transitionDelay: '0.3s' }}>
                 {returning && (
@@ -448,14 +451,20 @@ export default function Landing({ language = 'en' }) {
           <div className="calc-card">
             <h2 className="calc-title">{lx.calcTitle}</h2>
             <p className="calc-sub">{lx.calcSub}</p>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(240,237,228,0.6)', marginBottom: '0.4rem' }}>
+              {lx.placeholder}
+            </label>
             <input
               className="calc-input"
               type="number"
               min="0"
-              placeholder={lx.placeholder}
+              placeholder="0"
               value={calcIncome}
               onChange={e => setCalcIncome(e.target.value)}
             />
+            <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.3)', marginTop: '-0.5rem', marginBottom: '1.25rem' }}>
+              {lx.inputHelper}
+            </div>
             <div className="calc-toggles">
               {[
                 { key: 'svobodna', label: lx.forms.svobodna },
@@ -470,17 +479,23 @@ export default function Landing({ language = 'en' }) {
               ))}
             </div>
 
-            {monthly > 0 && (
+            {earned > 0 && (
               <div className="calc-results">
                 {calcForm === 'tracking' ? (
-                  <div className="calc-total-row">
-                    <span className="calc-total-label">{lx.projected}</span>
-                    <span className="calc-total-val">{fmt(res.annual)} €</span>
-                  </div>
+                  <>
+                    <div className="calc-row">
+                      <span className="calc-row-label">{lx.earned}</span>
+                      <span className="calc-row-val">{fmt(res.earned)} €</span>
+                    </div>
+                    <div className="calc-total-row">
+                      <span className="calc-total-label">{lx.projected}</span>
+                      <span className="calc-total-val">{fmt(res.projected)} €</span>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="calc-row">
-                      <span className="calc-row-label">{lx.earned} ({currentMonth} {language === 'bg' ? 'мес.' : 'mo.'})</span>
+                      <span className="calc-row-label">{lx.earned}</span>
                       <span className="calc-row-val">{fmt(res.earned)} €</span>
                     </div>
                     <div className="calc-row">
@@ -489,7 +504,7 @@ export default function Landing({ language = 'en' }) {
                     </div>
                     <div className="calc-row">
                       <span className="calc-row-label">{lx.incomeTax}</span>
-                      <span className="calc-row-val">{fmt(res.ddfl)} €</span>
+                      <span className="calc-row-val">{fmt(res.incomeTax)} €</span>
                     </div>
                     <div className="calc-row">
                       <span className="calc-row-label">{lx.insurance}</span>
@@ -515,7 +530,7 @@ export default function Landing({ language = 'en' }) {
         <section className="features">
           <p className="section-label reveal">What Finku does</p>
           <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>
-            Everything a freelancer actually needs
+            Everything you actually need
           </h2>
           <div className="features-grid">
             {[

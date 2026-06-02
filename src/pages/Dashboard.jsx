@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
@@ -48,6 +48,47 @@ function calcTax(totalIncome, totalExpenses, legalForm) {
   return { taxableIncome, incomeTax, insurance, total, monthsElapsed }
 }
 
+function nextTaxDeadline() {
+  const today = new Date()
+  const y = today.getFullYear()
+  const candidates = [
+    new Date(y, 3, 30),
+    new Date(y, 6, 31),
+    new Date(y, 9, 31),
+    new Date(y + 1, 0, 31),
+  ]
+  const next = candidates.find(d => d > today) || new Date(y + 1, 0, 31)
+  const days = Math.ceil((next - today) / 86400000)
+  return { date: next, days }
+}
+
+function formatDeadlineLabel(date, language) {
+  const d = date.getDate()
+  const en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const bg = ['яну','фев','мар','апр','май','юни','юли','авг','сеп','окт','ное','дек']
+  return `${d} ${language === 'bg' ? bg[date.getMonth()] : en[date.getMonth()]}`
+}
+
+function useCountUp(target, duration = 1200) {
+  const [value, setValue] = useState(0)
+  const hasAnimated = useRef(false)
+  const raf = useRef(null)
+  useEffect(() => {
+    if (!target) { setValue(0); return }
+    if (hasAnimated.current) { setValue(target); return }
+    hasAnimated.current = true
+    const t0 = performance.now()
+    function step(now) {
+      const p = Math.min((now - t0) / duration, 1)
+      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))))
+      if (p < 1) raf.current = requestAnimationFrame(step)
+    }
+    raf.current = requestAnimationFrame(step)
+    return () => { if (raf.current) cancelAnimationFrame(raf.current) }
+  }, [target])
+  return value
+}
+
 export default function Dashboard({ session, language, legalForm, onLanguageChange }) {
   const lang = t[language]
   const navigate = useNavigate()
@@ -62,10 +103,18 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
   const [showAllIncome, setShowAllIncome] = useState(false)
   const [showAllExpenses, setShowAllExpenses] = useState(false)
   const [showTaxTooltip, setShowTaxTooltip] = useState(false)
+  const [setAside, setSetAside] = useState(() => localStorage.getItem('finku_set_aside') || '')
+  const [taxPulse, setTaxPulse] = useState(false)
+  const prevTaxRef = useRef(null)
   const { toasts, showToast } = useToast()
+  const [firstName, setFirstName] = useState('')
 
   useEffect(() => { document.title = 'Dashboard · Finku' }, [])
-  const [firstName, setFirstName] = useState('')
+
+  useEffect(() => {
+    if (setAside) localStorage.setItem('finku_set_aside', setAside)
+    else localStorage.removeItem('finku_set_aside')
+  }, [setAside])
 
   useEffect(() => { fetchData(); fetchName() }, [])
 
@@ -97,6 +146,21 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
   const tax = calcTax(totalIncome, totalExpenses, legalFormEff)
   const projectedAnnual = (totalIncome / currentMonth) * 12
 
+  useEffect(() => {
+    if (tax?.total != null) {
+      if (prevTaxRef.current !== null && prevTaxRef.current !== tax.total) {
+        setTaxPulse(true)
+        const timer = setTimeout(() => setTaxPulse(false), 400)
+        return () => clearTimeout(timer)
+      }
+      prevTaxRef.current = tax.total
+    }
+  }, [tax?.total])
+
+  const taxTotalDisplay = useCountUp(tax?.total ?? 0)
+  const deadline = tax ? nextTaxDeadline() : null
+  const setAsideNum = parseFloat(setAside) || 0
+
   const monthlyData = Array.from({ length: currentMonth }, (_, i) => {
     const m = String(i + 1).padStart(2, '0')
     const inc = income.filter(r => r.date.startsWith(`${currentYear}-${m}`)).reduce((s, r) => s + Number(r.amount), 0)
@@ -110,6 +174,14 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
     await supabase.auth.signOut()
     navigate('/')
   }
+
+  const setAsidePill = setAsideNum > 0 && tax ? (() => {
+    if (setAsideNum >= tax.total)
+      return { bg: 'rgba(200,240,58,0.1)', color: '#c8f03a', label: '✓ ' + (language === 'bg' ? 'Покрито' : 'Covered') }
+    if (setAsideNum >= tax.total * 0.7)
+      return { bg: 'rgba(255,200,0,0.1)', color: '#e8a84a', label: '⚠ ' + (language === 'bg' ? 'Почти' : 'Almost there') }
+    return { bg: 'rgba(224,112,112,0.1)', color: '#e07070', label: '✗ ' + (language === 'bg' ? 'Непокрито' : 'Not covered') }
+  })() : null
 
   return (
     <>
@@ -128,247 +200,70 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
           -webkit-backdrop-filter: blur(12px);
           border-bottom: 0.5px solid rgba(240,237,228,0.08);
         }
-
-        .dash-nav-logo {
-          font-family: 'Instrument Serif', serif;
-          font-size: 20px;
-          color: #f0ede4;
-          letter-spacing: -0.3px;
-        }
-
-        .dash-nav-right {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .dash-lang-select {
-          font-size: 13px;
-          border: 1px solid rgba(240,237,228,0.12);
-          border-radius: 8px;
-          padding: 5px 10px;
-          background: rgba(240,237,228,0.06);
-          color: rgba(240,237,228,0.7);
-          cursor: pointer;
-          outline: none;
-          font-family: 'DM Sans', sans-serif;
-          color-scheme: dark;
-        }
+        .dash-nav-logo { font-family: 'Instrument Serif', serif; font-size: 20px; color: #f0ede4; letter-spacing: -0.3px; }
+        .dash-nav-right { display: flex; align-items: center; gap: 8px; }
+        .dash-lang-select { font-size: 13px; border: 1px solid rgba(240,237,228,0.12); border-radius: 8px; padding: 5px 10px; background: rgba(240,237,228,0.06); color: rgba(240,237,228,0.7); cursor: pointer; outline: none; font-family: 'DM Sans', sans-serif; color-scheme: dark; }
         .dash-lang-select:hover { border-color: rgba(240,237,228,0.25); }
-
-        .dash-nav-btn {
-          background: none;
-          border: none;
-          color: rgba(240,237,228,0.6);
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          cursor: pointer;
-          padding: 6px 12px;
-          border-radius: 8px;
-          transition: color 0.15s, background 0.15s;
-        }
+        .dash-nav-btn { background: none; border: none; color: rgba(240,237,228,0.6); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: color 0.15s, background 0.15s; }
         .dash-nav-btn:hover { color: #f0ede4; background: rgba(240,237,228,0.06); }
-
-        .dash-nav-logout {
-          background: none;
-          border: 1px solid rgba(240,237,228,0.12);
-          color: rgba(240,237,228,0.6);
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          cursor: pointer;
-          padding: 6px 14px;
-          border-radius: 8px;
-          transition: color 0.15s, border-color 0.15s, background 0.15s;
-        }
+        .dash-nav-logout { background: none; border: 1px solid rgba(240,237,228,0.12); color: rgba(240,237,228,0.6); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 6px 14px; border-radius: 8px; transition: color 0.15s, border-color 0.15s, background 0.15s; }
         .dash-nav-logout:hover { color: #f0ede4; border-color: rgba(240,237,228,0.25); background: rgba(240,237,228,0.04); }
 
-        .dash-page {
-          min-height: 100vh;
-          background: #0e0e0c;
-          padding-top: 60px;
-        }
+        .dash-page { min-height: 100vh; background: #0e0e0c; padding-top: 60px; }
+        .dash-content { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .dash-header { margin-bottom: 1.75rem; }
+        .dash-greeting { font-size: 20px; font-weight: 500; color: #f0ede4; letter-spacing: -0.3px; }
+        .dash-subheading { font-size: 13px; color: rgba(240,237,228,0.35); margin-top: 3px; }
 
-        .dash-content {
-          max-width: 900px;
-          margin: 0 auto;
-          padding: 2rem 1.5rem 4rem;
-        }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+        .kpi-card { background: #161614; border: 1px solid rgba(240,237,228,0.08); border-radius: 12px; padding: 1rem; }
+        .kpi-label { font-size: 11px; color: rgba(240,237,228,0.35); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .kpi-sub { font-size: 11px; color: rgba(240,237,228,0.25); margin-top: 3px; }
 
-        .dash-header {
-          margin-bottom: 1.75rem;
+        @keyframes taxPulse {
+          0% { transform: scale(1); color: #c8f03a; }
+          40% { transform: scale(1.08); color: #ffffff; }
+          100% { transform: scale(1); color: #c8f03a; }
         }
-
-        .dash-greeting {
-          font-size: 20px;
-          font-weight: 500;
-          color: #f0ede4;
-          letter-spacing: -0.3px;
-        }
-
-        .dash-subheading {
-          font-size: 13px;
-          color: rgba(240,237,228,0.35);
-          margin-top: 3px;
-        }
-
-        .kpi-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: 10px;
-          margin-bottom: 1.25rem;
-        }
-
-        .kpi-card {
-          background: #161614;
-          border: 1px solid rgba(240,237,228,0.08);
-          border-radius: 12px;
-          padding: 1rem;
-        }
-
-        .kpi-label {
-          font-size: 11px;
-          color: rgba(240,237,228,0.35);
-          margin-bottom: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .kpi-value {
-          font-size: 20px;
-          font-weight: 500;
-          font-variant-numeric: tabular-nums;
-        }
-
-        .kpi-sub {
-          font-size: 11px;
-          color: rgba(240,237,228,0.25);
-          margin-top: 3px;
-        }
-
-        .tax-banner {
-          background: rgba(200,240,58,0.06);
-          border: 1px solid rgba(200,240,58,0.14);
-          border-radius: 14px;
-          padding: 1.25rem;
-          margin-bottom: 1.25rem;
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 1rem;
-        }
-
-        .tax-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          background: rgba(200,240,58,0.12);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .tax-title {
-          font-weight: 500;
-          font-size: 14px;
-          color: #f0ede4;
-        }
-
-        .tax-desc {
-          font-size: 12px;
-          color: rgba(240,237,228,0.4);
-          margin-top: 2px;
-          max-width: 340px;
-        }
-
-        .tax-figures {
-          display: flex;
-          gap: 20px;
-          flex-wrap: wrap;
-          align-items: center;
-        }
-
-        .tax-fig-label {
-          font-size: 11px;
-          color: rgba(240,237,228,0.35);
-        }
-
-        .tax-fig-value {
-          font-size: 15px;
-          font-weight: 500;
-          color: #f0ede4;
-          margin-top: 2px;
-        }
-
-        .tax-total-value {
-          font-size: 18px;
+        .tax-amount {
+          font-size: 42px;
           font-weight: 600;
           color: #c8f03a;
-          margin-top: 2px;
+          letter-spacing: -1px;
+          margin-bottom: 0.3rem;
+          font-variant-numeric: tabular-nums;
+          display: inline-block;
         }
+        .tax-amount.pulsing { animation: taxPulse 400ms ease-out forwards; }
 
-        .entry-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: rgba(240,237,228,0.04);
-          border-radius: 9px;
-          padding: 8px 10px;
-          position: relative;
-        }
-
-        .entry-row { cursor: pointer; }
-        .entry-row:hover { background: rgba(240,237,228,0.07); }
-
-        .entry-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-
-        .entry-desc {
+        .set-aside-input {
+          width: 88px;
+          background: rgba(240,237,228,0.06);
+          border: 1px solid rgba(240,237,228,0.12);
+          border-radius: 6px;
+          padding: 3px 8px;
           font-size: 13px;
-          font-weight: 500;
           color: #f0ede4;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 160px;
+          font-family: 'DM Sans', sans-serif;
+          outline: none;
+          transition: border-color 0.15s;
         }
+        .set-aside-input:focus { border-color: rgba(200,240,58,0.35); }
 
-        .entry-date {
-          font-size: 11px;
-          color: rgba(240,237,228,0.3);
-        }
-
-        .chart-legend-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-        }
-
-        .entries-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          margin-bottom: 1.25rem;
-        }
-
-        .welcome-card {
-          background: #161614;
-          border: 1px solid rgba(240,237,228,0.08);
-          border-radius: 16px;
-          padding: 3rem 2rem;
-          text-align: center;
-          margin-bottom: 1.25rem;
-        }
+        .entry-row { display: flex; align-items: center; justify-content: space-between; background: rgba(240,237,228,0.04); border-radius: 9px; padding: 8px 10px; position: relative; cursor: pointer; }
+        .entry-row:hover { background: rgba(240,237,228,0.07); }
+        .entry-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+        .entry-date { font-size: 11px; color: rgba(240,237,228,0.3); }
+        .chart-legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+        .entries-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
 
         @media (max-width: 640px) {
           .entries-grid { grid-template-columns: 1fr; }
           .dash-nav { padding: 0 1rem; }
           .dash-content { padding: 1.5rem 1rem 3rem; }
+          .tax-amount { font-size: 34px; }
         }
       `}</style>
 
@@ -407,31 +302,80 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
           </div>
         </nav>
 
-        <div className="dash-content">
-          <div className="dash-header">
-            <div className="dash-greeting">
-              {greeting(lang)}{firstName ? `, ${firstName}` : ''}
-            </div>
-            <div className="dash-subheading">{formatCurrentDate(language)}</div>
+        {/* Loading */}
+        {loading ? (
+          <div className="dash-content">
+            <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(240,237,228,0.3)' }}>…</div>
           </div>
 
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(240,237,228,0.3)' }}>…</div>
-          ) : (
-            <>
-              {/* Tax Banner */}
-              {tax && (
-                <div style={{
-                  background: 'rgba(200,240,58,0.06)',
-                  border: '0.5px solid rgba(200,240,58,0.15)',
-                  borderRadius: 12,
-                  padding: '1.25rem 1.5rem',
-                  marginBottom: '1.25rem',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                    <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                      {lang.taxEstimate} · {lang.taxAuthority}
-                    </div>
+        /* First-time empty state */
+        ) : income.length === 0 && expenses.length === 0 ? (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', minHeight: 'calc(100vh - 60px)',
+            textAlign: 'center', padding: '2rem 1.5rem',
+          }}>
+            <h1 style={{
+              fontFamily: "'Instrument Serif', serif",
+              fontSize: 'clamp(32px, 5vw, 52px)',
+              color: '#f0ede4', letterSpacing: '-0.5px',
+              marginBottom: '1rem', lineHeight: 1.1,
+            }}>
+              {language === 'bg' ? 'Нека видим колко дължиш' : "Let's see what you owe"}
+            </h1>
+            <p style={{ fontSize: 16, color: 'rgba(240,237,228,0.5)', marginBottom: '2rem', maxWidth: 400, lineHeight: 1.65 }}>
+              {language === 'bg'
+                ? 'Добави първия си приход и виж данъчната прогноза мигновено.'
+                : 'Add your first income entry and watch your tax estimate appear instantly.'}
+            </p>
+            <button
+              className="btn-primary"
+              onClick={() => setModal({ type: 'income' })}
+              style={{ width: '100%', maxWidth: 360, justifyContent: 'center', fontSize: 15, padding: '14px 24px', marginBottom: '1.25rem' }}
+            >
+              + {language === 'bg' ? 'Добави първия си приход' : 'Add your first income'}
+            </button>
+            <div style={{ fontSize: 14, color: 'rgba(240,237,228,0.35)' }}>
+              <CSVImport userId={userId} language={language} onImported={fetchData} />
+            </div>
+          </div>
+
+        /* Normal dashboard */
+        ) : (
+          <div className="dash-content">
+            <div className="dash-header">
+              <div className="dash-greeting">
+                {greeting(lang)}{firstName ? `, ${firstName}` : ''}
+              </div>
+              <div className="dash-subheading">{formatCurrentDate(language)}</div>
+            </div>
+
+            {/* Tax Banner */}
+            {tax && (
+              <div style={{
+                background: 'rgba(200,240,58,0.06)',
+                border: '0.5px solid rgba(200,240,58,0.15)',
+                borderRadius: 12,
+                padding: '1.25rem 1.5rem',
+                marginBottom: '1.25rem',
+              }}>
+                {/* Top row: label + deadline pill + tooltip */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                    {lang.taxEstimate} · {lang.taxAuthority}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {deadline && (
+                      <span style={{
+                        background: 'rgba(200,240,58,0.1)', color: '#c8f03a',
+                        fontSize: 12, borderRadius: 20, padding: '4px 10px',
+                        whiteSpace: 'nowrap', fontWeight: 500,
+                      }}>
+                        {language === 'bg'
+                          ? `Следващ срок: ${formatDeadlineLabel(deadline.date, 'bg')} · ${deadline.days} дни`
+                          : `Next deadline: ${formatDeadlineLabel(deadline.date, 'en')} · ${deadline.days} days`}
+                      </span>
+                    )}
                     <div style={{ position: 'relative' }}>
                       <button
                         onMouseEnter={() => setShowTaxTooltip(true)}
@@ -465,173 +409,172 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
                       )}
                     </div>
                   </div>
-                  <div style={{ fontSize: 30, fontWeight: 600, color: '#c8f03a', marginBottom: '0.4rem', letterSpacing: '-0.5px' }}>
-                    ~{fmt(tax.total)} {lang.currency}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>
-                    {language === 'bg' ? 'Данък' : 'Income tax'} {fmt(tax.incomeTax)} {lang.currency}
-                    {' · '}
-                    {lang.insurance} ~{fmt(tax.insurance)} {lang.currency}
-                    {' · '}
-                    {lang.totalOwed}
-                  </div>
                 </div>
-              )}
 
-              {/* KPI Cards */}
-              <div className="kpi-grid">
-                {[
-                  { label: lang.totalIncome, value: `${fmt(totalIncome)} ${lang.currency}`, color: '#7ec95f' },
-                  { label: lang.totalExpenses, value: `${fmt(totalExpenses)} ${lang.currency}`, color: '#e07070' },
-                  { label: lang.netIncome, value: `${fmt(netIncome)} ${lang.currency}`, color: '#f0ede4' },
-                  { label: lang.avgMonthly, value: `${fmt(avgMonthly)} ${lang.currency}`, color: '#e8a84a' },
-                ].map((k, i) => (
-                  <div key={i} className="kpi-card">
-                    <div className="kpi-label">{k.label}</div>
-                    <div className="kpi-value" style={{ color: k.color }}>{k.value}</div>
-                    <div className="kpi-sub">{lang.soFar} {currentYear}</div>
-                  </div>
-                ))}
-              </div>
+                {/* Animated total amount */}
+                <div className={`tax-amount${taxPulse ? ' pulsing' : ''}`}>
+                  ~{fmt(taxTotalDisplay)} {lang.currency}
+                </div>
 
-              {/* Projected Annual Banner */}
-              {currentMonth >= 2 && totalIncome > 0 && (
-                <div style={{
-                  background: '#161614',
-                  border: '1px solid rgba(240,237,228,0.06)',
-                  borderRadius: 12,
-                  padding: '0.9rem 1.25rem',
-                  marginBottom: '1.25rem',
-                  fontSize: 13,
-                  color: 'rgba(240,237,228,0.5)',
-                }}>
-                  {language === 'bg' ? (
-                    <>При текущото темпо ще спечелите <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> тази година</>
-                  ) : (
-                    <>At your current rate you're on track to earn <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> this year</>
+                {/* Set aside row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>
+                    {language === 'bg' ? 'Заделено:' : 'Currently set aside:'}
+                  </span>
+                  <input
+                    className="set-aside-input"
+                    type="number"
+                    min="0"
+                    value={setAside}
+                    onChange={e => setSetAside(e.target.value)}
+                    placeholder="0"
+                  />
+                  <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>€</span>
+                  {setAsidePill && (
+                    <span style={{ background: setAsidePill.bg, color: setAsidePill.color, fontSize: 12, borderRadius: 20, padding: '3px 10px', fontWeight: 500 }}>
+                      {setAsidePill.label}
+                    </span>
                   )}
                 </div>
-              )}
 
-              {/* Income + Expenses columns */}
-              {income.length === 0 && expenses.length === 0 ? (
-                <div className="welcome-card">
-                  <div style={{ fontSize: 32, marginBottom: '0.75rem' }}>👋</div>
-                  <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 24, color: '#f0ede4', letterSpacing: '-0.3px', marginBottom: '0.75rem' }}>
-                    Welcome to Finku
-                  </h2>
-                  <p style={{ fontSize: 14, color: 'rgba(240,237,228,0.45)', lineHeight: 1.7, maxWidth: 400, margin: '0 auto 1.75rem' }}>
-                    Start by adding your first income entry or uploading a Revolut CSV. Your tax estimate will update automatically.
-                  </p>
-                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {/* Subtitle breakdown */}
+                <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.38)' }}>
+                  {language === 'bg' ? 'Данък' : 'Income tax'} {fmt(tax.incomeTax)} {lang.currency}
+                  {' · '}
+                  {lang.insurance} ~{fmt(tax.insurance)} {lang.currency}
+                  {' · '}
+                  {lang.totalOwed}
+                </div>
+              </div>
+            )}
+
+            {/* KPI Cards */}
+            <div className="kpi-grid">
+              {[
+                { label: lang.totalIncome, value: `${fmt(totalIncome)} ${lang.currency}`, color: '#7ec95f' },
+                { label: lang.totalExpenses, value: `${fmt(totalExpenses)} ${lang.currency}`, color: '#e07070' },
+                { label: lang.netIncome, value: `${fmt(netIncome)} ${lang.currency}`, color: '#f0ede4' },
+                { label: lang.avgMonthly, value: `${fmt(avgMonthly)} ${lang.currency}`, color: '#e8a84a' },
+              ].map((k, i) => (
+                <div key={i} className="kpi-card">
+                  <div className="kpi-label">{k.label}</div>
+                  <div className="kpi-value" style={{ color: k.color }}>{k.value}</div>
+                  <div className="kpi-sub">{lang.soFar} {currentYear}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Projected Annual */}
+            {currentMonth >= 2 && totalIncome > 0 && (
+              <div style={{
+                background: '#161614', border: '1px solid rgba(240,237,228,0.06)',
+                borderRadius: 12, padding: '0.9rem 1.25rem', marginBottom: '1.25rem',
+                fontSize: 13, color: 'rgba(240,237,228,0.5)',
+              }}>
+                {language === 'bg' ? (
+                  <>При текущото темпо ще спечелите <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> тази година</>
+                ) : (
+                  <>At your current rate you're on track to earn <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> this year</>
+                )}
+              </div>
+            )}
+
+            {/* Income + Expenses columns */}
+            <div className="entries-grid">
+              {[
+                { type: 'income', label: lang.recentIncome, data: showAllIncome ? income : income.slice(0, 5), total: income.length, showAll: showAllIncome, toggleShowAll: () => setShowAllIncome(v => !v), addLabel: lang.addIncome, emptyMsg: lang.noIncome, color: '#7ec95f', dot: '#7ec95f' },
+                { type: 'expense', label: lang.recentExpenses, data: showAllExpenses ? expenses : expenses.slice(0, 5), total: expenses.length, showAll: showAllExpenses, toggleShowAll: () => setShowAllExpenses(v => !v), addLabel: lang.addExpense, emptyMsg: lang.noExpenses, color: '#e07070', dot: '#e07070' },
+              ].map(col => (
+                <div key={col.type} className="card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{col.label}</span>
+                      {col.total > 5 && (
+                        <button
+                          onClick={col.toggleShowAll}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0, transition: 'color 0.15s' }}
+                          onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.7)'}
+                          onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
+                        >
+                          {col.showAll ? 'Show less' : 'View all'}
+                        </button>
+                      )}
+                    </div>
                     <button
                       className="btn-primary"
-                      onClick={() => setModal({ type: 'income' })}
-                      style={{ padding: '10px 20px' }}
+                      onClick={() => setModal({ type: col.type })}
+                      style={{ padding: '5px 12px', fontSize: 12 }}
                     >
-                      + {lang.addIncome}
+                      + {col.addLabel}
                     </button>
-                    <CSVImport userId={userId} language={language} onImported={fetchData} />
                   </div>
-                </div>
-              ) : (
-              <div className="entries-grid">
-                {[
-                  { type: 'income', label: lang.recentIncome, data: showAllIncome ? income : income.slice(0, 5), total: income.length, showAll: showAllIncome, toggleShowAll: () => setShowAllIncome(v => !v), addLabel: lang.addIncome, emptyMsg: lang.noIncome, color: '#7ec95f', dot: '#7ec95f' },
-                  { type: 'expense', label: lang.recentExpenses, data: showAllExpenses ? expenses : expenses.slice(0, 5), total: expenses.length, showAll: showAllExpenses, toggleShowAll: () => setShowAllExpenses(v => !v), addLabel: lang.addExpense, emptyMsg: lang.noExpenses, color: '#e07070', dot: '#e07070' },
-                ].map(col => (
-                  <div key={col.type} className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{col.label}</span>
-                        {col.total > 5 && (
-                          <button
-                            onClick={col.toggleShowAll}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0, transition: 'color 0.15s' }}
-                            onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.7)'}
-                            onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
-                          >
-                            {col.showAll ? 'Show less' : 'View all'}
-                          </button>
-                        )}
-                      </div>
-                      <button
-                        className="btn-primary"
-                        onClick={() => setModal({ type: col.type })}
-                        style={{ padding: '5px 12px', fontSize: 12 }}
-                      >
-                        + {col.addLabel}
-                      </button>
-                    </div>
 
-                    {col.data.length === 0 ? (
-                      <p style={{ fontSize: 13, color: 'rgba(240,237,228,0.25)', textAlign: 'center', padding: '1.5rem 0' }}>{col.emptyMsg}</p>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {col.data.map(row => (
-                          <div
-                            key={row.id}
-                            className="entry-row"
-                            onClick={() => setDrawer({ entry: row, type: col.type })}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                              <div className="entry-dot" style={{ background: col.dot }} />
-                              <div style={{ minWidth: 0 }}>
-                                <div className="entry-desc">{row.description}</div>
-                                <div className="entry-date">{formatDate(row.date, language)}</div>
-                              </div>
-                            </div>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: col.color, flexShrink: 0, marginLeft: 8 }}>
-                              {col.type === 'income' ? '+' : '−'}{fmt(row.amount)} {lang.currency}
+                  {col.data.length === 0 ? (
+                    <p style={{ fontSize: 13, color: 'rgba(240,237,228,0.25)', textAlign: 'center', padding: '1.5rem 0' }}>{col.emptyMsg}</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {col.data.map(row => (
+                        <div
+                          key={row.id}
+                          className="entry-row"
+                          onClick={() => setDrawer({ entry: row, type: col.type })}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                            <div className="entry-dot" style={{ background: col.dot }} />
+                            <div style={{ minWidth: 0 }}>
+                              <div className="entry-desc">{row.description}</div>
+                              <div className="entry-date">{formatDate(row.date, language)}</div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <div style={{ fontSize: 13, fontWeight: 500, color: col.color, flexShrink: 0, marginLeft: 8 }}>
+                            {col.type === 'income' ? '+' : '−'}{fmt(row.amount)} {lang.currency}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                    <CSVImport userId={userId} language={language} onImported={fetchData} />
+                  <CSVImport userId={userId} language={language} onImported={fetchData} />
+                </div>
+              ))}
+            </div>
+
+            {/* Bar Chart */}
+            <div className="card" style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{lang.chartTitle}</span>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  {[{ color: '#7ec95f', label: lang.incomeLabel }, { color: '#e07070', label: lang.expensesLabel }].map(l => (
+                    <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>
+                      <div className="chart-legend-dot" style={{ background: l.color }} />
+                      {l.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+                {monthlyData.map((d, i) => (
+                  <div key={i} style={{ flex: 1, display: 'flex', gap: 3, alignItems: 'flex-end', height: '100%' }}>
+                    <div style={{ flex: 1, background: '#7ec95f', borderRadius: '3px 3px 0 0', height: `${(d.inc / maxBar) * 100}%`, minHeight: d.inc > 0 ? 3 : 0, opacity: 0.8 }} />
+                    <div style={{ flex: 1, background: '#e07070', borderRadius: '3px 3px 0 0', height: `${(d.exp / maxBar) * 100}%`, minHeight: d.exp > 0 ? 3 : 0, opacity: 0.8 }} />
                   </div>
                 ))}
               </div>
-              )}
-
-              {/* Bar Chart */}
-              <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{lang.chartTitle}</span>
-                  <div style={{ display: 'flex', gap: 14 }}>
-                    {[{ color: '#7ec95f', label: lang.incomeLabel }, { color: '#e07070', label: lang.expensesLabel }].map(l => (
-                      <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>
-                        <div className="chart-legend-dot" style={{ background: l.color }} />
-                        {l.label}
-                      </div>
-                    ))}
+              <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                {monthlyData.map((_, i) => (
+                  <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 10, color: 'rgba(240,237,228,0.25)' }}>
+                    {lang.months[i]}
                   </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
-                  {monthlyData.map((d, i) => (
-                    <div key={i} style={{ flex: 1, display: 'flex', gap: 3, alignItems: 'flex-end', height: '100%' }}>
-                      <div style={{ flex: 1, background: '#7ec95f', borderRadius: '3px 3px 0 0', height: `${(d.inc / maxBar) * 100}%`, minHeight: d.inc > 0 ? 3 : 0, opacity: 0.8 }} />
-                      <div style={{ flex: 1, background: '#e07070', borderRadius: '3px 3px 0 0', height: `${(d.exp / maxBar) * 100}%`, minHeight: d.exp > 0 ? 3 : 0, opacity: 0.8 }} />
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                  {monthlyData.map((_, i) => (
-                    <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 10, color: 'rgba(240,237,228,0.25)' }}>
-                      {lang.months[i]}
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
+            </div>
 
-              {/* Disclaimer */}
-              <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.2)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
-                {lang.disclaimer}
-              </p>
-            </>
-          )}
-        </div>
+            {/* Disclaimer */}
+            <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.2)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
+              {lang.disclaimer}
+            </p>
+          </div>
+        )}
       </div>
 
       {drawer && (
