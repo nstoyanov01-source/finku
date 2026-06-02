@@ -274,10 +274,15 @@ export default function Landing({ language = 'en' }) {
           .features-grid { grid-template-columns: 1fr !important; }
           .taxman-panels { grid-template-columns: 1fr; }
         }
-        @media (max-width: 640px) {
-          .hero { padding: 6rem 1.5rem 3rem; }
+        .phone-scale-wrapper { flex-shrink: 0; }
+
+        @media (max-width: 768px) {
+          .hero { min-height: auto; padding: 7rem 2rem 3rem; }
           .hero-inner { grid-template-columns: 1fr; }
-          .hero-right { display: none; }
+          .hero-right { display: flex; justify-content: center; width: 100%; margin-top: 2rem; }
+          .phone-scale-wrapper { transform: scale(0.55); transform-origin: top center; margin-bottom: -198px; }
+        }
+        @media (max-width: 640px) {
           .hero-sub { font-size: 16px; }
           nav .nav-right .btn-ghost { display: none; }
           .calc-card { padding: 1.5rem; }
@@ -328,7 +333,8 @@ export default function Landing({ language = 'en' }) {
 
             {/* Phone Mockup */}
             <div className="hero-right reveal" style={{ transitionDelay: '0.2s' }}>
-              <div className="phone-mockup">
+              <div className="phone-scale-wrapper">
+                <div className="phone-mockup">
                 <div style={{
                   width: 220, height: 440,
                   background: '#0e0e0c',
@@ -440,6 +446,7 @@ export default function Landing({ language = 'en' }) {
                       }}>+ Add expense</button>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             </div>
