@@ -59,6 +59,8 @@ export default function Profile({ session, language, onLanguageChange }) {
   const [currentLegalForm, setCurrentLegalForm] = useState(null)
   const [showLegalFormEdit, setShowLegalFormEdit] = useState(false)
   const [legalFormSaved, setLegalFormSaved] = useState(false)
+  const [authorRate, setAuthorRate] = useState(false)
+  const [authorRateSaving, setAuthorRateSaving] = useState(false)
 
   useEffect(() => { document.title = 'Profile · Finku' }, [])
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -66,10 +68,11 @@ export default function Profile({ session, language, onLanguageChange }) {
   const [deleteSuccess, setDeleteSuccess] = useState(false)
 
   useEffect(() => {
-    supabase.from('profiles').select('first_name, legal_form').eq('id', userId).single()
+    supabase.from('profiles').select('first_name, legal_form, author_rate').eq('id', userId).single()
       .then(({ data }) => {
         if (data?.first_name) setFirstName(data.first_name)
         if (data?.legal_form) setCurrentLegalForm(data.legal_form)
+        setAuthorRate(data?.author_rate ?? false)
       })
   }, [userId])
 
@@ -109,6 +112,14 @@ export default function Profile({ session, language, onLanguageChange }) {
     setCurrentLegalForm(value)
     setLegalFormSaved(true)
     setTimeout(() => { setShowLegalFormEdit(false); setLegalFormSaved(false) }, 1500)
+  }
+
+  async function handleAuthorRateToggle() {
+    const next = !authorRate
+    setAuthorRateSaving(true)
+    await supabase.from('profiles').update({ author_rate: next }).eq('id', userId)
+    setAuthorRate(next)
+    setAuthorRateSaving(false)
   }
 
   async function handleLanguageChange(l) {
@@ -362,6 +373,45 @@ export default function Profile({ session, language, onLanguageChange }) {
         .lf-option.lf-active { border-color: #c8f03a; background: rgba(200,240,58,0.06); }
         .lf-option-label { font-weight: 500; font-size: 14px; color: #f0ede4; }
         .lf-option-sub { font-size: 12px; color: rgba(240,237,228,0.4); margin-top: 2px; }
+
+        .author-toggle-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          cursor: pointer;
+          padding: 2px 0;
+        }
+        .author-toggle-label {
+          font-size: 14px;
+          color: rgba(240,237,228,0.75);
+          line-height: 1.5;
+          flex: 1;
+        }
+        .toggle-switch {
+          width: 40px;
+          height: 22px;
+          border-radius: 11px;
+          border: none;
+          cursor: pointer;
+          flex-shrink: 0;
+          position: relative;
+          transition: background 0.2s;
+        }
+        .toggle-switch::after {
+          content: '';
+          position: absolute;
+          top: 3px;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: white;
+          transition: left 0.2s;
+        }
+        .toggle-switch.on { background: #c8f03a; }
+        .toggle-switch.off { background: rgba(240,237,228,0.15); }
+        .toggle-switch.on::after { left: 21px; }
+        .toggle-switch.off::after { left: 3px; }
       `}</style>
 
       <div className="profile-page">
@@ -478,6 +528,30 @@ export default function Profile({ session, language, onLanguageChange }) {
               </div>
             )}
           </div>
+
+          {/* Tax calculation — author rate toggle (only for svobodna or unset) */}
+          {(!currentLegalForm || currentLegalForm === 'svobodna_profesiya') && (
+            <div className="profile-section">
+              <div className="profile-section-title">{isBg ? 'Данъчно изчисление' : 'Tax calculation'}</div>
+              <div className="author-toggle-row" onClick={authorRateSaving ? undefined : handleAuthorRateToggle}>
+                <span className="author-toggle-label">
+                  {isBg
+                    ? 'Получавам авторски възнаграждения или съм адвокат (40% НПР)'
+                    : 'I receive author royalties or practice law (40% НПР)'}
+                </span>
+                <button
+                  className={`toggle-switch ${authorRate ? 'on' : 'off'}`}
+                  onClick={e => { e.stopPropagation(); if (!authorRateSaving) handleAuthorRateToggle() }}
+                  aria-label="Toggle author rate"
+                />
+              </div>
+              <p style={{ fontSize: 12, color: 'rgba(240,237,228,0.3)', lineHeight: 1.6, marginTop: '0.75rem' }}>
+                {isBg
+                  ? 'Важи за адвокати, автори, музиканти, артисти и изпълнители. При съмнение, оставете изключено и се консултирайте със счетоводител.'
+                  : 'This applies to lawyers, authors, musicians, artists and performers. If unsure, leave this off and consult an accountant.'}
+              </p>
+            </div>
+          )}
 
           {/* Language */}
           <div className="profile-section">

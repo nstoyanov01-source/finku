@@ -32,34 +32,50 @@ function formatCurrentDate(language) {
   })
 }
 
-function calcTax(totalIncome, totalExpenses, legalForm) {
-  const monthsElapsed = new Date().getMonth() + 1
-  const insurance = 153 * monthsElapsed
+function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false) {
   if (legalForm === 'just_tracking') return null
-  let taxableIncome, incomeTax
+  const monthsElapsed = new Date().getMonth() + 1
+  const insurancePerMonth = 153.08
+  const totalInsurance = insurancePerMonth * monthsElapsed
+
   if (legalForm === 'ET') {
-    taxableIncome = Math.max(0, totalIncome - totalExpenses)
-    incomeTax = taxableIncome * 0.15
-  } else {
-    taxableIncome = totalIncome * 0.75
-    incomeTax = taxableIncome * 0.15
+    const profit = Math.max(0, totalIncome - totalExpenses)
+    const insuranceDeduction = Math.min(profit, totalInsurance)
+    const taxableBase = Math.max(0, profit - insuranceDeduction)
+    const incomeTax = taxableBase * 0.15
+    return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 15, nprRate: 0 }
   }
-  const total = incomeTax + insurance
-  return { taxableIncome, incomeTax, insurance, total, monthsElapsed }
+
+  const nprRate = useAuthorRate ? 0.40 : 0.25
+  const npr = totalIncome * nprRate
+  const afterNPR = totalIncome - npr
+  const insuranceDeduction = Math.min(afterNPR, totalInsurance)
+  const taxableBase = Math.max(0, afterNPR - insuranceDeduction)
+  const incomeTax = taxableBase * 0.10
+  return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 10, nprRate: nprRate * 100 }
 }
 
 function nextTaxDeadline() {
   const today = new Date()
+  const m = today.getMonth() // 0-indexed
   const y = today.getFullYear()
-  const candidates = [
-    new Date(y, 3, 30),
-    new Date(y, 6, 31),
-    new Date(y, 9, 31),
-    new Date(y + 1, 0, 31),
+  const isQ4 = m >= 9 // October (9) through December (11)
+
+  if (isQ4) {
+    // No advance payment in Q4 — next event is annual declaration April 30
+    const annualDecl = new Date(y + 1, 3, 30)
+    const days = Math.ceil((annualDecl - today) / 86400000)
+    return { date: annualDecl, days, isAnnual: true }
+  }
+
+  const quarters = [
+    new Date(y, 3, 30),  // Apr 30
+    new Date(y, 6, 31),  // Jul 31
+    new Date(y, 9, 31),  // Oct 31
   ]
-  const next = candidates.find(d => d > today) || new Date(y + 1, 0, 31)
+  const next = quarters.find(d => d > today) || new Date(y + 1, 3, 30)
   const days = Math.ceil((next - today) / 86400000)
-  return { date: next, days }
+  return { date: next, days, isAnnual: false }
 }
 
 function formatDeadlineLabel(date, language) {
@@ -89,7 +105,7 @@ function useCountUp(target, duration = 1200) {
   return value
 }
 
-export default function Dashboard({ session, language, legalForm, onLanguageChange }) {
+export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
   const lang = t[language]
   const navigate = useNavigate()
   const userId = session.user.id
@@ -143,7 +159,7 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
   const avgMonthly = currentMonth > 0 ? totalIncome / currentMonth : 0
 
   const legalFormEff = legalForm || 'svobodna_profesiya'
-  const tax = calcTax(totalIncome, totalExpenses, legalFormEff)
+  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false)
   const projectedAnnual = (totalIncome / currentMonth) * 12
 
   useEffect(() => {
@@ -293,6 +309,9 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
             >
               + {language === 'bg' ? 'Нова фактура' : 'New invoice'}
             </button>
+            <button className="dash-nav-btn" onClick={() => navigate('/blog')}>
+              Blog
+            </button>
             <button className="dash-nav-btn" onClick={() => navigate('/profile')}>
               Profile
             </button>
@@ -371,9 +390,13 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
                         fontSize: 12, borderRadius: 20, padding: '4px 10px',
                         whiteSpace: 'nowrap', fontWeight: 500,
                       }}>
-                        {language === 'bg'
-                          ? `Следващ срок: ${formatDeadlineLabel(deadline.date, 'bg')} · ${deadline.days} дни`
-                          : `Next deadline: ${formatDeadlineLabel(deadline.date, 'en')} · ${deadline.days} days`}
+                        {deadline.isAnnual
+                          ? (language === 'bg'
+                            ? `Годишна декларация: ${formatDeadlineLabel(deadline.date, 'bg')} · ${deadline.days} дни`
+                            : `Annual declaration: ${formatDeadlineLabel(deadline.date, 'en')} · ${deadline.days} days`)
+                          : (language === 'bg'
+                            ? `Следващо плащане: ${formatDeadlineLabel(deadline.date, 'bg')} · ${deadline.days} дни`
+                            : `Next payment: ${formatDeadlineLabel(deadline.date, 'en')} · ${deadline.days} days`)}
                       </span>
                     )}
                     <div style={{ position: 'relative' }}>
@@ -394,17 +417,17 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
                           position: 'absolute', top: 'calc(100% + 8px)', right: 0,
                           background: '#1e1e1c', border: '1px solid rgba(240,237,228,0.1)',
                           borderRadius: 8, padding: '10px 14px', fontSize: 12,
-                          width: 280, zIndex: 50, color: 'rgba(240,237,228,0.7)',
+                          width: 290, zIndex: 50, color: 'rgba(240,237,228,0.7)',
                           lineHeight: 1.6, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
                           whiteSpace: 'normal',
                         }}>
                           {legalFormEff === 'ET'
                             ? (language === 'bg'
-                              ? 'Печалба (приходи − разходи) × 15% = данък. Плюс 153 € месечни осигуровки.'
-                              : 'Profit (income − expenses) × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')
+                              ? 'Печалба (приходи − разходи) − осигуровки = данъчна основа. Данъчна основа × 15% = данък.'
+                              : 'Profit (income − expenses) − insurance = taxable base. Taxable base × 15% = income tax.')
                             : (language === 'bg'
-                              ? 'Брутен доход × 75% = облагаем доход. Облагаем доход × 15% = данък. Плюс 153 € месечни осигуровки.'
-                              : 'Gross income × 75% = taxable income. Taxable income × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')}
+                              ? `Брутен доход − ${tax?.nprRate ?? 25}% НПР − осигуровки = данъчна основа. Данъчна основа × 10% = данък.`
+                              : `Gross income − ${tax?.nprRate ?? 25}% НПР deduction − insurance = taxable base. Taxable base × 10% = income tax.`)}
                         </div>
                       )}
                     </div>
@@ -438,12 +461,26 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
                 </div>
 
                 {/* Subtitle breakdown */}
+                <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.38)', marginBottom: '0.4rem' }}>
+                  {legalFormEff === 'ET'
+                    ? (language === 'bg'
+                      ? `На база реална печалба (приходи − разходи) − осигуровки × 15%`
+                      : `Based on actual profit (income − expenses), minus insurance × 15% income tax`)
+                    : (language === 'bg'
+                      ? `На база ${tax.nprRate}% НПР приспадане − осигуровки × 10%`
+                      : `Based on ${tax.nprRate}% НПР deduction, minus insurance × 10% income tax`)}
+                </div>
                 <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.38)' }}>
                   {language === 'bg' ? 'Данък' : 'Income tax'} {fmt(tax.incomeTax)} {lang.currency}
                   {' · '}
                   {lang.insurance} ~{fmt(tax.insurance)} {lang.currency}
                   {' · '}
                   {lang.totalOwed}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.25)', marginTop: '0.6rem' }}>
+                  {language === 'bg'
+                    ? 'Само прогноза. Консултирайте се със счетоводител за официалната декларация.'
+                    : 'Estimate only. Consult an accountant for your official declaration.'}
                 </div>
               </div>
             )}

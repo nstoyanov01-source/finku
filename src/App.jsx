@@ -11,6 +11,8 @@ import Terms from './pages/Terms'
 import Profile from './pages/Profile'
 import UpdatePassword from './pages/UpdatePassword'
 import NewInvoice from './pages/NewInvoice'
+import Blog from './pages/Blog'
+import BlogPost from './pages/BlogPost'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -18,6 +20,7 @@ export default function App() {
   const [language, setLanguage] = useState(null)
   const [onboarded, setOnboarded] = useState(null)
   const [legalForm, setLegalForm] = useState(null)
+  const [authorRate, setAuthorRate] = useState(false)
   const [needsLegalForm, setNeedsLegalForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
@@ -37,7 +40,7 @@ export default function App() {
       }
       setSession(session)
       if (session) loadProfile(session.user.id)
-      else { setLanguage(null); setOnboarded(null); setLegalForm(null); setNeedsLegalForm(false); setLoading(false) }
+      else { setLanguage(null); setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
@@ -46,12 +49,13 @@ export default function App() {
   async function loadProfile(userId) {
     const { data } = await supabase
       .from('profiles')
-      .select('language, onboarded, legal_form')
+      .select('language, onboarded, legal_form, author_rate')
       .eq('id', userId)
       .single()
     setLanguage(data?.language || 'en')
     setOnboarded(data?.onboarded ?? false)
     setLegalForm(data?.legal_form || null)
+    setAuthorRate(data?.author_rate ?? false)
     setNeedsLegalForm(data?.onboarded === true && !data?.legal_form)
     setLoading(false)
   }
@@ -96,7 +100,7 @@ export default function App() {
         !session ? <Navigate to="/auth" /> :
         !onboarded ? <Navigate to="/language" /> :
         needsLegalForm ? <Navigate to="/legal-form" /> :
-        <Dashboard session={session} language={language} legalForm={legalForm} onLanguageChange={setLanguage} />
+        <Dashboard session={session} language={language} legalForm={legalForm} authorRate={authorRate} onAuthorRateChange={setAuthorRate} onLanguageChange={setLanguage} />
       } />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
@@ -111,6 +115,8 @@ export default function App() {
         !onboarded ? <Navigate to="/language" /> :
         <NewInvoice session={session} language={language} onLanguageChange={setLanguage} />
       } />
+      <Route path="/blog" element={<Blog language={language || 'en'} />} />
+      <Route path="/blog/:slug" element={<BlogPost language={language || 'en'} />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
