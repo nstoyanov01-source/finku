@@ -32,14 +32,20 @@ function formatCurrentDate(language) {
   })
 }
 
-function calcTax(grossIncome, totalExpenses, monthsActive, legalForm) {
-  const insurancePerMonth = 153
-  const taxableIncome = legalForm === 'ET'
-    ? Math.max(0, grossIncome - totalExpenses)
-    : grossIncome * 0.75
-  const ddfl = taxableIncome * 0.15
-  const insurance = insurancePerMonth * Math.max(1, monthsActive)
-  return { ddfl: Math.round(ddfl), insurance: Math.round(insurance), total: Math.round(ddfl + insurance) }
+function calcTax(totalIncome, totalExpenses, legalForm) {
+  const monthsElapsed = new Date().getMonth() + 1
+  const insurance = 153 * monthsElapsed
+  if (legalForm === 'just_tracking') return null
+  let taxableIncome, incomeTax
+  if (legalForm === 'ET') {
+    taxableIncome = Math.max(0, totalIncome - totalExpenses)
+    incomeTax = taxableIncome * 0.15
+  } else {
+    taxableIncome = totalIncome * 0.75
+    incomeTax = taxableIncome * 0.15
+  }
+  const total = incomeTax + insurance
+  return { taxableIncome, incomeTax, insurance, total, monthsElapsed }
 }
 
 export default function Dashboard({ session, language, legalForm, onLanguageChange }) {
@@ -59,8 +65,6 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
   const { toasts, showToast } = useToast()
 
   useEffect(() => { document.title = 'Dashboard · Finku' }, [])
-  const [balance, setBalance] = useState('')
-  const [showBalanceInput, setShowBalanceInput] = useState(false)
   const [firstName, setFirstName] = useState('')
 
   useEffect(() => { fetchData(); fetchName() }, [])
@@ -90,10 +94,8 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
   const avgMonthly = currentMonth > 0 ? totalIncome / currentMonth : 0
 
   const legalFormEff = legalForm || 'svobodna_profesiya'
-  const tax = calcTax(totalIncome, totalExpenses, currentMonth, legalFormEff)
+  const tax = calcTax(totalIncome, totalExpenses, legalFormEff)
   const projectedAnnual = (totalIncome / currentMonth) * 12
-  const balanceNum = parseFloat(balance) || 0
-  const hasEnough = balanceNum >= tax.total
 
   const monthlyData = Array.from({ length: currentMonth }, (_, i) => {
     const m = String(i + 1).padStart(2, '0')
@@ -417,6 +419,65 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
             <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(240,237,228,0.3)' }}>…</div>
           ) : (
             <>
+              {/* Tax Banner */}
+              {tax && (
+                <div style={{
+                  background: 'rgba(200,240,58,0.06)',
+                  border: '0.5px solid rgba(200,240,58,0.15)',
+                  borderRadius: 12,
+                  padding: '1.25rem 1.5rem',
+                  marginBottom: '1.25rem',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                      {lang.taxEstimate} · {lang.taxAuthority}
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        onMouseEnter={() => setShowTaxTooltip(true)}
+                        onMouseLeave={() => setShowTaxTooltip(false)}
+                        onClick={() => setShowTaxTooltip(v => !v)}
+                        style={{
+                          width: 18, height: 18, border: '1px solid rgba(240,237,228,0.2)',
+                          borderRadius: '50%', background: 'none', fontSize: 11,
+                          color: 'rgba(240,237,228,0.4)', cursor: 'help',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: 0, fontFamily: 'DM Sans, sans-serif', lineHeight: 1,
+                        }}
+                      >?</button>
+                      {showTaxTooltip && (
+                        <div style={{
+                          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                          background: '#1e1e1c', border: '1px solid rgba(240,237,228,0.1)',
+                          borderRadius: 8, padding: '10px 14px', fontSize: 12,
+                          width: 280, zIndex: 50, color: 'rgba(240,237,228,0.7)',
+                          lineHeight: 1.6, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                          whiteSpace: 'normal',
+                        }}>
+                          {legalFormEff === 'ET'
+                            ? (language === 'bg'
+                              ? 'Печалба (приходи − разходи) × 15% = данък. Плюс 153 € месечни осигуровки.'
+                              : 'Profit (income − expenses) × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')
+                            : (language === 'bg'
+                              ? 'Брутен доход × 75% = облагаем доход. Облагаем доход × 15% = данък. Плюс 153 € месечни осигуровки.'
+                              : 'Gross income × 75% = taxable income. Taxable income × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 30, fontWeight: 600, color: '#c8f03a', marginBottom: '0.4rem', letterSpacing: '-0.5px' }}>
+                    ~{fmt(tax.total)} {lang.currency}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>
+                    {language === 'bg' ? 'Данък' : 'Income tax'} {fmt(tax.incomeTax)} {lang.currency}
+                    {' · '}
+                    {lang.insurance} ~{fmt(tax.insurance)} {lang.currency}
+                    {' · '}
+                    {lang.totalOwed}
+                  </div>
+                </div>
+              )}
+
               {/* KPI Cards */}
               <div className="kpi-grid">
                 {[
@@ -451,112 +512,6 @@ export default function Dashboard({ session, language, legalForm, onLanguageChan
                   )}
                 </div>
               )}
-
-              {/* Tax Banner */}
-              {legalFormEff !== 'just_tracking' && <div className="tax-banner">
-                <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                  <div className="tax-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c8f03a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                      <div className="tax-title">{lang.taxEstimate}</div>
-                      <button
-                        onMouseEnter={() => setShowTaxTooltip(true)}
-                        onMouseLeave={() => setShowTaxTooltip(false)}
-                        onClick={() => setShowTaxTooltip(v => !v)}
-                        style={{
-                          width: 16, height: 16, border: '1px solid rgba(240,237,228,0.2)',
-                          borderRadius: '50%', background: 'none', fontSize: 11,
-                          color: 'rgba(240,237,228,0.4)', cursor: 'help', marginLeft: 6,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          padding: 0, flexShrink: 0, fontFamily: 'DM Sans, sans-serif', lineHeight: 1,
-                        }}
-                      >?</button>
-                      {showTaxTooltip && (
-                        <div style={{
-                          position: 'absolute', top: 'calc(100% + 8px)', left: 0,
-                          background: '#1e1e1c', border: '1px solid rgba(240,237,228,0.1)',
-                          borderRadius: 8, padding: '10px 14px', fontSize: 12,
-                          maxWidth: 280, zIndex: 50, color: 'rgba(240,237,228,0.7)',
-                          lineHeight: 1.6, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                          whiteSpace: 'normal',
-                        }}>
-                          {legalFormEff === 'ET'
-                            ? (language === 'bg'
-                              ? 'Печалба (приходи − разходи) × 15% = данък. Плюс 153 € месечни осигуровки.'
-                              : 'Profit (income − expenses) × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')
-                            : (language === 'bg'
-                              ? 'Брутен доход × 75% = облагаем доход. Облагаем доход × 15% = данък. Плюс 153 € месечни осигуровки.'
-                              : 'Gross income × 75% = taxable income. Taxable income × 15% = income tax. Plus 153 € fixed monthly insurance contributions.')}
-                        </div>
-                      )}
-                    </div>
-                    <div className="tax-desc">
-                      {legalFormEff === 'ET'
-                        ? (language === 'bg' ? 'На база реална печалба (приходи − разходи) × 15%' : 'Based on actual profit (income − expenses) × 15%')
-                        : lang.taxDesc}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="tax-figures">
-                  <div>
-                    <div className="tax-fig-label">{lang.ddfl}</div>
-                    <div className="tax-fig-value">{fmt(tax.ddfl)} {lang.currency}</div>
-                  </div>
-                  <div>
-                    <div className="tax-fig-label">{lang.insurance}</div>
-                    <div className="tax-fig-value">~{fmt(tax.insurance)} {lang.currency}</div>
-                  </div>
-                  <div>
-                    <div className="tax-fig-label">{lang.totalOwed}</div>
-                    <div className="tax-total-value">~{fmt(tax.total)} {lang.currency}</div>
-                  </div>
-                  <div>
-                    {showBalanceInput ? (
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <input
-                          className="input-field"
-                          type="number"
-                          value={balance}
-                          onChange={e => setBalance(e.target.value)}
-                          placeholder="0"
-                          style={{ width: 100, padding: '6px 10px', fontSize: 13 }}
-                          autoFocus
-                          onBlur={() => setShowBalanceInput(false)}
-                        />
-                        <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>{lang.currency}</span>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowBalanceInput(true)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500,
-                          padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                          fontFamily: 'DM Sans, sans-serif',
-                          background: hasEnough && balance
-                            ? 'rgba(126,201,95,0.12)'
-                            : balance
-                              ? 'rgba(232,168,74,0.12)'
-                              : 'rgba(240,237,228,0.06)',
-                          color: hasEnough && balance
-                            ? '#7ec95f'
-                            : balance
-                              ? '#e8a84a'
-                              : 'rgba(240,237,228,0.5)',
-                        }}
-                      >
-                        {balance
-                          ? (hasEnough ? '✓ ' + lang.setAsideOk : '⚠ ' + lang.setAsideWarn)
-                          : '+ Set current balance'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>}
 
               {/* Income + Expenses columns */}
               {income.length === 0 && expenses.length === 0 ? (
