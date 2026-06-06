@@ -373,6 +373,7 @@ export default function Profile({ session, language, onLanguageChange }) {
         .lf-option.lf-active { border-color: #c8f03a; background: rgba(200,240,58,0.06); }
         .lf-option-label { font-weight: 500; font-size: 14px; color: #f0ede4; }
         .lf-option-sub { font-size: 12px; color: rgba(240,237,228,0.4); margin-top: 2px; }
+        .lf-option-desc { font-size: 11px; color: rgba(240,237,228,0.28); margin-top: 4px; line-height: 1.45; }
 
         .author-toggle-row {
           display: flex;
@@ -494,9 +495,24 @@ export default function Profile({ session, language, onLanguageChange }) {
                   <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
                       {[
-                        { value: 'svobodna_profesiya', label: 'Свободна професия', sub: isBg ? 'Фрийлансър, консултант, дизайнер, разработчик' : 'Freelancer, consultant, designer, developer' },
-                        { value: 'ET', label: 'ЕТ (Едноличен търговец)', sub: isBg ? 'Регистриран едноличен търговец' : 'Registered sole trader' },
-                        { value: 'just_tracking', label: isBg ? 'Само проследяване' : 'Just tracking', sub: isBg ? 'Искам само да проследявам приходи и разходи' : 'I just want to track income and expenses' },
+                        {
+                          value: 'svobodna_profesiya',
+                          label: isBg ? 'Свободна професия' : 'Freelancer',
+                          sub: isBg ? 'Фрийлансър, консултант, дизайнер, разработчик' : 'Freelancer, consultant, designer, developer',
+                          desc: isBg ? 'Издаваш фактури директно на клиенти. Нямаш регистрирана фирма.' : 'You invoice clients directly. No registered company.',
+                        },
+                        {
+                          value: 'ET',
+                          label: isBg ? 'ЕТ (Едноличен търговец)' : 'Sole trader (ЕТ)',
+                          sub: isBg ? 'Регистриран едноличен търговец' : 'Registered sole trader',
+                          desc: isBg ? 'Имаш регистриран ЕТ с ЕИК номер от Търговския регистър.' : 'You have a registered business with an ЕИК number.',
+                        },
+                        {
+                          value: 'just_tracking',
+                          label: isBg ? 'Само проследяване' : 'Just tracking',
+                          sub: isBg ? 'Искам само да проследявам приходи и разходи' : 'I just want to track income and expenses',
+                          desc: isBg ? 'Не ми трябва данъчна прогноза — само проследяване на приходи и разходи.' : "I don't need tax estimates — just income and expense tracking.",
+                        },
                       ].map(opt => (
                         <button
                           key={opt.value}
@@ -505,6 +521,7 @@ export default function Profile({ session, language, onLanguageChange }) {
                         >
                           <div className="lf-option-label">{opt.label}</div>
                           <div className="lf-option-sub">{opt.sub}</div>
+                          <div className="lf-option-desc">{opt.desc}</div>
                         </button>
                       ))}
                     </div>
@@ -515,14 +532,23 @@ export default function Profile({ session, language, onLanguageChange }) {
                 )}
               </>
             ) : (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 14, color: 'rgba(240,237,228,0.65)' }}>
-                  {currentLegalForm === 'svobodna_profesiya' && 'Свободна професия'}
-                  {currentLegalForm === 'ET' && 'ЕТ (Едноличен търговец)'}
-                  {currentLegalForm === 'just_tracking' && (isBg ? 'Само проследяване' : 'Just tracking')}
-                  {!currentLegalForm && <span style={{ color: 'rgba(240,237,228,0.3)' }}>{isBg ? 'Не е зададено' : 'Not set'}</span>}
-                </span>
-                <button className="delete-cancel-btn" onClick={() => setShowLegalFormEdit(true)}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: 14, color: 'rgba(240,237,228,0.65)' }}>
+                    {currentLegalForm === 'svobodna_profesiya' && (isBg ? 'Свободна професия' : 'Freelancer')}
+                    {currentLegalForm === 'ET' && (isBg ? 'ЕТ (Едноличен търговец)' : 'Sole trader (ЕТ)')}
+                    {currentLegalForm === 'just_tracking' && (isBg ? 'Само проследяване' : 'Just tracking')}
+                    {!currentLegalForm && <span style={{ color: 'rgba(240,237,228,0.3)' }}>{isBg ? 'Не е зададено' : 'Not set'}</span>}
+                  </div>
+                  {currentLegalForm && (
+                    <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.3)', marginTop: 4, lineHeight: 1.45 }}>
+                      {currentLegalForm === 'svobodna_profesiya' && (isBg ? 'Издаваш фактури директно на клиенти. Нямаш регистрирана фирма.' : 'You invoice clients directly. No registered company.')}
+                      {currentLegalForm === 'ET' && (isBg ? 'Имаш регистриран ЕТ с ЕИК номер от Търговския регистър.' : 'You have a registered business with an ЕИК number.')}
+                      {currentLegalForm === 'just_tracking' && (isBg ? 'Не ми трябва данъчна прогноза — само проследяване на приходи и разходи.' : "I don't need tax estimates — just income and expense tracking.")}
+                    </div>
+                  )}
+                </div>
+                <button className="delete-cancel-btn" onClick={() => setShowLegalFormEdit(true)} style={{ flexShrink: 0, marginLeft: 12 }}>
                   {isBg ? 'Промени' : 'Change'}
                 </button>
               </div>
