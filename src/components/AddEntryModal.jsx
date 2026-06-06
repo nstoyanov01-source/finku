@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
+import { usePostHog } from '@posthog/react'
 
 export default function AddEntryModal({ type, userId, language, onClose, onSaved, onDeleted, initialData, entryId }) {
   const lang = t[language]
   const isEdit = !!entryId
   const submitting = useRef(false)
+  const posthog = usePostHog()
 
   const [form, setForm] = useState(initialData ? {
     description: initialData.description || '',
@@ -61,12 +63,17 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
         : { description: desc, category: form.category, amount: amt, date: form.date }
       const { error } = await supabase.from(table).update(patch).eq('id', entryId)
       if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
+      posthog?.capture('entry_updated', { type, amount: amt })
     } else {
       const payload = type === 'income'
         ? { user_id: userId, description: desc, client: form.client.trim(), amount: amt, date: form.date }
         : { user_id: userId, description: desc, category: form.category, amount: amt, date: form.date }
       const { error } = await supabase.from(table).insert(payload)
       if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
+      posthog?.capture(type === 'income' ? 'income_added' : 'expense_added', {
+        amount: amt,
+        ...(type === 'expense' ? { category: form.category } : {}),
+      })
     }
 
     onSaved()
@@ -80,6 +87,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     const table = type === 'income' ? 'income' : 'expenses'
     const { error } = await supabase.from(table).delete().eq('id', entryId)
     if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
+    posthog?.capture('entry_deleted', { type })
     if (onDeleted) onDeleted(); else onSaved()
     onClose()
   }

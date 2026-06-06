@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { usePostHog } from '@posthog/react'
 
 function translateError(msg) {
   if (msg.includes('Invalid login credentials')) return 'Wrong email or password. Please try again.'
@@ -19,12 +20,14 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)
+  const posthog = usePostHog()
 
   useEffect(() => { document.title = 'Sign in · Finku' }, [])
 
   function switchMode(next) { setMode(next); setError(''); setResetSent(false) }
 
   async function handleGoogleSignIn() {
+    posthog?.capture('user_logged_in', { method: 'google' })
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: 'https://finku.eu/dashboard' },
@@ -47,13 +50,20 @@ export default function Auth() {
     }
 
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(translateError(error.message))
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        setError(translateError(error.message))
+      } else if (data?.user) {
+        posthog?.identify(data.user.id, { email: data.user.email })
+        posthog?.capture('user_logged_in', { method: 'email' })
+      }
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) { setError(translateError(error.message)); setLoading(false); return }
       if (data?.user) {
         await supabase.from('profiles').upsert({ id: data.user.id, first_name: name.trim() })
+        posthog?.identify(data.user.id, { email: data.user.email, name: name.trim() })
+        posthog?.capture('user_signed_up', { method: 'email' })
       }
     }
     setLoading(false)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
+import { usePostHog } from '@posthog/react'
 
 function parseRevolutCSV(text) {
   const lines = text.trim().split('\n')
@@ -29,6 +30,7 @@ export default function CSVImport({ userId, language, onImported }) {
   const lang = t[language]
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
+  const posthog = usePostHog()
 
   async function handleFile(e) {
     const file = e.target.files[0]
@@ -52,6 +54,11 @@ export default function CSVImport({ userId, language, onImported }) {
     if (incomeRows.length) { await supabase.from('income').insert(incomeRows); count += incomeRows.length }
     if (expenseRows.length) { await supabase.from('expenses').insert(expenseRows); count += expenseRows.length }
 
+    posthog?.capture('csv_imported', {
+      entries_count: count,
+      income_rows: incomeRows.length,
+      expense_rows: expenseRows.length,
+    })
     setStatus(lang.csvSuccess(count))
     onImported()
     e.target.value = ''

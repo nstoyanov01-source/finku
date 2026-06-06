@@ -6,6 +6,7 @@ import AddEntryModal from '../components/AddEntryModal'
 import CSVImport from '../components/CSVImport'
 import Toast, { useToast } from '../components/Toast'
 import EntryDrawer from '../components/EntryDrawer'
+import { usePostHog } from '@posthog/react'
 
 function greeting(lang) {
   const h = new Date().getHours()
@@ -170,7 +171,9 @@ function generatePayments(tax, language) {
 
 export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
   const lang = t[language]
+  const posthog = usePostHog()
   const navigate = useNavigate()
+  const posthog = usePostHog()
   const userId = session.user.id
   const currentYear = new Date().getFullYear()
 
@@ -196,14 +199,17 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const { toasts, showToast } = useToast()
   const [firstName, setFirstName] = useState('')
 
-  useEffect(() => { document.title = 'Dashboard · Finku' }, [])
+  useEffect(() => {
+    document.title = 'Dashboard · Finku'
+    posthog?.identify(userId, { email: session.user.email })
+  }, [])
 
   useEffect(() => {
     if (setAside) localStorage.setItem('finku_set_aside', setAside)
     else localStorage.removeItem('finku_set_aside')
   }, [setAside])
 
-  function togglePaid(dateKey) {
+  function togglePaid(dateKey, paymentName) {
     const lsKey = `finku_paid_${dateKey}`
     setPaidKeys(prev => {
       if (prev[dateKey]) {
@@ -213,6 +219,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
         return next
       }
       localStorage.setItem(lsKey, '1')
+      posthog?.capture('payment_marked_paid', { payment_type: paymentName })
       return { ...prev, [dateKey]: true }
     })
   }
@@ -532,7 +539,12 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
 
                   {/* Breakdown toggle */}
                   <button
-                    onClick={() => setShowBreakdown(v => !v)}
+                    onClick={() => {
+                      setShowBreakdown(v => {
+                        if (!v) posthog?.capture('tax_breakdown_viewed', { legal_form: legalFormEff })
+                        return !v
+                      })
+                    }}
                     style={{
                       background: 'none', border: 'none', padding: 0,
                       fontSize: 12, color: 'rgba(240,237,228,0.35)',
@@ -600,7 +612,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                               background: isPaid ? 'rgba(200,240,58,0.1)' : 'none',
                               color: '#c8f03a',
                             }}
-                            onClick={() => togglePaid(payment.key)}
+                            onClick={() => togglePaid(payment.key, payment.name)}
                           >
                             {isPaid ? '✓' : ''}
                           </div>

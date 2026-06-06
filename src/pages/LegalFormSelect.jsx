@@ -12,7 +12,7 @@ export default function LegalFormSelect({ userId, language, onComplete }) {
     if (!selected) return
     setLoading(true)
     await supabase.from('profiles').update({ legal_form: selected, onboarded: true }).eq('id', userId)
-    posthog?.capture('onboarding_legal_form_selected', { legal_form: selected })
+    posthog?.capture('onboarding_completed', { legal_form: selected })
     onComplete()
   }
 

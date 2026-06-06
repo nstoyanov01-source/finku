@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
+import posthog from 'posthog-js'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import LanguageSelect from './pages/LanguageSelect'
@@ -28,8 +29,10 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session) loadProfile(session.user.id)
-      else setLoading(false)
+      if (session) {
+        posthog.identify(session.user.id, { email: session.user.email })
+        loadProfile(session.user.id)
+      } else setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -39,8 +42,10 @@ export default function App() {
         return
       }
       setSession(session)
-      if (session) loadProfile(session.user.id)
-      else { setLanguage(null); setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false) }
+      if (session) {
+        posthog.identify(session.user.id, { email: session.user.email })
+        loadProfile(session.user.id)
+      } else { setLanguage(null); setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
