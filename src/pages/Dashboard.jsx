@@ -173,7 +173,6 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const lang = t[language]
   const posthog = usePostHog()
   const navigate = useNavigate()
-  const posthog = usePostHog()
   const userId = session.user.id
   const currentYear = new Date().getFullYear()
 

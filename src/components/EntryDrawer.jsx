@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
+import { usePostHog } from '@posthog/react'
 
 function fmtAmt(n) {
   return Math.round(n).toLocaleString('en-US')
@@ -18,6 +19,7 @@ export default function EntryDrawer({ entry, type, language, onClose, onEdit, on
   const [visible, setVisible] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const posthog = usePostHog()
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setVisible(true))
@@ -34,6 +36,7 @@ export default function EntryDrawer({ entry, type, language, onClose, onEdit, on
     const table = type === 'income' ? 'income' : 'expenses'
     const { error } = await supabase.from(table).delete().eq('id', entry.id)
     if (error) { setDeleting(false); return }
+    posthog?.capture(type === 'income' ? 'income_deleted' : 'expense_deleted', { source: 'drawer' })
     onDeleted()
   }
 

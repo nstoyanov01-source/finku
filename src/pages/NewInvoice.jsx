@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { usePostHog } from '@posthog/react'
 
 const CURRENCY_SYMBOLS = { EUR: '€', USD: '$', GBP: '£', BGN: 'лв.' }
 
@@ -14,6 +15,7 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
   const navigate = useNavigate()
   const userId = session.user.id
   const isBg = language === 'bg'
+  const posthog = usePostHog()
 
   const [yourName, setYourName] = useState('')
   const [yourAddress, setYourAddress] = useState('')
@@ -73,6 +75,10 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
       date: invoiceDate,
     })
 
+    posthog?.capture('invoice_generated', {
+      amount: parseFloat(amount),
+      currency,
+    })
     setLoading(false)
     window.print()
   }

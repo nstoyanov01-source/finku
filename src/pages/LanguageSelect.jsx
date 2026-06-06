@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { usePostHog } from '@posthog/react'
 
 export default function LanguageSelect({ userId, onLanguageSet }) {
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(false)
+  const posthog = usePostHog()
 
   async function handleContinue() {
     if (!selected) return
     setLoading(true)
     await supabase.from('profiles').update({ language: selected }).eq('id', userId)
+    posthog?.capture('onboarding_language_selected', { language: selected })
     onLanguageSet(selected)
   }
 
