@@ -43,7 +43,7 @@ function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false) {
     const insuranceDeduction = Math.min(profit, totalInsurance)
     const taxableBase = Math.max(0, profit - insuranceDeduction)
     const incomeTax = taxableBase * 0.15
-    return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 15, nprRate: 0 }
+    return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 15, nprRate: 0, profit, insuranceDeduction }
   }
 
   const nprRate = useAuthorRate ? 0.40 : 0.25
@@ -52,7 +52,7 @@ function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false) {
   const insuranceDeduction = Math.min(afterNPR, totalInsurance)
   const taxableBase = Math.max(0, afterNPR - insuranceDeduction)
   const incomeTax = taxableBase * 0.10
-  return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 10, nprRate: nprRate * 100 }
+  return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 10, nprRate: nprRate * 100, npr, afterNPR, insuranceDeduction }
 }
 
 function nextTaxDeadline() {
@@ -105,6 +105,69 @@ function useCountUp(target, duration = 1200) {
   return value
 }
 
+function BreakdownRow({ label, value, isTotal }) {
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between',
+      padding: isTotal ? '8px 0 4px' : '4px 0',
+      fontSize: 12,
+      color: isTotal ? '#f0ede4' : 'rgba(240,237,228,0.5)',
+      fontWeight: isTotal ? 500 : 400,
+      borderTop: isTotal ? '0.5px solid rgba(240,237,228,0.1)' : 'none',
+      marginTop: isTotal ? 4 : 0,
+    }}>
+      <span>{label}</span>
+      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+    </div>
+  )
+}
+
+function daysUntil(date) {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const d = new Date(date); d.setHours(0, 0, 0, 0)
+  return Math.ceil((d - today) / 86400000)
+}
+
+function urgencyStyle(days) {
+  if (days > 30) return { color: '#c8f03a', bg: 'rgba(200,240,58,0.1)' }
+  if (days > 7) return { color: '#e8a84a', bg: 'rgba(255,200,0,0.08)' }
+  return { color: '#e07070', bg: 'rgba(224,112,112,0.1)' }
+}
+
+function generatePayments(tax, language) {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const year = today.getFullYear()
+  const payments = []
+  const monthNames = language === 'bg'
+    ? ['Януари','Февруари','Март','Април','Май','Юни','Юли','Август','Септември','Октомври','Ноември','Декември']
+    : ['January','February','March','April','May','June','July','August','September','October','November','December']
+  const insLabel = language === 'bg' ? 'Осигуровки' : 'Insurance'
+  const annLabel = language === 'bg' ? 'Годишна декларация' : 'Annual declaration'
+
+  for (let m = 0; m < 12; m++) {
+    const due = new Date(year, m, 25); due.setHours(0, 0, 0, 0)
+    if (due >= today) {
+      payments.push({ key: `${year}-${String(m+1).padStart(2,'0')}-25`, name: `${insLabel} — ${monthNames[m]}`, date: due, amount: 153 })
+    }
+  }
+
+  const qAmt = tax && tax.monthsElapsed > 0 ? Math.round(tax.incomeTax / tax.monthsElapsed * 3) : 0
+  const qDates = [new Date(year,3,30), new Date(year,6,31), new Date(year,9,31)]
+  const qLabels = language === 'bg'
+    ? ['Q1 данъчно плащане','Q2 данъчно плащане','Q3 данъчно плащане']
+    : ['Q1 tax payment','Q2 tax payment','Q3 tax payment']
+  qDates.forEach((d, i) => {
+    if (d > today) {
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+      payments.push({ key: ds, name: qLabels[i], date: d, amount: qAmt })
+    }
+  })
+
+  payments.push({ key: `${year+1}-04-30`, name: annLabel, date: new Date(year+1,3,30), amount: tax ? Math.round(tax.total) : 0 })
+  payments.sort((a, b) => a.date - b.date)
+  return payments.slice(0, 4)
+}
+
 export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
   const lang = t[language]
   const navigate = useNavigate()
@@ -118,7 +181,15 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const [drawer, setDrawer] = useState(null)
   const [showAllIncome, setShowAllIncome] = useState(false)
   const [showAllExpenses, setShowAllExpenses] = useState(false)
-  const [showTaxTooltip, setShowTaxTooltip] = useState(false)
+  const [showBreakdown, setShowBreakdown] = useState(false)
+  const [paidKeys, setPaidKeys] = useState(() => {
+    const keys = {}
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k?.startsWith('finku_paid_')) keys[k.replace('finku_paid_', '')] = true
+    }
+    return keys
+  })
   const [setAside, setSetAside] = useState(() => localStorage.getItem('finku_set_aside') || '')
   const [taxPulse, setTaxPulse] = useState(false)
   const prevTaxRef = useRef(null)
@@ -131,6 +202,20 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
     if (setAside) localStorage.setItem('finku_set_aside', setAside)
     else localStorage.removeItem('finku_set_aside')
   }, [setAside])
+
+  function togglePaid(dateKey) {
+    const lsKey = `finku_paid_${dateKey}`
+    setPaidKeys(prev => {
+      if (prev[dateKey]) {
+        localStorage.removeItem(lsKey)
+        const next = { ...prev }
+        delete next[dateKey]
+        return next
+      }
+      localStorage.setItem(lsKey, '1')
+      return { ...prev, [dateKey]: true }
+    })
+  }
 
   useEffect(() => { fetchData(); fetchName() }, [])
 
@@ -191,14 +276,6 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
     navigate('/')
   }
 
-  const setAsidePill = setAsideNum > 0 && tax ? (() => {
-    if (setAsideNum >= tax.total)
-      return { bg: 'rgba(200,240,58,0.1)', color: '#c8f03a', label: '✓ ' + (language === 'bg' ? 'Покрито' : 'Covered') }
-    if (setAsideNum >= tax.total * 0.7)
-      return { bg: 'rgba(255,200,0,0.1)', color: '#e8a84a', label: '⚠ ' + (language === 'bg' ? 'Почти' : 'Almost there') }
-    return { bg: 'rgba(224,112,112,0.1)', color: '#e07070', label: '✗ ' + (language === 'bg' ? 'Непокрито' : 'Not covered') }
-  })() : null
-
   return (
     <>
       <style>{`
@@ -254,7 +331,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
         .tax-amount.pulsing { animation: taxPulse 400ms ease-out forwards; }
 
         .set-aside-input {
-          width: 88px;
+          width: 80px;
           background: rgba(240,237,228,0.06);
           border: 1px solid rgba(240,237,228,0.12);
           border-radius: 6px;
@@ -267,6 +344,10 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
         }
         .set-aside-input:focus { border-color: rgba(200,240,58,0.35); }
 
+        .breakdown-section { border-top: 0.5px solid rgba(240,237,228,0.06); padding-top: 0.5rem; margin-top: 0.25rem; margin-bottom: 0.5rem; }
+        .payment-row { background: #161614; border: 0.5px solid rgba(240,237,228,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 12px; transition: border-color 0.15s; }
+        .payment-row:hover { border-color: rgba(240,237,228,0.12); }
+        .payment-checkbox { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: all 0.15s; }
         .entry-row { display: flex; align-items: center; justify-content: space-between; background: rgba(240,237,228,0.04); border-radius: 9px; padding: 8px 10px; position: relative; cursor: pointer; }
         .entry-row:hover { background: rgba(240,237,228,0.07); }
         .entry-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
@@ -369,120 +450,183 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
               <div className="dash-subheading">{formatCurrentDate(language)}</div>
             </div>
 
-            {/* Tax Banner */}
+            {/* Tax Section — Layer 1 + Layer 2 */}
             {tax && (
-              <div style={{
-                background: 'rgba(200,240,58,0.06)',
-                border: '0.5px solid rgba(200,240,58,0.15)',
-                borderRadius: 12,
-                padding: '1.25rem 1.5rem',
-                marginBottom: '1.25rem',
-              }}>
-                {/* Top row: label + deadline pill + tooltip */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', flexWrap: 'wrap', gap: 8 }}>
-                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                    {lang.taxEstimate} · {lang.taxAuthority}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {deadline && (
-                      <span style={{
-                        background: 'rgba(200,240,58,0.1)', color: '#c8f03a',
-                        fontSize: 12, borderRadius: 20, padding: '4px 10px',
-                        whiteSpace: 'nowrap', fontWeight: 500,
-                      }}>
-                        {deadline.isAnnual
-                          ? (language === 'bg'
-                            ? `Годишна декларация: ${formatDeadlineLabel(deadline.date, 'bg')} · ${deadline.days} дни`
-                            : `Annual declaration: ${formatDeadlineLabel(deadline.date, 'en')} · ${deadline.days} days`)
-                          : (language === 'bg'
-                            ? `Следващо плащане: ${formatDeadlineLabel(deadline.date, 'bg')} · ${deadline.days} дни`
-                            : `Next payment: ${formatDeadlineLabel(deadline.date, 'en')} · ${deadline.days} days`)}
-                      </span>
-                    )}
-                    <div style={{ position: 'relative' }}>
-                      <button
-                        onMouseEnter={() => setShowTaxTooltip(true)}
-                        onMouseLeave={() => setShowTaxTooltip(false)}
-                        onClick={() => setShowTaxTooltip(v => !v)}
-                        style={{
-                          width: 18, height: 18, border: '1px solid rgba(240,237,228,0.2)',
-                          borderRadius: '50%', background: 'none', fontSize: 11,
-                          color: 'rgba(240,237,228,0.4)', cursor: 'help',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          padding: 0, fontFamily: 'DM Sans, sans-serif', lineHeight: 1,
-                        }}
-                      >?</button>
-                      {showTaxTooltip && (
-                        <div style={{
-                          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                          background: '#1e1e1c', border: '1px solid rgba(240,237,228,0.1)',
-                          borderRadius: 8, padding: '10px 14px', fontSize: 12,
-                          width: 290, zIndex: 50, color: 'rgba(240,237,228,0.7)',
-                          lineHeight: 1.6, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                          whiteSpace: 'normal',
-                        }}>
-                          {legalFormEff === 'ET'
-                            ? (language === 'bg'
-                              ? 'Печалба (приходи − разходи) − осигуровки = данъчна основа. Данъчна основа × 15% = данък.'
-                              : 'Profit (income − expenses) − insurance = taxable base. Taxable base × 15% = income tax.')
-                            : (language === 'bg'
-                              ? `Брутен доход − ${tax?.nprRate ?? 25}% НПР − осигуровки = данъчна основа. Данъчна основа × 10% = данък.`
-                              : `Gross income − ${tax?.nprRate ?? 25}% НПР deduction − insurance = taxable base. Taxable base × 10% = income tax.`)}
-                        </div>
-                      )}
+              <>
+                {/* Layer 1: Tax Card */}
+                <div style={{
+                  background: 'rgba(200,240,58,0.04)',
+                  border: '0.5px solid rgba(200,240,58,0.2)',
+                  borderRadius: 12,
+                  padding: '1.25rem 1.5rem',
+                  marginBottom: '0.75rem',
+                }}>
+                  {/* Top row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                      {lang.taxEstimate} · {lang.taxAuthority}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {(() => {
+                        const pill = setAsideNum >= tax.total
+                          ? { bg: 'rgba(200,240,58,0.1)', color: '#c8f03a', label: lang.covered }
+                          : (setAsideNum > 0 && setAsideNum >= tax.total * 0.7)
+                          ? { bg: 'rgba(255,200,0,0.08)', color: '#e8a84a', label: lang.almostThere }
+                          : { bg: 'rgba(224,112,112,0.1)', color: '#e07070', label: lang.notCovered }
+                        return (
+                          <span style={{ background: pill.bg, color: pill.color, fontSize: 11, borderRadius: 20, padding: '3px 9px', fontWeight: 500 }}>
+                            {pill.label}
+                          </span>
+                        )
+                      })()}
+                      {deadline && (() => {
+                        const s = urgencyStyle(deadline.days)
+                        return (
+                          <span style={{ background: s.bg, color: s.color, fontSize: 11, borderRadius: 20, padding: '3px 9px', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                            {deadline.isAnnual
+                              ? `${lang.annualDeclaration}: ${formatDeadlineLabel(deadline.date, language)} · ${deadline.days} ${lang.daysAway}`
+                              : `${formatDeadlineLabel(deadline.date, language)} · ${deadline.days} ${lang.daysAway}`}
+                          </span>
+                        )
+                      })()}
                     </div>
                   </div>
-                </div>
 
-                {/* Animated total amount */}
-                <div className={`tax-amount${taxPulse ? ' pulsing' : ''}`}>
-                  ~{fmt(taxTotalDisplay)} {lang.currency}
-                </div>
+                  {/* Large total with count-up */}
+                  <div className={`tax-amount${taxPulse ? ' pulsing' : ''}`}>
+                    ~{fmt(taxTotalDisplay)} {lang.currency}
+                  </div>
 
-                {/* Set aside row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>
-                    {language === 'bg' ? 'Заделено:' : 'Currently set aside:'}
-                  </span>
-                  <input
-                    className="set-aside-input"
-                    type="number"
-                    min="0"
-                    value={setAside}
-                    onChange={e => setSetAside(e.target.value)}
-                    placeholder="0"
-                  />
-                  <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>€</span>
-                  {setAsidePill && (
-                    <span style={{ background: setAsidePill.bg, color: setAsidePill.color, fontSize: 12, borderRadius: 20, padding: '3px 10px', fontWeight: 500 }}>
-                      {setAsidePill.label}
-                    </span>
+                  {/* Subtitle */}
+                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.38)', marginBottom: '0.75rem' }}>
+                    153 {lang.currency}/{language === 'bg' ? 'мес. осигуровки' : 'month insurance'}
+                    {' · '}{fmt(tax.incomeTax)} {lang.currency} {language === 'bg' ? 'данък' : 'income tax'}
+                    {' · '}{tax.monthsElapsed} {language === 'bg' ? 'месеца' : 'months elapsed'}
+                  </div>
+
+                  {/* Set aside row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.6rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>{lang.setAside}:</span>
+                    <input
+                      className="set-aside-input"
+                      type="number"
+                      min="0"
+                      value={setAside}
+                      onChange={e => setSetAside(e.target.value)}
+                      placeholder="0"
+                    />
+                    <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>€</span>
+                    {setAsideNum > 0 && (() => {
+                      const pill = setAsideNum >= tax.total
+                        ? { bg: 'rgba(200,240,58,0.1)', color: '#c8f03a', label: lang.covered }
+                        : setAsideNum >= tax.total * 0.7
+                        ? { bg: 'rgba(255,200,0,0.08)', color: '#e8a84a', label: lang.almostThere }
+                        : { bg: 'rgba(224,112,112,0.1)', color: '#e07070', label: lang.notCovered }
+                      return (
+                        <span style={{ background: pill.bg, color: pill.color, fontSize: 12, borderRadius: 20, padding: '3px 10px', fontWeight: 500 }}>
+                          {pill.label}
+                        </span>
+                      )
+                    })()}
+                  </div>
+
+                  {/* Breakdown toggle */}
+                  <button
+                    onClick={() => setShowBreakdown(v => !v)}
+                    style={{
+                      background: 'none', border: 'none', padding: 0,
+                      fontSize: 12, color: 'rgba(240,237,228,0.35)',
+                      cursor: 'pointer', textDecoration: 'underline',
+                      fontFamily: 'DM Sans, sans-serif',
+                      marginBottom: showBreakdown ? '0.25rem' : '0.5rem',
+                      display: 'block',
+                    }}
+                  >
+                    {showBreakdown ? lang.hideCalculation : `${lang.howCalculated} ↓`}
+                  </button>
+
+                  {/* Breakdown rows */}
+                  {showBreakdown && (
+                    <div className="breakdown-section">
+                      {legalFormEff === 'ET' ? (
+                        <>
+                          <BreakdownRow label={language === 'bg' ? 'Брутен доход' : 'Gross income'} value={`${fmt(totalIncome)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Общи разходи' : 'Total expenses'} value={`− ${fmt(totalExpenses)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Печалба' : 'Profit'} value={`${fmt(tax.profit)} €`} />
+                          <BreakdownRow label={language === 'bg' ? `Осигуровки (${tax.monthsElapsed} × 153 €)` : `Insurance (${tax.monthsElapsed} × 153 €)`} value={`− ${fmt(tax.insuranceDeduction)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Данъчна основа' : 'Taxable base'} value={tax.taxableBase === 0 ? (language === 'bg' ? '0 — приспаданията надвишават дохода' : '0 — deductions exceed income') : `${fmt(tax.taxableBase)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Данък 15%' : 'Income tax 15%'} value={`${fmt(tax.incomeTax)} €`} />
+                          <BreakdownRow label={language === 'bg' ? '+ Осигуровки' : '+ Insurance'} value={`${fmt(tax.insurance)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Общо' : 'Total'} value={`${fmt(tax.total)} €`} isTotal />
+                        </>
+                      ) : (
+                        <>
+                          <BreakdownRow label={language === 'bg' ? 'Брутен доход' : 'Gross income'} value={`${fmt(totalIncome)} €`} />
+                          <BreakdownRow label={language === 'bg' ? `НПР приспадане (${tax.nprRate}%)` : `НПР deduction (${tax.nprRate}%)`} value={`− ${fmt(tax.npr)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'След НПР' : 'After НПР'} value={`${fmt(tax.afterNPR)} €`} />
+                          <BreakdownRow label={language === 'bg' ? `Осигуровки (${tax.monthsElapsed} × 153 €)` : `Insurance (${tax.monthsElapsed} × 153 €)`} value={`− ${fmt(tax.insuranceDeduction)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Данъчна основа' : 'Taxable base'} value={tax.taxableBase === 0 ? (language === 'bg' ? '0 — приспаданията надвишават дохода' : '0 — deductions exceed income') : `${fmt(tax.taxableBase)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Данък 10%' : 'Income tax 10%'} value={`${fmt(tax.incomeTax)} €`} />
+                          <BreakdownRow label={language === 'bg' ? '+ Осигуровки' : '+ Insurance'} value={`${fmt(tax.insurance)} €`} />
+                          <BreakdownRow label={language === 'bg' ? 'Общо' : 'Total'} value={`${fmt(tax.total)} €`} isTotal />
+                        </>
+                      )}
+                    </div>
                   )}
+
+                  {/* Disclaimer */}
+                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.2)' }}>
+                    {lang.estimateDisclaimer}
+                  </div>
                 </div>
 
-                {/* Subtitle breakdown */}
-                <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.38)', marginBottom: '0.4rem' }}>
-                  {legalFormEff === 'ET'
-                    ? (language === 'bg'
-                      ? `На база реална печалба (приходи − разходи) − осигуровки × 15%`
-                      : `Based on actual profit (income − expenses), minus insurance × 15% income tax`)
-                    : (language === 'bg'
-                      ? `На база ${tax.nprRate}% НПР приспадане − осигуровки × 10%`
-                      : `Based on ${tax.nprRate}% НПР deduction, minus insurance × 10% income tax`)}
+                {/* Layer 2: Payment Timeline */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: '1rem', marginBottom: '0.6rem' }}>
+                    {lang.upcomingPayments}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {generatePayments(tax, language).map(payment => {
+                      const days = daysUntil(payment.date)
+                      const isPaid = !!paidKeys[payment.key]
+                      const s = urgencyStyle(days)
+                      const dateLabel = payment.date.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })
+                      return (
+                        <div key={payment.key} className="payment-row" style={{ opacity: isPaid ? 0.45 : 1 }}>
+                          <div
+                            className="payment-checkbox"
+                            style={{
+                              border: isPaid ? '1.5px solid #c8f03a' : '1.5px solid rgba(240,237,228,0.2)',
+                              background: isPaid ? 'rgba(200,240,58,0.1)' : 'none',
+                              color: '#c8f03a',
+                            }}
+                            onClick={() => togglePaid(payment.key)}
+                          >
+                            {isPaid ? '✓' : ''}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, color: '#f0ede4', fontWeight: 500 }}>{payment.name}</div>
+                            <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', marginTop: 2 }}>{dateLabel}</div>
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            {payment.amount > 0 && (
+                              <div style={{ fontSize: 14, fontWeight: 500, color: '#f0ede4', fontVariantNumeric: 'tabular-nums' }}>
+                                {fmt(payment.amount)} €
+                              </div>
+                            )}
+                            <div style={{ fontSize: 11, color: isPaid ? 'rgba(240,237,228,0.35)' : s.color, marginTop: 2 }}>
+                              {isPaid ? lang.markedPaid : `${days} ${lang.daysAway}`}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'rgba(240,237,228,0.15)', marginTop: '0.5rem' }}>
+                    {lang.paymentDisclaimer}
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.38)' }}>
-                  {language === 'bg' ? 'Данък' : 'Income tax'} {fmt(tax.incomeTax)} {lang.currency}
-                  {' · '}
-                  {lang.insurance} ~{fmt(tax.insurance)} {lang.currency}
-                  {' · '}
-                  {lang.totalOwed}
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.25)', marginTop: '0.6rem' }}>
-                  {language === 'bg'
-                    ? 'Само прогноза. Консултирайте се със счетоводител за официалната декларация.'
-                    : 'Estimate only. Consult an accountant for your official declaration.'}
-                </div>
-              </div>
+              </>
             )}
 
             {/* KPI Cards */}
