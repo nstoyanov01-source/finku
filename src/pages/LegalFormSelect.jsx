@@ -4,6 +4,7 @@ import { usePostHog } from '@posthog/react'
 
 export default function LegalFormSelect({ userId, language, onComplete }) {
   const [selected, setSelected] = useState(null)
+  const [firstName, setFirstName] = useState('')
   const [loading, setLoading] = useState(false)
   const isBg = language === 'bg'
   const posthog = usePostHog()
@@ -11,7 +12,7 @@ export default function LegalFormSelect({ userId, language, onComplete }) {
   async function handleContinue() {
     if (!selected) return
     setLoading(true)
-    await supabase.from('profiles').update({ legal_form: selected, onboarded: true }).eq('id', userId)
+    await supabase.from('profiles').update({ legal_form: selected, onboarded: true, first_name: firstName.trim() }).eq('id', userId)
     posthog?.capture('onboarding_completed', { legal_form: selected })
     onComplete()
   }
@@ -55,6 +56,29 @@ export default function LegalFormSelect({ userId, language, onComplete }) {
         <div style={{ width: '100%', maxWidth: 420 }}>
           <div className="lang-logo">Finku</div>
           <p className="lang-sub">{isBg ? 'Как работите?' : 'How do you work?'}</p>
+
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={{ display: 'block', fontSize: 12, color: 'rgba(240,237,228,0.45)', marginBottom: 6 }}>
+              {isBg ? 'Вашето име' : 'Your first name'}
+            </label>
+            <input
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                background: '#161614', border: '1px solid rgba(240,237,228,0.12)',
+                borderRadius: 10, padding: '10px 14px',
+                fontSize: 14, color: '#f0ede4', fontFamily: 'DM Sans, sans-serif',
+                outline: 'none', transition: 'border-color 0.15s',
+              }}
+              type="text"
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              placeholder={isBg ? 'Никола' : 'Nikola'}
+              autoComplete="given-name"
+              autoFocus
+              onFocus={e => { e.target.style.borderColor = 'rgba(200,240,58,0.35)' }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(240,237,228,0.12)' }}
+            />
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1.5rem' }}>
             {options.map(opt => (

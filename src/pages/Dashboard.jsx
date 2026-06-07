@@ -145,11 +145,10 @@ function generatePayments(tax, language) {
   const insLabel = language === 'bg' ? 'Осигуровки' : 'Insurance'
   const annLabel = language === 'bg' ? 'Годишна декларация' : 'Annual declaration'
 
-  for (let m = 0; m < 12; m++) {
+  const currentMonth = today.getMonth()
+  for (let m = currentMonth + 1; m < 12; m++) {
     const due = new Date(year, m, 25); due.setHours(0, 0, 0, 0)
-    if (due >= today) {
-      payments.push({ key: `${year}-${String(m+1).padStart(2,'0')}-25`, name: `${insLabel} — ${monthNames[m]}`, date: due, amount: 153 })
-    }
+    payments.push({ key: `${year}-${String(m+1).padStart(2,'0')}-25`, name: `${insLabel} — ${monthNames[m]}`, date: due, amount: 153 })
   }
 
   const qAmt = tax && tax.monthsElapsed > 0 ? Math.round(tax.incomeTax / tax.monthsElapsed * 3) : 0

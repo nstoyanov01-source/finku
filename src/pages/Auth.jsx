@@ -6,7 +6,7 @@ import { usePostHog } from '@posthog/react'
 function translateError(msg) {
   if (msg.includes('Invalid login credentials')) return 'Wrong email or password. Please try again.'
   if (msg.includes('Email not confirmed')) return 'Please check your email and confirm your account first.'
-  if (msg.includes('User already registered')) return 'An account with this email already exists. Try logging in.'
+  if (msg.includes('User already registered')) return 'An account with this email already exists. Try logging in instead.'
   if (msg.includes('Password should be at least 6 characters')) return 'Password must be at least 6 characters.'
   return 'Something went wrong. Please try again.'
 }
@@ -14,17 +14,17 @@ function translateError(msg) {
 export default function Auth() {
   const [searchParams] = useSearchParams()
   const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login')
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)
+  const [signupSuccess, setSignupSuccess] = useState(false)
   const posthog = usePostHog()
 
   useEffect(() => { document.title = 'Sign in · Finku' }, [])
 
-  function switchMode(next) { setMode(next); setError(''); setResetSent(false) }
+  function switchMode(next) { setMode(next); setError(''); setResetSent(false); setSignupSuccess(false) }
 
   async function handleGoogleSignIn() {
     posthog?.capture('user_logged_in', { method: 'google' })
@@ -60,11 +60,10 @@ export default function Auth() {
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) { setError(translateError(error.message)); setLoading(false); return }
-      if (data?.user) {
-        await supabase.from('profiles').upsert({ id: data.user.id, first_name: name.trim() })
-        posthog?.identify(data.user.id, { email: data.user.email, name: name.trim() })
-        posthog?.capture('user_signed_up', { method: 'email' })
-      }
+      posthog?.capture('user_signed_up', { method: 'email' })
+      setSignupSuccess(true)
+      setLoading(false)
+      return
     }
     setLoading(false)
   }
@@ -241,6 +240,10 @@ export default function Auth() {
                   </>
                 )}
               </>
+            ) : signupSuccess ? (
+              <div className="auth-success">
+                Check your email to confirm your account.
+              </div>
             ) : (
               <>
                 <h2>{mode === 'login' ? 'Log in to your account' : 'Create your account'}</h2>
@@ -259,20 +262,6 @@ export default function Auth() {
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {mode === 'signup' && (
-                    <div>
-                      <label className="label">First name</label>
-                      <input
-                        className="input-field"
-                        type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        placeholder="Nikola"
-                        required
-                        autoComplete="given-name"
-                      />
-                    </div>
-                  )}
                   <div>
                     <label className="label">Email address</label>
                     <input
