@@ -395,14 +395,6 @@ Until you hit this threshold, you issue invoices without VAT and note *"Не е 
 
 If most of your clients are businesses in other EU countries, you may also need to register for the **OSS** (One Stop Shop) scheme or obtain a VAT number for intra-community supply purposes — even before hitting the domestic threshold. Check with an accountant if you have significant EU B2B income.
 
-## The InvoicePro Rounding Bug (and Why It Matters)
-
-Since Bulgaria adopted the euro as its functional currency peg, some popular invoicing software — including InvoicePro — has had reported issues with floating-point arithmetic when converting between BGN and EUR amounts. In some cases, the displayed total on a PDF differs from the programmatically calculated total by 0.01 EUR due to rounding.
-
-While 1 cent sounds trivial, when НАП's automated cross-matching compares your declared income with amounts on filed invoices, discrepancies trigger manual review flags. A pattern of 0.01 EUR discrepancies across many invoices can result in a time-consuming audit correspondence.
-
-Finku's invoice generator uses integer arithmetic internally — all amounts are stored and calculated in eurocents before display — which eliminates this class of rounding error entirely.
-
 ## Practical Tips
 
 **Number invoices sequentially and never skip.** НАП can request your invoice register at any time. Gaps in sequence numbers raise questions.
@@ -442,21 +434,13 @@ Generate professional, sequentially numbered invoices in seconds — and have yo
 
 ## Нужен ли е касов апарат?
 
-Само ако приемате **плащания в брой**. Ако всичките ви приходи постъпват по банков път, не ви е нужен касов апарат. Повечето фрийлансъри, фактуриращи дигитални услуги, работят изцяло с банкови преводи.
+Само ако приемате **плащания в брой**. Ако всичките ви приходи постъпват по банков път, не ви е нужен касов апарат.
 
 ## ДДС — кога трябва да се регистрирате?
 
 Не сте задължени да се регистрирате по ДДС, докато облагаемият ви оборот за последните 12 месеца не надхвърли **51 130 EUR** (100 000 лв. по фиксирания курс).
 
 До достигане на прага издавате фактури без ДДС с бележка *"Не е регистриран по ЗДДС"*. След надхвърлянето имате 7 дни да се регистрирате в НАП.
-
-## Проблемът с Finku и закръгляването
-
-Някои популярни програми за фактуриране имат проблеми с аритметиката с плаваща запетая при конвертиране между BGN и EUR. В резултат показаната сума в PDF може да се различава с 0,01 EUR от изчислената програматично.
-
-Въпреки че 1 стотинка звучи тривиално, когато автоматизираните системи на НАП сравняват декларирания доход с фактурите, несъответствията задействат ръчна проверка. Системен модел на разлики от 0,01 EUR може да доведе до проверка.
-
-Генераторът на фактури на Finku използва целочислена аритметика вътрешно — всички суми се съхраняват и изчисляват в евроцентове преди показване — което елиминира този клас грешки изцяло.
 
 ## Практически съвети
 
@@ -471,5 +455,978 @@ Generate professional, sequentially numbered invoices in seconds — and have yo
 ---
 
 Генерирайте професионални, последователно номерирани фактури за секунди — и следете дохода си автоматично — на [finku.eu](https://finku.eu).`,
+  },
+
+  {
+    id: 4,
+    slug: 'dancheen-kalkulator-samoosiguryavashti-se-2026',
+    title: 'Tax Calculator for Self-Employed in Bulgaria 2026',
+    titleBg: 'Данъчен калкулатор за самоосигуряващи се 2026',
+    description: 'Calculate exactly how much income tax and insurance you owe as a self-employed person in Bulgaria. Free, accurate, updated for 2026.',
+    descriptionBg: 'Изчисли точно колко данък и осигуровки дължиш като самоосигуряващо се лице в България. Безплатно, точно, актуализирано за 2026.',
+    date: '2026-06-07',
+    readingTime: 5,
+    content: `## Bulgaria Has One of the Lowest Income Tax Rates in Europe
+
+Bulgaria's flat income tax rate is 10% — one of the lowest in the EU. For an employed person this is straightforward. But if you work as самоосигуряващо се лице (self-employed), the calculation involves more moving parts. On top of income tax you also owe mandatory insurance contributions, and the two interact in a specific way that most people get wrong.
+
+## The Full Formula
+
+The official formula for свободна професия in Bulgaria:
+
+1. Take your gross income for the quarter
+2. Apply НПР — a flat 25% statutory expense deduction (so you are only taxed on 75% of what you earn)
+3. Subtract the insurance contributions you actually paid in the quarter
+4. Apply 10% income tax to what remains
+
+In short:
+
+\`\`\`
+Taxable base = (Gross income × 75%) − Insurance paid
+Income tax = Taxable base × 10%
+\`\`\`
+
+## Insurance Contributions
+
+Insurance is calculated separately. For 2026, the minimum monthly insurance for a самоосигуряващо се лице is approximately **153 EUR per month** (27.8% rate on the minimum base of 933 BGN).
+
+You pay this every month by the 25th — regardless of income. It does not go away in slow months.
+
+## Worked Example: Q1 for Someone Earning 2,000 EUR/Month
+
+Gross income for Q1 (Jan–Mar): 3 × 2,000 = **6,000 EUR**
+
+**Step 1 — Apply НПР (25%):**
+6,000 × 25% = 1,500 EUR deducted
+Income after НПР: **4,500 EUR**
+
+**Step 2 — Subtract Q1 insurance:**
+3 × 153 = **459 EUR**
+
+**Step 3 — Taxable base:**
+4,500 − 459 = **4,041 EUR**
+
+**Step 4 — 10% tax:**
+4,041 × 10% = **404.10 EUR due by April 30**
+
+Total Q1 obligations: 404.10 EUR advance tax + 459 EUR insurance = **863.10 EUR** on 6,000 EUR gross income. Effective rate: about 14.4%.
+
+## The Three Quarterly Deadlines
+
+| Quarter | Period | Deadline |
+|---------|--------|----------|
+| Q1 | January – March | **April 30** |
+| Q2 | April – June | **July 31** |
+| Q3 | July – September | **October 31** |
+| Q4 | October – December | No advance payment — reconciled in annual declaration |
+
+## Why Tracking Throughout the Year Matters
+
+The most common story: someone spends the year working hard and assumes they will sort out taxes in April. When April arrives, they face the entire year's liability at once — and sometimes penalties on the quarterly payments they missed.
+
+Bulgaria charges interest daily on late advance payments from the deadline date. It compounds, and by the time the annual declaration is filed it can add up to a meaningful sum. More importantly, a big unexpected payment in April can seriously disrupt cash flow.
+
+If you estimate what each quarter owes as you go, nothing is surprising. The numbers are simple once you know the formula.
+
+---
+
+Finku calculates all of this automatically as you go. No spreadsheets, no surprises. Try it free at [finku.eu](https://finku.eu).`,
+
+    contentBg: `## България е сред страните с най-нисък данък в Европа
+
+Плоската данъчна ставка в България е 10% — една от най-ниските в ЕС. За наети работници всичко е ясно. Но ако работите като самоосигуряващо се лице, изчислението включва повече елементи. Освен данък върху дохода дължите и задължителни осигуровки — и двете взаимодействат по начин, който повечето хора не разбират добре.
+
+## Пълната формула
+
+Официалната формула за свободна професия в България:
+
+1. Вземете брутния си доход за тримесечието
+2. Приложете НПР — 25% нормативно признати разходи (плащате данък само върху 75% от дохода)
+3. Извадете платените осигуровки за периода
+4. Приложете 10% данък върху остатъка
+
+Накратко:
+
+\`\`\`
+Данъчна основа = (Брутен доход × 75%) − Платени осигуровки
+Данък = Данъчна основа × 10%
+\`\`\`
+
+## Осигуровките са отделна история
+
+За 2026 г. минималната месечна осигуровка е приблизително **153 EUR на месец**. Плащате ги до 25-о число на всеки месец — независимо от дохода.
+
+## Реален пример: Q1 за доход от 2 000 EUR/месец
+
+Брутен доход за Q1: 3 × 2 000 = **6 000 EUR**
+
+**Стъпка 1 — НПР (25%):**
+6 000 × 25% = 1 500 EUR приспадане → доход след НПР: **4 500 EUR**
+
+**Стъпка 2 — Осигуровки за Q1:**
+3 × 153 = **459 EUR**
+
+**Стъпка 3 — Данъчна основа:**
+4 500 − 459 = **4 041 EUR**
+
+**Стъпка 4 — 10% данък:**
+4 041 × 10% = **404,10 EUR дължими до 30 април**
+
+Общо за Q1: 404,10 EUR данък + 459 EUR осигуровки = **863,10 EUR** от 6 000 EUR брутен доход. Ефективна ставка около 14,4%.
+
+## Трите тримесечни срока
+
+| Тримесечие | Период | Срок |
+|-----------|--------|------|
+| Q1 | Януари – Март | **30 април** |
+| Q2 | Април – Юни | **31 юли** |
+| Q3 | Юли – Септември | **31 октомври** |
+| Q4 | Октомври – Декември | Без авансово плащане — изравнява се в годишната декларация |
+
+## Защо проследяването е толкова важно
+
+Най-честият случай: работите цяла година и отлагате данъците "за после". До април получавате голяма сметка — и понякога лихви за пропуснати авансови вноски.
+
+България начислява лихва ежедневно от датата на срока. Тя се натрупва и до годишната декларация може да стане значима сума. По-важното: неочаквано голямо плащане през април може сериозно да разстрои паричния поток.
+
+Ако следите дохода и правите прогноза за всяко тримесечие — никакви изненади.
+
+---
+
+Finku изчислява всичко това автоматично в реално време. Без таблици, без изненади. Пробвайте безплатно на [finku.eu](https://finku.eu).`,
+  },
+
+  {
+    id: 5,
+    slug: 'kak-da-se-registriram-svobodna-profesiya-bulgaria',
+    title: 'How to Register as Self-Employed in Bulgaria: Step by Step',
+    titleBg: 'Как да се регистрирам като самоосигуряващо се лице в България — стъпка по стъпка',
+    description: 'Starting freelance work in Bulgaria? Here\'s exactly how to register, what it costs, and what happens next with taxes.',
+    descriptionBg: 'Започваш работа на свободна практика в България? Ето точно как да се регистрираш, какво струва и какво следва с данъците.',
+    date: '2026-06-07',
+    readingTime: 6,
+    content: `## Who Needs to Register?
+
+If you are providing services to clients, issuing invoices, and receiving payment — without a traditional employment contract — you are legally required to register as самоосигуряващо се лице (self-insuring individual) before you start working, or within 7 days of your first activity.
+
+This applies whether your clients are Bulgarian companies, international businesses, or individuals. The test is simple: if you earn money from professional services outside of employment, you need to register.
+
+## Step 1: Register at Агенция по Вписванията (БУЛСТАТ)
+
+Your first step is registering your economic activity with the Bulgarian Registry Agency to obtain a БУЛСТАТ number — your business identifier.
+
+**What to bring:**
+- Bulgarian national ID card or passport
+- Completed registration form (available at the office or from registryagency.bg)
+- Declaration of the type of activity
+
+**Cost:** Free
+
+**How long:** Usually the same day or within 24 hours
+
+**Where:** Any branch of Агенция по вписванията, or online with a qualified electronic signature (КЕП)
+
+Your БУЛСТАТ number goes on every invoice you ever issue.
+
+## Step 2: Register at НАП as Самоосигуряващо се Лице
+
+Within the same 7-day window, register at the National Revenue Agency (НАП).
+
+**What you declare:**
+- Date of commencement of activity
+- Type of insurance coverage (pension + health as minimum; optionally add sickness/maternity ОЗМ)
+- Whether you have other income sources — this affects the insurance calculation
+
+**Form:** OKd-1 (available at any НАП office or the НАП e-services portal)
+
+**Where:** Your territorial НАП office based on your permanent address
+
+This registration locks in your obligations: monthly insurance by the 25th, quarterly advance tax declarations, and annual declaration by April 30.
+
+## Step 3: Open a Dedicated Bank Account
+
+You do not need a business account for свободна професия — a personal IBAN is perfectly valid. That said, keeping a dedicated account for professional income makes year-end reconciliation far easier. Many freelancers use a Revolut or Wise account for this.
+
+## What Happens After Registration
+
+Once registered, your ongoing obligations are:
+
+- **Monthly, by the 25th**: Pay insurance contributions (~153 EUR/month minimum)
+- **Quarterly**: File Декларация по чл. 55 ЗДДФЛ and pay advance income tax — April 30, July 31, October 31
+- **Annually, by April 30**: File Годишна данъчна декларация
+
+## The Most Common Mistake
+
+Many people start freelancing — completing projects, issuing invoices, receiving payments — before registering, planning to "sort out the paperwork later."
+
+НАП has access to bank transaction data and cross-matches with company expense records. If a Bulgarian company declares a payment to you and you have not declared that income, the discrepancy is detectable. Late registration typically results in assessed contributions from the date activity began, plus accrued interest.
+
+Start registered. It is always easier than fixing it retroactively.
+
+## Свободна Професия vs ЕТ vs ЕООД — Plain Language
+
+**Свободна профессия**: you work as an individual, not a company. Simplest to set up. You pay tax on 75% of gross income. No complex accounting required.
+
+**ЕТ (Едноличен търговец)**: a registered sole trader entity. Useful if your actual business expenses exceed 25% of income, since you can deduct them all. Taxed at 15% on profit (income minus expenses).
+
+**ЕООД**: a separate legal limited liability company you own. Offers liability protection and lower effective rates for high earners, but requires monthly accounting (150–300 EUR/month typically) and more bureaucracy.
+
+---
+
+Finku supports both свободна професия and ЕТ. Start tracking your income and estimating your taxes from day one — free at [finku.eu](https://finku.eu).`,
+
+    contentBg: `## Кой трябва да се регистрира?
+
+Ако предоставяте услуги на клиенти, издавате фактури и получавате заплащане — без трудов договор — сте законово задължени да се регистрирате като самоосигуряващо се лице преди да започнете или в рамките на 7 дни от първата дейност.
+
+## Стъпка 1: Регистрация в Агенция по Вписванията (БУЛСТАТ)
+
+Регистрирайте икономическата си дейност, за да получите БУЛСТАТ номер.
+
+**Необходими документи:**
+- Лична карта или паспорт
+- Попълнен регистрационен формуляр (от офиса или registryagency.bg)
+- Декларация за вид дейност
+
+**Цена:** Безплатно
+
+**Срок:** Обикновено същия ден или до 24 часа
+
+**Къде:** Всеки офис на Агенция по вписванията, или онлайн с КЕП
+
+БУЛСТАТ номерът ви отива на всяка фактура.
+
+## Стъпка 2: Регистрация в НАП
+
+В рамките на същите 7 дни се регистрирайте и в НАП.
+
+**Декларирате:**
+- Дата на започване на дейност
+- Вид осигуряване (пенсия + здраве задължително; ОЗМ опционално)
+- Дали имате и трудов договор
+
+**Формуляр:** ОКд-1 — в офис на НАП или онлайн
+
+**Задължения след регистрацията:**
+- Месечно до 25-о число: осигуровки (~153 EUR/месец)
+- Тримесечно: декларация по чл. 55 ЗДДФЛ — 30 април, 31 юли, 31 октомври
+- Годишно до 30 април: годишна данъчна декларация
+
+## Стъпка 3: Банкова сметка
+
+Не е задължителна бизнес сметка — личен IBAN е достатъчен. Отделна сметка само за бизнес приходи обаче прави годишното изравняване много по-лесно.
+
+## Най-честата грешка
+
+Много хора започват работа — изпълняват проекти, издават фактури, получават плащания — преди да се регистрират. НАП разполага с достъп до банкови данни и кръстосана проверка с фирмени разходи. Закъснялата регистрация носи осигуровки с обратна сила плюс лихва.
+
+Регистрирайте се преди да започнете.
+
+## Свободна Професия vs ЕТ vs ЕООД — накратко
+
+**Свободна профессия**: работите като физическо лице. Най-лесно. Данък върху 75% от брутния доход. Без сложно счетоводство.
+
+**ЕТ**: регистриран едноличен търговец. Полезен ако реалните разходи надвишават 25% от дохода — приспадате ги всички. Данък 15% върху печалбата.
+
+**ЕООД**: отделно юридическо лице. Защита на личното имущество, по-ниска ефективна ставка при висок доход, но изисква месечно счетоводство (150–300 EUR/месец) и повече бюрокрация.
+
+---
+
+Finku поддържа и свободна професия, и ЕТ. Следете дохода и данъците от първия ден — безплатно на [finku.eu](https://finku.eu).`,
+  },
+
+  {
+    id: 6,
+    slug: 'eood-vs-svobodna-profesiya-vs-et-koe-plashta-po-malko',
+    title: 'ЕООД vs Freelancer vs Sole Trader: Which Pays Less Tax in Bulgaria?',
+    titleBg: 'ЕООД vs Свободна професия vs ЕТ: Кое плаща по-малко данъци в България?',
+    description: 'A honest comparison of the three main ways to work for yourself in Bulgaria — with real tax calculations for each.',
+    descriptionBg: 'Честно сравнение на трите основни начина да работиш за себе си в България — с реални данъчни изчисления за всеки.',
+    date: '2026-06-07',
+    readingTime: 8,
+    content: `## Three Ways to Work for Yourself in Bulgaria
+
+**Свободна профессия**: you work as an individual. No company, no registration beyond БУЛСТАТ and НАП. The simplest path.
+
+**ЕТ (Едноличен търговец)**: you as a registered sole trader. A legal entity tied to your personal identity. More complex, but allows deducting real business expenses.
+
+**ЕООД**: a limited liability company you own. A separate legal entity. Most complex, highest overhead, but can be cheaper for high earners.
+
+## Real Tax Calculations: 4,000 EUR/Month
+
+Let's compare all three for someone earning 4,000 EUR per month (48,000 EUR per year).
+
+### Свободна Профессия
+
+- Annual gross: 48,000 EUR
+- After 25% НПР: 48,000 × 75% = **36,000 EUR**
+- Minus annual insurance: 12 × 153 = **1,836 EUR**
+- Taxable base: 36,000 − 1,836 = **34,164 EUR**
+- Income tax (10%): **3,416.40 EUR/year**
+- Total annual obligation: 3,416 + 1,836 = **5,252 EUR/year**
+- Monthly equivalent: **437.70 EUR/month**
+
+### ЕТ (Assuming 500 EUR/Month in Real Expenses)
+
+ЕТ is taxed at 15% on profit (income minus actual expenses).
+
+- Annual gross: 48,000 EUR
+- Actual expenses: 6,000 EUR
+- Gross profit: 42,000 EUR
+- Minus annual insurance: 1,836 EUR
+- Taxable profit: 42,000 − 1,836 = **40,164 EUR**
+- Income tax (15%): **6,024.60 EUR/year**
+- Total annual obligation: 6,024 + 1,836 = **7,860 EUR/year**
+- Monthly equivalent: **655 EUR/month**
+
+At 4,000 EUR/month with only 500 EUR in real expenses, **свободна профессия wins clearly**. ЕТ only beats свободна профессия when your actual deductible expenses substantially exceed 25% of income.
+
+### ЕООД
+
+- Annual profit (assuming 48,000 revenue, 6,000 expenses): 42,000 EUR
+- Corporate tax (10%): 4,200 EUR
+- Net profit after corporate tax: 37,800 EUR
+- Dividend tax when you take money out (5%): 1,890 EUR
+- Total tax on profit: **6,090 EUR/year**
+- Plus accountant cost: ~2,400 EUR/year (200 EUR/month)
+- Plus insurance (still needed personally): **1,836 EUR/year**
+- Total annual cost: 6,090 + 2,400 + 1,836 = **10,326 EUR/year**
+- Monthly equivalent: **~860 EUR/month**
+
+## When Each Option Makes Sense
+
+**Choose свободна профессия if:**
+- Your monthly income is under 3,000–4,000 EUR
+- Your actual business expenses are modest (under 25% of income)
+- You want simplicity — minimal paperwork, no accountant needed
+- You are just starting out and testing the waters
+
+**Choose ЕТ if:**
+- Your actual deductible expenses regularly exceed 25% of gross income (e.g., you buy equipment, pay for software, rent office space)
+- You want to be recognized as a merchant entity for certain contract types
+
+**Choose ЕООД if:**
+- Your monthly income consistently exceeds 5,000 EUR
+- You want liability protection (personal assets are shielded from business debts)
+- You are building a company, hiring people, or seeking investment
+- You need to retain profits in the company rather than taking them all personally
+
+## The Hidden Costs Nobody Mentions
+
+ЕООД sounds attractive on paper because 10% + 5% = 14.5% combined tax — lower than the 10% flat rate with НПР. But the comparison ignores:
+
+- **Accountant fees**: 150–300 EUR/month is standard. That is 1,800–3,600 EUR/year before you see a tax saving.
+- **Annual filing fees and legal obligations**: balance sheet publication, annual meeting minutes, etc.
+- **Time overhead**: more reporting, more compliance, more coordination with your accountant.
+
+For most Bulgarian freelancers earning under 4,000 EUR/month, свободна профессия is both simpler and cheaper when you factor in the accountant cost.
+
+## One Honest Conclusion
+
+If you are a solo freelancer earning between 1,000 and 4,000 EUR per month with typical digital-service expenses, **свободна профессия will almost certainly cost you less** in total — taxes plus overhead — than either ЕТ or ЕООД.
+
+The ЕООД calculation starts making sense once you consistently earn above 5,000 EUR/month and can justify the accountant cost with the tax differential. ЕТ makes sense in specific situations where actual expenses are genuinely high.
+
+---
+
+Finku supports both свободна профессия and ЕТ — track your income and see your estimated tax in real time. Free at [finku.eu](https://finku.eu).`,
+
+    contentBg: `## Три начина да работиш за себе си в България
+
+**Свободна профессия**: работите като физическо лице. Без компания, без сложна регистрация. Най-простият път.
+
+**ЕТ (Едноличен търговец)**: регистриран едноличен търговец. Юридически субект, свързан с личната ви идентичност. По-сложно, но позволява приспадане на реални разходи.
+
+**ЕООД**: дружество с ограничена отговорност. Отделно юридическо лице. Най-сложно, най-голяма административна тежест, но може да е по-изгодно при висок доход.
+
+## Реални изчисления: 4 000 EUR/месец
+
+Сравняваме трите варианта за доход от 4 000 EUR/месец (48 000 EUR/годишно).
+
+### Свободна Профессия
+
+- Годишен брутен доход: 48 000 EUR
+- След НПР 25%: 48 000 × 75% = **36 000 EUR**
+- Минус годишни осигуровки: 12 × 153 = **1 836 EUR**
+- Данъчна основа: 36 000 − 1 836 = **34 164 EUR**
+- Данък (10%): **3 416 EUR/годишно**
+- Общо годишно: 3 416 + 1 836 = **5 252 EUR/годишно**
+- Месечен еквивалент: **около 438 EUR/месец**
+
+### ЕТ (при реални разходи 500 EUR/месец)
+
+ЕТ се облага с 15% върху печалбата.
+
+- Годишен брутен доход: 48 000 EUR
+- Реални разходи: 6 000 EUR
+- Брутна печалба: 42 000 EUR
+- Минус осигуровки: 1 836 EUR
+- Облагаема печалба: **40 164 EUR**
+- Данък (15%): **6 025 EUR/годишно**
+- Общо: 6 025 + 1 836 = **7 860 EUR/годишно**
+- Месечен еквивалент: **около 655 EUR/месец**
+
+При 4 000 EUR/месец и само 500 EUR реални разходи, **свободна профессия печели ясно**.
+
+### ЕООД
+
+- Корпоративен данък (10%) върху 42 000 EUR печалба: 4 200 EUR
+- Данък дивидент при теглене (5%): 1 890 EUR
+- Разход за счетоводител: ~2 400 EUR/годишно
+- Осигуровки (лично): 1 836 EUR/годишно
+- Общо: **~10 326 EUR/годишно — около 860 EUR/месец**
+
+## Кога кой вариант е подходящ?
+
+**Изберете свободна профессия ако:**
+- Месечният доход е под 3 000–4 000 EUR
+- Реалните разходи са скромни (под 25% от дохода)
+- Искате простота — минимална бюрокрация, без счетоводител
+
+**Изберете ЕТ ако:**
+- Реалните приспадаеми разходи редовно надвишават 25% от брутния доход (оборудване,软件, наем на офис)
+
+**Изберете ЕООД ако:**
+- Месечният доход стабилно надвишава 5 000 EUR
+- Искате защита на личното имущество
+- Изграждате компания, наемате хора или търсите инвестиции
+
+## Скритите разходи, за които никой не говори
+
+ЕООД изглежда привлекателно — 10% + 5% = 14,5%. Но сравнението пропуска:
+
+- **Счетоводител**: 150–300 EUR/месец = 1 800–3 600 EUR/годишно
+- Годишни такси, задължения за публикуване на отчети
+- Административна тежест и координация
+
+За повечето фрийлансъри с доход под 4 000 EUR/месец, свободна профессия е едновременно по-проста и по-евтина.
+
+## Едно честно заключение
+
+Ако сте самостоятелен фрийлансър с доход между 1 000 и 4 000 EUR/месец, **свободна профессия почти сигурно ще ви струва по-малко** — данъци плюс административна тежест — от ЕТ или ЕООД. ЕООД започва да има смисъл при постоянен доход над 5 000 EUR/месец.
+
+---
+
+Finku поддържа и свободна профессия, и ЕТ — следете дохода и виждайте данъчната прогноза в реално време. Безплатно на [finku.eu](https://finku.eu).`,
+  },
+
+  {
+    id: 7,
+    slug: 'influencer-youtubeer-tiktok-danaci-bulgaria-2026',
+    title: 'YouTuber, TikToker or Influencer in Bulgaria? Here\'s What You Actually Owe',
+    titleBg: 'YouTuber, TikToker или инфлуенсър в България? Ето колко реално дължиш на НАП',
+    description: 'НАП is actively tracking influencer income. Here\'s how YouTube, TikTok, Instagram and sponsorship income is taxed in Bulgaria.',
+    descriptionBg: 'НАП активно следи доходите на инфлуенсъри. Ето как се облагат приходите от YouTube, TikTok, Instagram и спонсорства в България.',
+    date: '2026-06-07',
+    readingTime: 7,
+    content: `## The Uncomfortable Truth
+
+НАП has been actively investigating undeclared income from content creators. In one widely reported investigation, authorities identified over 900 individuals who had collectively failed to declare approximately 14 million leva in income over five years. The tools НАП uses — bank data analysis, payment processor records, cross-matching with foreign platform reporting — are effective.
+
+If you earn money from YouTube, TikTok, Instagram, sponsorships, or any online content activity, you owe Bulgarian tax on it. The question is how much, and what category it falls into.
+
+## How YouTube Income Is Taxed
+
+YouTube AdSense income — the money Google pays you for ads on your videos — is most commonly classified as **авторски възнаграждения** (author royalties) under Bulgarian tax law. This is because your videos are copyrighted creative works and Google is licensing the right to advertise on them.
+
+The tax advantage: income classified as author royalties qualifies for a **40% НПР deduction** (норматив за признати разходи), not the standard 25%.
+
+The formula:
+\`\`\`
+Taxable base = YouTube income × 60% − Insurance paid
+Tax = Taxable base × 10%
+\`\`\`
+
+On 1,000 EUR from YouTube: 1,000 × 60% = 600, minus ~51 EUR insurance = 549 × 10% = **54.90 EUR tax**.
+
+Compare that to свободна профессия at 25% НПР: 1,000 × 75% = 750, minus 51 insurance = 699 × 10% = **69.90 EUR tax**.
+
+The 40% НПР is a meaningful difference for high-volume creators.
+
+## How TikTok and Instagram Sponsorship Income Is Taxed
+
+Sponsorship payments — brand deals, paid posts, affiliate commissions — are generally classified as свободна профессия income, not author royalties. The standard 25% НПР applies.
+
+Some accountants argue that sponsored content created as original video or photography qualifies for author royalties treatment. This is not universally agreed upon and НАП may challenge the classification. If you want to claim 40% НПР on sponsorship income, discuss it with an accountant first.
+
+The safe default: treat sponsorships as свободна профессия (25% НПР) and treat platform ad revenue (YouTube AdSense) as author royalties (40% НПР).
+
+## The VAT Trap Nobody Talks About
+
+Here is the part most people miss entirely: if you receive payments from Google AdSense, YouTube Premium, or similar foreign digital platforms, you may need to register under **ЗДДС article 97а** — regardless of how small your income is.
+
+Article 97а covers the receipt of taxable services from foreign suppliers (which includes digital platform payments originating from abroad). Registration under 97а does not mean you charge VAT to your audience — it means you self-report VAT on the inbound payments from foreign platforms.
+
+The threshold for 97а registration can be as low as a single invoice received from a foreign EU entity. This applies even if your total annual income is well below the standard 100,000 BGN VAT registration threshold.
+
+This is genuinely complex and highly fact-specific. Get an accountant's view before ignoring it.
+
+## The Good News
+
+Bulgaria's 10% flat tax is genuinely one of the lowest in Europe. A Bulgarian YouTuber earning the same revenue as a German or French creator pays significantly less tax. Declaring and paying — even if you have been delinquent — is almost always better than НАП finding out first.
+
+НАП has a voluntary disclosure process. If you have undeclared income from prior years, it is worth discussing with an accountant how to correct the record. The penalties for proactive correction are lower than for assessed penalties after audit.
+
+## How to Get Started
+
+1. Register at БУЛСТАТ (Агенция по вписванията) — free, same day
+2. Register at НАП as самоосигуряващо се лице — within 7 days
+3. Start tracking all income by platform and source
+4. File quarterly advance tax declarations by the deadlines
+5. Consult an accountant on the author royalties vs свободна профессия classification for your specific income mix
+
+---
+
+Finku helps you track income across platforms and estimate your quarterly tax — so you always know what you owe before НАП asks. Try it at [finku.eu](https://finku.eu).`,
+
+    contentBg: `## НАП те следи — ето как да се оправдаеш
+
+НАП активно разследва недекларирани доходи на създатели на съдържание. В широко отразено разследване властите са идентифицирали над 900 лица, колективно укрили около 14 милиона лева за пет години. Инструментите са ефективни: анализ на банкови данни, записи от платежни процесори, кръстосване с чуждестранни платформи.
+
+Ако печелите от YouTube, TikTok, Instagram, спонсорства или друга онлайн дейност — дължите данък в България. Въпросът е колко и в каква категория попада.
+
+## Как се облага доходът от YouTube
+
+AdSense приходите от YouTube — парите, платени от Google за реклами на видеата ви — се класифицират най-често като **авторски възнаграждения** по българското данъчно право. Видеата ви са авторско произведение и Google лицензира правото да рекламира върху тях.
+
+Данъчното предимство: авторските възнаграждения се ползват от **40% НПР** (а не стандартните 25%).
+
+Формула:
+\`\`\`
+Данъчна основа = YouTube доход × 60% − Платени осигуровки
+Данък = Данъчна основа × 10%
+\`\`\`
+
+При 1 000 EUR от YouTube: 1 000 × 60% = 600, минус ~51 EUR осигуровки = 549 × 10% = **54,90 EUR данък**.
+
+При свободна профессия с 25% НПР: 1 000 × 75% = 750, минус 51 = 699 × 10% = **69,90 EUR данък**.
+
+Разликата е осезаема при голям обем приходи.
+
+## Как се облагат TikTok, Instagram и спонсорства
+
+Спонсорствата — брандове, платени публикации, афилиейт — обикновено се третират като свободна профессия (25% НПР). Стандартното правило.
+
+Някои счетоводители твърдят, че оригинално видео или фотографско съдържание за спонсорства може да се квалифицира като авторски права (40% НПР). Това не е единодушно и НАП може да оспори. Ако искате да приложите 40% НПР за спонсорства — консултирайте се първо.
+
+## ДДС капанът, за който никой не говори
+
+Ако получавате плащания от Google AdSense или подобни чуждестранни платформи, може да сте задължени да се регистрирате по **чл. 97а ЗДДС** — независимо от размера на дохода.
+
+Член 97а обхваща получаването на облагаеми услуги от чуждестранни доставчици. Праг за регистрация може да е дори единствена фактура от чуждестранно ЕС лице. Не означава, че таксувате ДДС на аудиторията си — означава, че самоначислявате ДДС върху входящите плащания от платформи.
+
+Сложно е и зависи от конкретния случай. Консултирайте се с счетоводител.
+
+## Добрата новина
+
+Плоският данък от 10% в България е един от най-ниските в Европа. Декларирането и плащането — дори ако сте изоставали — е почти винаги по-добро от НАП да разбере пръв.
+
+НАП има процедура за доброволно коригиране. Ако имате недекларирани доходи от предишни години, обсъдете с счетоводител как да поправите ситуацията — санкциите за проактивна корекция са по-ниски от тези след ревизия.
+
+## Как да започнете
+
+1. Регистрация в БУЛСТАТ — безплатно, за 1 ден
+2. Регистрация в НАП като самоосигуряващо се лице — в рамките на 7 дни
+3. Проследявайте всички приходи по платформа и вид
+4. Подавайте тримесечни авансови декларации в срок
+5. Консултирайте се за класификацията авторски права vs свободна профессия
+
+---
+
+Finku ви помага да следите приходите от различни платформи и да прогнозирате тримесечния данък. Опитайте на [finku.eu](https://finku.eu).`,
+  },
+
+  {
+    id: 8,
+    slug: 'kak-da-platya-avansov-danak-onlain-bulgaria',
+    title: 'How to Pay Your Quarterly Tax to НАП Online: Complete Guide',
+    titleBg: 'Как да платя авансов данък на НАП онлайн — пълно ръководство',
+    description: 'Step by step guide to paying your quarterly advance tax payment to НАП online. Deadlines, amounts, and exactly where to click.',
+    descriptionBg: 'Стъпка по стъпка как да платиш авансовия данък на НАП онлайн. Срокове, суми и точно къде да кликнеш.',
+    date: '2026-06-07',
+    readingTime: 5,
+    content: `## The Three Deadlines
+
+There are three advance tax payments per year for самоосигуряващи се лица:
+
+- **April 30** — for Q1 income (January through March)
+- **July 31** — for Q2 income (April through June)
+- **October 31** — for Q3 income (July through September)
+
+There is no Q4 advance payment. Q4 income is reported and taxed through the annual declaration filed by April 30 of the following year.
+
+## What You Are Actually Paying
+
+The quarterly payment is **advance income tax only** — not insurance. Insurance contributions are a separate payment, due monthly by the 25th of each month to НАП.
+
+The advance tax amount is calculated as:
+\`\`\`
+Taxable base = (Gross quarterly income × 75%) − Insurance paid in quarter
+Advance tax = Taxable base × 10%
+\`\`\`
+
+If you use a different НПР rate (40% for lawyers, authors, artists), replace 75% with 60%.
+
+## How to Calculate Your Amount
+
+Work through the formula manually, or use Finku which calculates it automatically based on your logged income and insurance payments. Most people underestimate their Q1 payment because they forget to account for all three months of income, or because they use the wrong НПР rate.
+
+## Paying Online via the НАП Portal
+
+**Step 1** — Go to nap.bg and log in using either:
+- Your **ПИК** (персонален идентификационен код) — a free code issued by НАП
+- Your **КЕП** (квалифициран електронен подпис) — a qualified digital signature
+
+To get a ПИК if you do not have one: visit any НАП office with your ID card. It takes about 10 minutes.
+
+**Step 2** — Once logged in, navigate to **"Подаване на документи"** → **"Декларации"** → **"Декларация по чл. 55, ал. 1 ЗДДФЛ и чл. 201, ал. 1 ЗКПО"** (the Advance Tax Declaration, Form 55).
+
+**Step 3** — Select the relevant tax period (e.g., Q1 2026 = January–March 2026).
+
+**Step 4** — Enter your gross income for the quarter, the НПР rate that applies to you, and the insurance you paid. The system calculates the tax owed.
+
+**Step 5** — Submit the declaration, then pay the calculated amount via the integrated payment options (online banking, debit/credit card, or generate a payment reference for bank transfer).
+
+## Paying by Bank Transfer
+
+If you prefer to pay by bank transfer rather than through the portal, the НАП bank account details are:
+
+- **Bank**: BNB (Bulgarian National Bank)
+- **IBAN**: BG09 BNBG 9661 3100 1754 01 (central НАП account — confirm this on nap.bg as it may vary by territorial office)
+- **BIC**: BNBGBGSD
+- **Payment reference**: Your EGN, tax period, and document type
+
+Always confirm the current IBAN on the official nap.bg website before transferring.
+
+## If You Miss the Deadline
+
+Interest accrues daily from the day after the deadline at the statutory rate (currently approximately 10% per annum, calculated daily). It is not enormous, but it compounds.
+
+НАП can also issue a penalty notice (акт за установяване на административно нарушение) for habitual non-compliance. A single late payment rarely triggers this, but a pattern of missing deadlines increases the risk.
+
+Pay late as soon as you realize it — the interest stops accruing the day you pay.
+
+## Insurance Is Separate
+
+A common point of confusion: the quarterly tax declaration does not cover insurance. Insurance must be paid monthly, by the 25th, as a separate transfer. If you submit your advance tax declaration in April but have not been paying monthly insurance, you will have a separate insurance debt with accrued interest on top.
+
+---
+
+Finku shows you exactly what is due and when — so you never miss a deadline. Try it free at [finku.eu](https://finku.eu).`,
+
+    contentBg: `## Трите срока
+
+Три авансови данъчни плащания годишно за самоосигуряващи се лица:
+
+- **30 април** — за доходи Q1 (януари–март)
+- **31 юли** — за доходи Q2 (април–юни)
+- **31 октомври** — за доходи Q3 (юли–септември)
+
+За Q4 няма авансово плащане — изравнява се с годишната декларация до 30 април на следващата година.
+
+## Какво всъщност плащате
+
+Тримесечното плащане е **само авансов данък върху дохода** — не осигуровки. Осигуровките са отделно плащане, дължимо месечно до 25-о число.
+
+Авансовият данък:
+\`\`\`
+Данъчна основа = (Брутен тримесечен доход × 75%) − Платени осигуровки
+Авансов данък = Данъчна основа × 10%
+\`\`\`
+
+## Плащане онлайн през портала на НАП
+
+**Стъпка 1** — Влезте на nap.bg с:
+- **ПИК** (персонален идентификационен код) — безплатен код от НАП
+- **КЕП** (квалифициран електронен подпис)
+
+Нямате ПИК? Отидете в офис на НАП с лична карта — издава се за около 10 минути.
+
+**Стъпка 2** — След влизане: **"Подаване на документи"** → **"Декларации"** → **"Декларация по чл. 55, ал. 1 ЗДДФЛ"** (Формуляр 55).
+
+**Стъпка 3** — Изберете данъчния период (напр. Q1 2026 = януари–март 2026).
+
+**Стъпка 4** — Въведете брутния доход за тримесечието, приложимата ставка НПР и платените осигуровки. Системата изчислява дължимото.
+
+**Стъпка 5** — Подайте декларацията, след което платете чрез онлайн банкиране, карта или банков превод.
+
+## Плащане чрез банков превод
+
+- **Банка**: БНБ
+- **IBAN**: BG09 BNBG 9661 3100 1754 01 (централна сметка НАП — проверете на nap.bg)
+- **BIC**: BNBGBGSD
+- **Основание**: ЕГН, данъчен период, вид документ
+
+Винаги потвърждавайте актуалния IBAN на официалния nap.bg.
+
+## Ако пропуснете срока
+
+Лихва се начислява ежедневно от деня след срока (~10% годишно). Платете веднага щом осъзнаете — лихвата спира в деня на плащането.
+
+## Осигуровките са отделно
+
+Честа грешка: тримесечната декларация не покрива осигуровките. Те трябва да се плащат месечно, до 25-о число. Ако сте подали авансовата декларация, но не сте плащали месечни осигуровки, имате отделен дълг с натрупана лихва.
+
+---
+
+Finku ви показва точно какво се дължи и кога — за да не пропускате нито един срок. Пробвайте безплатно на [finku.eu](https://finku.eu).`,
+  },
+
+  {
+    id: 9,
+    slug: 'legalno-po-malko-danaci-samoosiguryavashti-se',
+    title: 'How to Legally Pay Less Tax as Self-Employed in Bulgaria',
+    titleBg: 'Как легално да плащаш по-малко данъци като самоосигуряващо се лице',
+    description: 'Legal ways to reduce your tax burden as a self-employed person in Bulgaria. Deductions, structure choices, and timing strategies.',
+    descriptionBg: 'Законни начини да намалиш данъчната си тежест като самоосигуряващо се лице в България. Приспадания, избор на структура и стратегии за времето.',
+    date: '2026-06-07',
+    readingTime: 6,
+    content: `## Important Disclaimer
+
+This article provides general information for educational purposes. Tax law is specific to your circumstances and changes over time. Consult a licensed Bulgarian accountant or tax advisor for your specific situation before making any decisions based on this content.
+
+## Strategy 1: Choose the Right Legal Structure
+
+The default choice — свободна профессия — is not always optimal.
+
+If your actual, documentable business expenses regularly exceed 25% of your gross income, switching to **ЕТ** allows you to deduct every legitimate expense rather than the flat 25% НПР. Common deductible expenses for ЕТ include: professional equipment, software subscriptions, office rent, internet, phone, professional services.
+
+The break-even: if your actual expenses are exactly 25% of income, both are equivalent. Above that, ЕТ saves money. Below that, свободна профессия wins.
+
+## Strategy 2: Know Your НПР Rate
+
+Most people use the default 25% НПР deduction without checking whether they qualify for 40%.
+
+The 40% НПР applies to income classified as **авторски възнаграждения** (author royalties) — received by:
+- Authors, writers, journalists
+- Visual artists, musicians, performers
+- Architects (for creative work)
+- Lawyers (for certain legal work)
+- Software developers in some interpretations (see Post 10 for the full discussion)
+
+If your income qualifies for 40% НПР and you have been using 25%, you have been overpaying. A corrected annual declaration can recover the difference.
+
+## Strategy 3: Track All Business Expenses Rigorously
+
+For ЕТ users, missed deductions are missed savings. Common expenses people forget to track:
+- Laptop and hardware purchases (amortized over useful life)
+- Software licenses and SaaS subscriptions
+- Professional books, courses, and training
+- Coworking space fees
+- Internet and phone (work portion)
+- Travel for client meetings (with documentation)
+- Professional association fees
+
+Keep receipts. Maintain a simple expense log. At year end, these numbers reduce your taxable base directly.
+
+## Strategy 4: Consider Optional ОЗМ Insurance for Periods of Reduced Work
+
+The optional **ОЗМ** (общо заболяване и майчинство) contribution adds 3.5% to your monthly insurance cost, but entitles you to sick pay from НОИ when you have a болничен лист (sick note).
+
+For most healthy, actively working freelancers this is not worth the extra cost. But if you are planning a period of reduced work — parental leave, recovery from an illness, a sabbatical — opting in before that period gives you access to НОИ benefits during it. The catch: you must be registered for ОЗМ before you need it, not during.
+
+## Strategy 5: Timing of Income Recognition
+
+For свободна профессия, Bulgarian tax law recognizes income on a **cash basis** — meaning when you actually receive the payment, not when you issue the invoice or complete the work.
+
+If you have flexibility in when clients pay, you can sometimes smooth income across quarters to avoid a very high Q2 or Q3 estimate. For example, if Q2 has been exceptionally strong and Q3 looks lighter, a payment received in early October rather than late September shifts it to Q4 — which has no advance payment deadline.
+
+This is not tax avoidance; it is cash-basis accounting working as intended. Just do not delay payments to the point of harming client relationships or your business cash flow.
+
+## What NOT to Do
+
+Not declaring income, underreporting, or working for extended periods without registration are not strategies — they are risks. НАП has data-sharing agreements with Bulgarian banks, foreign payment processors (including Stripe, PayPal, and Google), and EU tax authorities. Undeclared income that passes through a bank account is increasingly detectable.
+
+The amnesty for correcting past filings exists. Proactive disclosure carries lower penalties than being caught through an audit.
+
+---
+
+Finku tracks your income automatically and helps you see your estimated tax liability in real time — so you can make informed decisions throughout the year. Try it free at [finku.eu](https://finku.eu).`,
+
+    contentBg: `## Важна бележка
+
+Тази статия предоставя обща информация с образователна цел. Данъчното законодателство е специфично за вашата ситуация и се променя. Консултирайте се с лицензиран счетоводител или данъчен консултант преди да вземете решения въз основа на тази информация.
+
+## Стратегия 1: Изберете правилната правна форма
+
+Свободна профессия не е винаги оптималният избор.
+
+Ако реалните ви документирани бизнес разходи редовно надвишават 25% от брутния доход, преминаването към **ЕТ** ви позволява да приспаднете всеки легитимен разход. Чести приспадаеми разходи при ЕТ: оборудване, софтуер, наем на офис, интернет, телефон, проф. услуги.
+
+Равновесната точка: ако реалните разходи са точно 25%, двата варианта са еквивалентни. Над 25% — ЕТ спестява. Под — свободна профессия.
+
+## Стратегия 2: Познайте ставката си за НПР
+
+Повечето хора използват 25% НПР по подразбиране, без да проверяват дали отговарят на изискванията за 40%.
+
+40% НПР се прилага за доходи, класифицирани като **авторски възнаграждения**, получени от:
+- Автори, писатели, журналисти
+- Визуални артисти, музиканти, изпълнители
+- Архитекти (за творческа работа)
+- Адвокати (за определена правна работа)
+- Разработчици на софтуер в някои интерпретации (вижте статия 10)
+
+Ако доходът ви се квалифицира за 40% НПР и сте ползвали 25% — надплатили сте. Коригирана годишна декларация може да върне разликата.
+
+## Стратегия 3: Проследявайте всички бизнес разходи
+
+За ЕТ потребители пропуснатите приспадания са пропуснати спестявания. Хората най-често забравят:
+- Лаптоп и хардуер
+- Лицензи за софтуер и SaaS абонаменти
+- Профес. книги, курсове и обучения
+- Coworking такси
+- Интернет и телефон (работна част)
+- Пътувания за клиентски срещи
+
+Пазете разписки. Водете прост журнал на разходите.
+
+## Стратегия 4: Обмислете ОЗМ при планиран период с намалена работа
+
+Незадължителната **ОЗМ** вноска (3,5% допълнително) ви дава право на болнично от НОИ. За повечето активно работещи фрийлансъри не си струва. Но ако планирате родителски отпуск, възстановяване или сабатикъл — трябва да сте регистрирани преди да ви потрябва, не по време.
+
+## Стратегия 5: Тайминг на признаване на дохода
+
+При свободна профессия данъкът е на **касова основа** — признава се при получаване на плащането, не при издаване на фактурата.
+
+Ако имате гъвкавост кога клиентите плащат, понякога можете да изгладите дохода по тримесечия. Плащане, получено в началото на октомври вместо края на септември, се прехвърля в Q4 — без авансово данъчно задължение. Не е укриване на данъци — касова основа, работеща по предназначение.
+
+## Какво да НЕ правите
+
+Недеклариране, занижено деклариране или работа без регистрация не са стратегии — те са рискове. НАП има споразумения за обмен на данни с български банки, чуждестранни платежни процесори (Stripe, PayPal, Google) и европейски данъчни органи.
+
+Амнистията за коригиране на минали декларации съществува. Проактивното коригиране носи по-ниски санкции от ревизия.
+
+---
+
+Finku проследява дохода ви автоматично и ви показва приблизителното данъчно задължение в реално време. Пробвайте безплатно на [finku.eu](https://finku.eu).`,
+  },
+
+  {
+    id: 10,
+    slug: 'danaci-software-chrome-extension-digital-product-bulgaria',
+    title: 'Taxes on Software, Chrome Extensions and Digital Products in Bulgaria',
+    titleBg: 'Данъци от продажба на software, Chrome extension или дигитален продукт в България',
+    description: 'Selling software, apps or digital products from Bulgaria? Here\'s how your income is taxed and which НПР rate you qualify for.',
+    descriptionBg: 'Продаваш software, приложения или дигитални продукти от България? Ето как се облага доходът ти и за какъв НПР процент се класираш.',
+    date: '2026-06-07',
+    readingTime: 6,
+    content: `## A Genuinely Grey Area
+
+Developers who sell software products, Chrome extensions, WordPress plugins, SaaS tools, or digital downloads from Bulgaria are navigating one of the least-settled areas of Bulgarian tax law. Different accountants classify this income differently — some as свободна профессия (25% НПР), some as авторски възнаграждения (40% НПР) — and НАП itself has not issued unambiguous published guidance covering all scenarios.
+
+Getting this classification right can make a meaningful difference to what you pay.
+
+## The Key Question: Service Income or Author Royalties?
+
+**Свободна профессия** (25% НПР) applies to income from professional services — you are paid for doing something. Consulting, development work for clients, technical services.
+
+**Авторски възнаграждения** (40% НПР) applies to income from copyrighted works — you are paid for the use or licensing of something you created. Books, music, films... and potentially software.
+
+Software is explicitly protected by copyright under Bulgarian law (Закон за авторското право и сродните му права). A Chrome extension, a WordPress plugin, a SaaS product — these are copyrighted works. The argument is: when you sell a license or receive revenue from a product you created, you are receiving royalties from a copyrighted work, not payment for a service.
+
+## What This Means in Practice
+
+The difference, on 10,000 EUR of income:
+
+**Свободна профессия (25% НПР):**
+- 10,000 × 75% = 7,500 taxable before insurance
+- Minus ~612 EUR insurance (4 months × 153)
+- 6,888 × 10% = **688.80 EUR tax**
+
+**Author royalties (40% НПР):**
+- 10,000 × 60% = 6,000 taxable before insurance
+- Minus ~612 EUR insurance
+- 5,388 × 10% = **538.80 EUR tax**
+
+That is **150 EUR difference per 10,000 EUR earned**. For a developer earning 50,000 EUR/year from a product, that is 750 EUR per year — not transformative, but real.
+
+## The Honest Caveat
+
+The author royalties classification for software income is **not universally accepted** and carries risk. НАП may challenge it. If you are audited and the classification is disallowed, you would owe the difference plus interest.
+
+The strongest case for author royalties applies when:
+- You own the product entirely (no clients, no custom work)
+- Revenue is from licensing fees, subscription payments, or platform payouts
+- The product is a clearly creative/IP work, not a service rendered
+
+The weakest case: custom software development for a specific client, billed hourly or by project. That looks much more like a service than a royalty.
+
+Before applying 40% НПР to software income, discuss it with an accountant who has specific experience in this area.
+
+## Income from Foreign Platforms
+
+If your revenue comes through Stripe, Apple App Store, Google Play, Gumroad, Paddle, or similar:
+
+- **Currency conversion**: declare the BGN equivalent on the date of receipt. Use the BNB official exchange rate for the transaction date.
+- **VAT on digital services**: if you sell to EU consumers (not businesses), you may need to register for the EU VAT OSS scheme — regardless of your Bulgarian VAT status. The threshold is relatively low.
+- **Article 97а ЗДДС**: if you receive services from foreign digital platforms (e.g., app store as an intermediary), there may be article 97а registration requirements. Highly fact-specific.
+
+## Practical Steps
+
+1. Register at БУЛСТАТ and НАП as самоосигуряващо се лице
+2. Track all income by platform, product, and date of receipt
+3. Keep records of what each product earns separately
+4. Consult an accountant about whether авторски възнаграждения classification applies to your specific income mix
+5. If operating through Stripe or international platforms, get advice on EU VAT obligations
+
+---
+
+Whatever you build, Finku helps you track what you earn and estimate what you owe — so you can focus on the product, not the paperwork. Try it free at [finku.eu](https://finku.eu).`,
+
+    contentBg: `## Истински сива зона
+
+Разработчиците, продаващи software продукти, Chrome extensions, WordPress плъгини, SaaS инструменти или дигитални изтегляния от България, се движат в една от най-слабо уредените области на българското данъчно право. Различни счетоводители класифицират тези доходи по различен начин — едни като свободна профессия (25% НПР), други като авторски възнаграждения (40% НПР).
+
+## Ключовият въпрос: доход от услуга или авторски права?
+
+**Свободна профессия** (25% НПР): доход от професионални услуги — плащат ви за нещо, което правите.
+
+**Авторски възнаграждения** (40% НПР): доход от авторски произведения — плащат ви за ползването на нещо, което сте създали.
+
+Софтуерът е изрично защитен с авторски права по ЗАПСП. Chrome extension, WordPress плъгин, SaaS продукт — това са авторски произведения. Аргументът: когато продавате лиценз или получавате приходи от продукт, който сте създали, получавате авторски хонорар, не плащане за услуга.
+
+## Какво означава на практика
+
+Разлика при 10 000 EUR доход:
+
+**Свободна профессия (25% НПР):**
+- 10 000 × 75% = 7 500 − 612 = 6 888 × 10% = **688,80 EUR данък**
+
+**Авторски права (40% НПР):**
+- 10 000 × 60% = 6 000 − 612 = 5 388 × 10% = **538,80 EUR данък**
+
+**Разлика: 150 EUR на всеки 10 000 EUR**. При 50 000 EUR годишен доход — 750 EUR разлика.
+
+## Честото предупреждение
+
+Класификацията като авторски права за доход от software **не е общоприета** и носи риск. НАП може да я оспори.
+
+Най-силният случай за авторски права:
+- Изцяло ваш продукт (без клиентска работа)
+- Приходи от лицензни такси, абонаменти или платформени плащания
+- Ясно творческо/IP произведение
+
+Най-слабият случай: custom разработка за конкретен клиент, фактурирана по час — изглежда като услуга, не роялти.
+
+Преди да приложите 40% НПР за доход от software — консултирайте се с счетоводител с опит в тази област.
+
+## Доход от чуждестранни платформи
+
+Ако приходите идват от Stripe, Apple App Store, Google Play, Gumroad, Paddle:
+
+- **Конвертиране на валута**: декларирайте BGN еквивалента по курс на БНБ за датата на получаване
+- **ДДС за дигитални услуги**: при продажба на ЕС потребители (не бизнеси) може да се наложи регистрация за EU VAT OSS схема
+- **Чл. 97а ЗДДС**: при получаване на услуги от чуждестранни платформи — специфично за случая
+
+## Практически стъпки
+
+1. Регистрирайте се в БУЛСТАТ и НАП като самоосигуряващо се лице
+2. Проследявайте всички приходи по платформа, продукт и дата
+3. Консултирайте се за класификацията авторски права vs свободна профессия
+4. При Stripe или международни платформи — потърсете съвет за ЕС ДДС задължения
+
+---
+
+Каквото и да изграждате, Finku ви помага да следите приходите и да прогнозирате дължимото — за да се фокусирате върху продукта, не върху бюрокрацията. Пробвайте безплатно на [finku.eu](https://finku.eu).`,
   },
 ]

@@ -12,7 +12,6 @@ function renderMarkdown(text) {
   while (i < lines.length) {
     const line = lines[i]
 
-    // Table detection
     if (line.trim().startsWith('|')) {
       tableBuffer.push(line)
       inTable = true
@@ -25,15 +24,12 @@ function renderMarkdown(text) {
       inTable = false
     }
 
-    // H2
     if (line.startsWith('## ')) {
       elements.push(<h2 key={i} style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(20px, 3vw, 26px)', color: '#f0ede4', letterSpacing: '-0.3px', marginTop: '2.25rem', marginBottom: '0.75rem', lineHeight: 1.2 }}>{line.slice(3)}</h2>)
     }
-    // H3
     else if (line.startsWith('### ')) {
       elements.push(<h3 key={i} style={{ fontSize: 16, fontWeight: 600, color: '#f0ede4', marginTop: '1.5rem', marginBottom: '0.5rem' }}>{line.slice(4)}</h3>)
     }
-    // Code block
     else if (line.startsWith('```')) {
       const codeLines = []
       i++
@@ -47,11 +43,9 @@ function renderMarkdown(text) {
         </pre>
       )
     }
-    // Horizontal rule
     else if (line.trim() === '---') {
       elements.push(<hr key={i} style={{ border: 'none', borderTop: '0.5px solid rgba(240,237,228,0.1)', margin: '2rem 0' }} />)
     }
-    // Bullet list item
     else if (line.startsWith('- ')) {
       const listItems = []
       while (i < lines.length && lines[i].startsWith('- ')) {
@@ -61,11 +55,9 @@ function renderMarkdown(text) {
       elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '1.5rem', color: 'rgba(240,237,228,0.7)', fontSize: 15, lineHeight: 1.7, marginBottom: '1rem' }}>{listItems}</ul>)
       continue
     }
-    // Empty line — spacer
     else if (line.trim() === '') {
-      // skip — spacing handled by margins
+      // skip
     }
-    // Regular paragraph
     else {
       elements.push(<p key={i} style={{ fontSize: 15, color: 'rgba(240,237,228,0.7)', lineHeight: 1.8, marginBottom: '1rem' }}>{inlineFormat(line)}</p>)
     }
@@ -110,7 +102,6 @@ function renderTable(rows, keyBase) {
 }
 
 function inlineFormat(text) {
-  // Handle **bold**, *italic*, `code`, and [link](url)
   const parts = []
   const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`|\[(.+?)\]\((.+?)\))/g
   let last = 0
@@ -136,8 +127,18 @@ export default function BlogPost({ language = 'en' }) {
   const post = blogPosts.find(p => p.slug === slug)
 
   useEffect(() => {
-    if (post) document.title = `${isBg ? post.titleBg : post.title} · Finku`
-    else document.title = 'Post not found · Finku'
+    if (post) {
+      document.title = `${isBg ? post.titleBg : post.title} · Finku`
+      let meta = document.querySelector('meta[name="description"]')
+      if (!meta) {
+        meta = document.createElement('meta')
+        meta.setAttribute('name', 'description')
+        document.head.appendChild(meta)
+      }
+      meta.setAttribute('content', isBg ? post.descriptionBg : post.description)
+    } else {
+      document.title = 'Post not found · Finku'
+    }
   }, [post, isBg])
 
   if (!post) {

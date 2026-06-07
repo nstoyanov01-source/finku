@@ -8,6 +8,8 @@ export default function Blog({ language = 'en' }) {
 
   useEffect(() => { document.title = 'Blog · Finku' }, [])
 
+  const sortedPosts = [...blogPosts].sort((a, b) => new Date(b.date) - new Date(a.date))
+
   return (
     <>
       <style>{`
@@ -98,7 +100,7 @@ export default function Blog({ language = 'en' }) {
           </div>
 
           <div className="blog-grid">
-            {blogPosts.map(post => (
+            {sortedPosts.map(post => (
               <Link key={post.id} to={`/blog/${post.slug}`} className="blog-card">
                 <div className="blog-card-meta">
                   {new Date(post.date).toLocaleDateString(isBg ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
