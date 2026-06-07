@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
 import AddEntryModal from '../components/AddEntryModal'
@@ -33,9 +33,9 @@ function formatCurrentDate(language) {
   })
 }
 
-function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false) {
+function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false, monthsElapsed = null) {
   if (legalForm === 'just_tracking') return null
-  const monthsElapsed = new Date().getMonth() + 1
+  if (monthsElapsed === null) monthsElapsed = new Date().getMonth() + 1
   const insurancePerMonth = 153.08
   const totalInsurance = insurancePerMonth * monthsElapsed
 
@@ -174,6 +174,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const navigate = useNavigate()
   const userId = session.user.id
   const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
 
   const [income, setIncome] = useState([])
   const [expenses, setExpenses] = useState([])
@@ -222,20 +223,21 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
     })
   }
 
-  useEffect(() => { fetchData(); fetchName() }, [])
+  useEffect(() => { fetchName() }, [])
+  useEffect(() => { fetchData(selectedYear) }, [selectedYear])
 
   async function fetchName() {
     const { data } = await supabase.from('profiles').select('first_name').eq('id', userId).single()
     if (data?.first_name) setFirstName(data.first_name)
   }
 
-  async function fetchData() {
+  async function fetchData(year = selectedYear) {
     setLoading(true)
     const [{ data: inc }, { data: exp }] = await Promise.all([
       supabase.from('income').select('*').eq('user_id', userId)
-        .gte('date', `${currentYear}-01-01`).order('date', { ascending: false }),
+        .gte('date', `${year}-01-01`).lte('date', `${year}-12-31`).order('date', { ascending: false }),
       supabase.from('expenses').select('*').eq('user_id', userId)
-        .gte('date', `${currentYear}-01-01`).order('date', { ascending: false }),
+        .gte('date', `${year}-01-01`).lte('date', `${year}-12-31`).order('date', { ascending: false }),
     ])
     setIncome(inc || [])
     setExpenses(exp || [])
@@ -246,10 +248,12 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const totalExpenses = expenses.reduce((s, r) => s + Number(r.amount), 0)
   const netIncome = totalIncome - totalExpenses
   const currentMonth = new Date().getMonth() + 1
-  const avgMonthly = currentMonth > 0 ? totalIncome / currentMonth : 0
+  const isPastYear = selectedYear < currentYear
+  const monthsElapsed = isPastYear ? 12 : currentMonth
+  const avgMonthly = monthsElapsed > 0 ? totalIncome / monthsElapsed : 0
 
   const legalFormEff = legalForm || 'svobodna_profesiya'
-  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false)
+  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false, monthsElapsed)
   const projectedAnnual = (totalIncome / currentMonth) * 12
 
   useEffect(() => {
@@ -267,10 +271,11 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const deadline = tax ? nextTaxDeadline() : null
   const setAsideNum = parseFloat(setAside) || 0
 
-  const monthlyData = Array.from({ length: currentMonth }, (_, i) => {
+  const chartMonths = isPastYear ? 12 : currentMonth
+  const monthlyData = Array.from({ length: chartMonths }, (_, i) => {
     const m = String(i + 1).padStart(2, '0')
-    const inc = income.filter(r => r.date.startsWith(`${currentYear}-${m}`)).reduce((s, r) => s + Number(r.amount), 0)
-    const exp = expenses.filter(r => r.date.startsWith(`${currentYear}-${m}`)).reduce((s, r) => s + Number(r.amount), 0)
+    const inc = income.filter(r => r.date.startsWith(`${selectedYear}-${m}`)).reduce((s, r) => s + Number(r.amount), 0)
+    const exp = expenses.filter(r => r.date.startsWith(`${selectedYear}-${m}`)).reduce((s, r) => s + Number(r.amount), 0)
     return { inc, exp }
   })
 
@@ -375,6 +380,15 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
           <div className="dash-nav-right">
             <select
               className="dash-lang-select"
+              value={selectedYear}
+              onChange={e => setSelectedYear(Number(e.target.value))}
+            >
+              {Array.from({ length: currentYear - 2024 + 1 }, (_, i) => 2024 + i).map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <select
+              className="dash-lang-select"
               value={language}
               onChange={async e => {
                 const l = e.target.value
@@ -394,6 +408,9 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
               }}
             >
               + {language === 'bg' ? 'Нова фактура' : 'New invoice'}
+            </button>
+            <button className="dash-nav-btn" onClick={() => navigate('/changelog')}>
+              Changelog
             </button>
             <button className="dash-nav-btn" onClick={() => navigate('/blog')}>
               Blog
@@ -494,6 +511,11 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                           </span>
                         )
                       })()}
+                      <Link to="/how-to-pay" style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textDecoration: 'none', whiteSpace: 'nowrap', transition: 'color 0.15s' }}
+                        onMouseOver={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.7)' }}
+                        onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.4)' }}>
+                        {language === 'bg' ? 'Как да платиш →' : 'How to pay →'}
+                      </Link>
                     </div>
                   </div>
 
@@ -590,8 +612,8 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                   </div>
                 </div>
 
-                {/* Layer 2: Payment Timeline */}
-                <div style={{ marginBottom: '1.25rem' }}>
+                {/* Layer 2: Payment Timeline — current year only */}
+                {!isPastYear && <div style={{ marginBottom: '1.25rem' }}>
                   <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: '1rem', marginBottom: '0.6rem' }}>
                     {lang.upcomingPayments}
                   </div>
@@ -635,7 +657,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                   <div style={{ fontSize: 10, color: 'rgba(240,237,228,0.15)', marginTop: '0.5rem' }}>
                     {lang.paymentDisclaimer}
                   </div>
-                </div>
+                </div>}
               </>
             )}
 
@@ -650,13 +672,13 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                 <div key={i} className="kpi-card">
                   <div className="kpi-label">{k.label}</div>
                   <div className="kpi-value" style={{ color: k.color }}>{k.value}</div>
-                  <div className="kpi-sub">{lang.soFar} {currentYear}</div>
+                  <div className="kpi-sub">{lang.soFar} {selectedYear}</div>
                 </div>
               ))}
             </div>
 
-            {/* Projected Annual */}
-            {currentMonth >= 2 && totalIncome > 0 && (
+            {/* Projected Annual — current year only */}
+            {!isPastYear && currentMonth >= 2 && totalIncome > 0 && (
               <div style={{
                 background: '#161614', border: '1px solid rgba(240,237,228,0.06)',
                 borderRadius: 12, padding: '0.9rem 1.25rem', marginBottom: '1.25rem',
@@ -691,13 +713,15 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                         </button>
                       )}
                     </div>
-                    <button
-                      className="btn-primary"
-                      onClick={() => setModal({ type: col.type })}
-                      style={{ padding: '5px 12px', fontSize: 12 }}
-                    >
-                      + {col.addLabel}
-                    </button>
+                    {!isPastYear && (
+                      <button
+                        className="btn-primary"
+                        onClick={() => setModal({ type: col.type })}
+                        style={{ padding: '5px 12px', fontSize: 12 }}
+                      >
+                        + {col.addLabel}
+                      </button>
+                    )}
                   </div>
 
                   {col.data.length === 0 ? (
@@ -725,7 +749,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                     </div>
                   )}
 
-                  <CSVImport userId={userId} language={language} onImported={fetchData} />
+                  {!isPastYear && <CSVImport userId={userId} language={language} onImported={() => fetchData(selectedYear)} />}
                 </div>
               ))}
             </div>
@@ -781,7 +805,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
           }}
           onDeleted={() => {
             setDrawer(null)
-            fetchData()
+            fetchData(selectedYear)
             showToast('Entry deleted', 'success')
           }}
         />
@@ -794,11 +818,11 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
           language={language}
           onClose={() => setModal(null)}
           onSaved={() => {
-            fetchData()
+            fetchData(selectedYear)
             if (modal.entry) showToast('Entry updated ✓', 'success')
             else showToast(modal.type === 'income' ? 'Income added ✓' : 'Expense added ✓', 'success')
           }}
-          onDeleted={() => { fetchData(); showToast('Entry deleted', 'success') }}
+          onDeleted={() => { fetchData(selectedYear); showToast('Entry deleted', 'success') }}
           initialData={modal.entry}
           entryId={modal.entry?.id}
         />

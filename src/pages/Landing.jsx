@@ -756,6 +756,8 @@ export default function Landing({ language = 'en' }) {
           <div className="footer-note">Tax estimates are approximate and do not constitute tax advice.</div>
           <div className="footer-links">
             <Link to="/blog" className="footer-link">Blog</Link>
+            <Link to="/how-to-pay" className="footer-link">How to pay</Link>
+            <Link to="/changelog" className="footer-link">Changelog</Link>
             <Link to="/privacy" className="footer-link">Privacy Policy</Link>
             <Link to="/terms" className="footer-link">Terms</Link>
           </div>

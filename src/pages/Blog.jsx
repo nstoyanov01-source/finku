@@ -118,6 +118,8 @@ export default function Blog({ language = 'en' }) {
             <div className="blog-footer-logo">Finku</div>
             <div className="blog-footer-links">
               <Link to="/blog" className="blog-footer-link">Blog</Link>
+              <Link to="/how-to-pay" className="blog-footer-link">{isBg ? 'Как да платиш' : 'How to pay'}</Link>
+              <Link to="/changelog" className="blog-footer-link">Changelog</Link>
               <Link to="/privacy" className="blog-footer-link">{isBg ? 'Поверителност' : 'Privacy'}</Link>
               <Link to="/terms" className="blog-footer-link">{isBg ? 'Условия' : 'Terms'}</Link>
             </div>
