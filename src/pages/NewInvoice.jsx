@@ -174,15 +174,15 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
               <div className="inv-section-title">{isBg ? 'Вашите данни' : 'Your details'}</div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Вашето име *' : 'Your name *'}</label>
-                <input style={inputStyle} value={yourName} onChange={e => setYourName(e.target.value)} placeholder="Nikola Stoyanov" />
+                <input style={inputStyle} value={yourName} onChange={e => setYourName(e.target.value)} placeholder="John Doe" />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Адрес' : 'Your address'}</label>
-                <textarea style={textareaStyle} rows={2} value={yourAddress} onChange={e => setYourAddress(e.target.value)} placeholder="ul. Sava Radulov 3&#10;Varna 9002, Bulgaria" />
+                <textarea style={textareaStyle} rows={2} value={yourAddress} onChange={e => setYourAddress(e.target.value)} placeholder="123 Main Street, Sofia 1000, Bulgaria" />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>EGN / EIK</label>
-                <input style={inputStyle} value={yourTaxId} onChange={e => setYourTaxId(e.target.value)} placeholder="9XXXXXXXXX" />
+                <input style={inputStyle} value={yourTaxId} onChange={e => setYourTaxId(e.target.value)} placeholder="XXXXXXXXXX" />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Имейл' : 'Your email'}</label>
@@ -199,7 +199,7 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Адрес на клиента' : 'Client address'}</label>
-                <textarea style={textareaStyle} rows={2} value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="123 Main Street&#10;London EC1A 1BB, UK" />
+                <textarea style={textareaStyle} rows={2} value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="456 Business Ave, London EC1A 1BB" />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Имейл на клиента' : 'Client email'}</label>
@@ -227,7 +227,7 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
             </div>
             <div style={{ marginBottom: '1rem' }}>
               <label style={labelStyle}>{isBg ? 'Описание на услугата *' : 'Service description *'}</label>
-              <textarea style={textareaStyle} rows={3} value={serviceDescription} onChange={e => setServiceDescription(e.target.value)} placeholder={isBg ? 'Уеб разработка — м. май 2026' : 'Web development — May 2026'} />
+              <textarea style={textareaStyle} rows={3} value={serviceDescription} onChange={e => setServiceDescription(e.target.value)} placeholder={isBg ? 'Уеб разработка — м. май 2026' : 'Web design and development services'} />
             </div>
             <div className="inv-row">
               <div>
@@ -246,7 +246,7 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
             </div>
             <div style={{ marginTop: '1rem' }}>
               <label style={labelStyle}>{isBg ? 'Бележки / детайли за плащане' : 'Notes / payment details'}</label>
-              <textarea style={textareaStyle} rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder={isBg ? 'IBAN: BG...  BIC: XXXXX' : 'IBAN: BG...  BIC: XXXXX'} />
+              <textarea style={textareaStyle} rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder={isBg ? 'IBAN: BG...  BIC: XXXXX' : 'Payment due within 30 days. Bank transfer preferred.'} />
             </div>
           </div>
 
