@@ -241,8 +241,32 @@ export default function Auth() {
                 )}
               </>
             ) : signupSuccess ? (
-              <div className="auth-success">
-                Check your email to confirm your account.
+              <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+                <div style={{
+                  width: 60, height: 60, borderRadius: '50%', background: '#c8f03a',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 1.25rem',
+                }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0e0e0c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 28, fontWeight: 400, color: '#f0ede4', marginBottom: '0.75rem', letterSpacing: '-0.3px' }}>
+                  Check your email
+                </h2>
+                <p style={{ fontSize: 14, color: 'rgba(240,237,228,0.55)', lineHeight: 1.65, marginBottom: '0.6rem' }}>
+                  We sent a confirmation link to <strong style={{ color: '#f0ede4' }}>{email}</strong>. Click it to activate your account.
+                </p>
+                <p style={{ fontSize: 12, color: 'rgba(240,237,228,0.3)', marginBottom: '1.5rem' }}>
+                  Can't find it? Check your spam folder.
+                </p>
+                <button
+                  className="btn-primary"
+                  onClick={() => switchMode('login')}
+                  style={{ width: '100%', justifyContent: 'center', background: '#c8f03a', color: '#0e0e0c' }}
+                >
+                  ← Back to login
+                </button>
               </div>
             ) : (
               <>
