@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import { blogPosts } from '../data/blogPosts'
 
 function renderMarkdown(text) {
@@ -123,6 +124,11 @@ export default function BlogPost({ language = 'en' }) {
   const { slug } = useParams()
   const navigate = useNavigate()
   const isBg = language === 'bg'
+  const [session, setSession] = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+  }, [])
 
   const post = blogPosts.find(p => p.slug === slug)
 
@@ -182,8 +188,17 @@ export default function BlogPost({ language = 'en' }) {
         <nav className="bpost-nav">
           <Link to="/" className="bpost-nav-logo">Finku</Link>
           <div className="bpost-nav-right">
-            <button className="bpost-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
-            <button className="bpost-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+            {session ? (
+              <>
+                <button className="bpost-nav-ghost" onClick={() => navigate('/profile')}>Profile</button>
+                <button className="bpost-nav-ghost" onClick={async () => { await supabase.auth.signOut(); navigate('/') }}>Log out</button>
+              </>
+            ) : (
+              <>
+                <button className="bpost-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
+                <button className="bpost-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+              </>
+            )}
           </div>
         </nav>
 

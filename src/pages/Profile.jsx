@@ -50,9 +50,6 @@ export default function Profile({ session, language, onLanguageChange }) {
   const email = session.user.email
 
   const isBg = language === 'bg'
-  const [firstName, setFirstName] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [pwResetSent, setPwResetSent] = useState(false)
   const [pwResetLoading, setPwResetLoading] = useState(false)
@@ -68,22 +65,12 @@ export default function Profile({ session, language, onLanguageChange }) {
   const [deleteSuccess, setDeleteSuccess] = useState(false)
 
   useEffect(() => {
-    supabase.from('profiles').select('first_name, legal_form, author_rate').eq('id', userId).single()
+    supabase.from('profiles').select('legal_form, author_rate').eq('id', userId).single()
       .then(({ data }) => {
-        if (data?.first_name) setFirstName(data.first_name)
         if (data?.legal_form) setCurrentLegalForm(data.legal_form)
         setAuthorRate(data?.author_rate ?? false)
       })
   }, [userId])
-
-  async function handleSaveName() {
-    if (!firstName.trim()) return
-    setSaving(true)
-    await supabase.from('profiles').update({ first_name: firstName.trim() }).eq('id', userId)
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }
 
   async function handleDeleteAccount() {
     if (deleteConfirmText !== 'DELETE') return
@@ -429,28 +416,6 @@ export default function Profile({ session, language, onLanguageChange }) {
           {/* Personal info */}
           <div className="profile-section">
             <div className="profile-section-title">Account</div>
-
-            <div className="profile-field">
-              <label className="label">{pl.firstName}</label>
-              <div className="profile-input-row">
-                <input
-                  className="input-field"
-                  type="text"
-                  value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
-                  placeholder="Nikola"
-                  onKeyDown={e => e.key === 'Enter' && handleSaveName()}
-                />
-                <button
-                  className="btn-primary"
-                  onClick={handleSaveName}
-                  disabled={saving || !firstName.trim()}
-                  style={{ flexShrink: 0, padding: '10px 16px' }}
-                >
-                  {saved ? pl.saved : saving ? '…' : pl.saveChanges}
-                </button>
-              </div>
-            </div>
 
             <div className="profile-field">
               <label className="label">{pl.emailLabel}</label>

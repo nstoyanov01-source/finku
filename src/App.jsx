@@ -15,7 +15,6 @@ import NewInvoice from './pages/NewInvoice'
 import Blog from './pages/Blog'
 import BlogPost from './pages/BlogPost'
 import HowToPay from './pages/HowToPay'
-import Changelog from './pages/Changelog'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -125,7 +124,6 @@ export default function App() {
       <Route path="/blog" element={<Blog language={language || 'en'} />} />
       <Route path="/blog/:slug" element={<BlogPost language={language || 'en'} />} />
       <Route path="/how-to-pay" element={<HowToPay language={language || 'en'} />} />
-      <Route path="/changelog" element={<Changelog language={language || 'en'} />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

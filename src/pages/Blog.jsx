@@ -1,12 +1,18 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import { blogPosts } from '../data/blogPosts'
 
 export default function Blog({ language = 'en' }) {
   const navigate = useNavigate()
   const isBg = language === 'bg'
+  const [session, setSession] = useState(null)
 
   useEffect(() => { document.title = 'Blog · Finku' }, [])
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+  }, [])
 
   const sortedPosts = [...blogPosts].sort((a, b) => new Date(b.date) - new Date(a.date))
 
@@ -80,8 +86,17 @@ export default function Blog({ language = 'en' }) {
         <nav className="blog-nav">
           <Link to="/" className="blog-nav-logo">Finku</Link>
           <div className="blog-nav-right">
-            <button className="blog-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
-            <button className="blog-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+            {session ? (
+              <>
+                <button className="blog-nav-ghost" onClick={() => navigate('/profile')}>Profile</button>
+                <button className="blog-nav-ghost" onClick={async () => { await supabase.auth.signOut(); navigate('/') }}>Log out</button>
+              </>
+            ) : (
+              <>
+                <button className="blog-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
+                <button className="blog-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+              </>
+            )}
           </div>
         </nav>
 
@@ -119,7 +134,6 @@ export default function Blog({ language = 'en' }) {
             <div className="blog-footer-links">
               <Link to="/blog" className="blog-footer-link">Blog</Link>
               <Link to="/how-to-pay" className="blog-footer-link">{isBg ? 'Как да платиш' : 'How to pay'}</Link>
-              <Link to="/changelog" className="blog-footer-link">Changelog</Link>
               <Link to="/privacy" className="blog-footer-link">{isBg ? 'Поверителност' : 'Privacy'}</Link>
               <Link to="/terms" className="blog-footer-link">{isBg ? 'Условия' : 'Terms'}</Link>
             </div>

@@ -58,114 +58,34 @@ function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false, m
 
 function nextTaxDeadline() {
   const today = new Date()
-  const m = today.getMonth() // 0-indexed
+  const m = today.getMonth()
   const y = today.getFullYear()
-  const isQ4 = m >= 9 // October (9) through December (11)
+  const isQ4 = m >= 9
 
   if (isQ4) {
-    // No advance payment in Q4 — next event is annual declaration April 30
     const annualDecl = new Date(y + 1, 3, 30)
     const days = Math.ceil((annualDecl - today) / 86400000)
     return { date: annualDecl, days, isAnnual: true }
   }
 
-  const quarters = [
-    new Date(y, 3, 30),  // Apr 30
-    new Date(y, 6, 31),  // Jul 31
-    new Date(y, 9, 31),  // Oct 31
-  ]
+  const quarters = [new Date(y, 3, 30), new Date(y, 6, 31), new Date(y, 9, 31)]
   const next = quarters.find(d => d > today) || new Date(y + 1, 3, 30)
   const days = Math.ceil((next - today) / 86400000)
   return { date: next, days, isAnnual: false }
 }
 
-function formatDeadlineLabel(date, language) {
-  const d = date.getDate()
-  const en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-  const bg = ['яну','фев','мар','апр','май','юни','юли','авг','сеп','окт','ное','дек']
-  return `${d} ${language === 'bg' ? bg[date.getMonth()] : en[date.getMonth()]}`
-}
-
-function useCountUp(target, duration = 1200) {
-  const [value, setValue] = useState(0)
-  const hasAnimated = useRef(false)
-  const raf = useRef(null)
-  useEffect(() => {
-    if (!target) { setValue(0); return }
-    if (hasAnimated.current) { setValue(target); return }
-    hasAnimated.current = true
-    const t0 = performance.now()
-    function step(now) {
-      const p = Math.min((now - t0) / duration, 1)
-      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))))
-      if (p < 1) raf.current = requestAnimationFrame(step)
-    }
-    raf.current = requestAnimationFrame(step)
-    return () => { if (raf.current) cancelAnimationFrame(raf.current) }
-  }, [target])
-  return value
-}
-
-function BreakdownRow({ label, value, isTotal }) {
-  return (
-    <div style={{
-      display: 'flex', justifyContent: 'space-between',
-      padding: isTotal ? '8px 0 4px' : '4px 0',
-      fontSize: 12,
-      color: isTotal ? '#f0ede4' : 'rgba(240,237,228,0.5)',
-      fontWeight: isTotal ? 500 : 400,
-      borderTop: isTotal ? '0.5px solid rgba(240,237,228,0.1)' : 'none',
-      marginTop: isTotal ? 4 : 0,
-    }}>
-      <span>{label}</span>
-      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</span>
-    </div>
-  )
-}
-
-function daysUntil(date) {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const d = new Date(date); d.setHours(0, 0, 0, 0)
-  return Math.ceil((d - today) / 86400000)
-}
-
-function urgencyStyle(days) {
-  if (days > 30) return { color: '#c8f03a', bg: 'rgba(200,240,58,0.1)' }
-  if (days > 7) return { color: '#e8a84a', bg: 'rgba(255,200,0,0.08)' }
-  return { color: '#e07070', bg: 'rgba(224,112,112,0.1)' }
-}
-
-function generatePayments(tax, language) {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
+function nextInsuranceDeadline() {
+  const today = new Date()
+  const day = today.getDate()
+  const month = today.getMonth()
   const year = today.getFullYear()
-  const payments = []
-  const monthNames = language === 'bg'
-    ? ['Януари','Февруари','Март','Април','Май','Юни','Юли','Август','Септември','Октомври','Ноември','Декември']
-    : ['January','February','March','April','May','June','July','August','September','October','November','December']
-  const insLabel = language === 'bg' ? 'Осигуровки' : 'Insurance'
-  const annLabel = language === 'bg' ? 'Годишна декларация' : 'Annual declaration'
+  return day < 25
+    ? new Date(year, month, 25)
+    : new Date(year, month + 1, 25)
+}
 
-  const currentMonth = today.getMonth()
-  for (let m = currentMonth + 1; m < 12; m++) {
-    const due = new Date(year, m, 25); due.setHours(0, 0, 0, 0)
-    payments.push({ key: `${year}-${String(m+1).padStart(2,'0')}-25`, name: `${insLabel} — ${monthNames[m]}`, date: due, amount: 153 })
-  }
-
-  const qAmt = tax && tax.monthsElapsed > 0 ? Math.round(tax.incomeTax / tax.monthsElapsed * 3) : 0
-  const qDates = [new Date(year,3,30), new Date(year,6,31), new Date(year,9,31)]
-  const qLabels = language === 'bg'
-    ? ['Q1 данъчно плащане','Q2 данъчно плащане','Q3 данъчно плащане']
-    : ['Q1 tax payment','Q2 tax payment','Q3 tax payment']
-  qDates.forEach((d, i) => {
-    if (d > today) {
-      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-      payments.push({ key: ds, name: qLabels[i], date: d, amount: qAmt })
-    }
-  })
-
-  payments.push({ key: `${year+1}-04-30`, name: annLabel, date: new Date(year+1,3,30), amount: tax ? Math.round(tax.total) : 0 })
-  payments.sort((a, b) => a.date - b.date)
-  return payments.slice(0, 4)
+function formatDeadlineDate(date, language) {
+  return date.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'short' })
 }
 
 export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
@@ -183,18 +103,6 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const [drawer, setDrawer] = useState(null)
   const [showAllIncome, setShowAllIncome] = useState(false)
   const [showAllExpenses, setShowAllExpenses] = useState(false)
-  const [showBreakdown, setShowBreakdown] = useState(false)
-  const [paidKeys, setPaidKeys] = useState(() => {
-    const keys = {}
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i)
-      if (k?.startsWith('finku_paid_')) keys[k.replace('finku_paid_', '')] = true
-    }
-    return keys
-  })
-  const [setAside, setSetAside] = useState(() => localStorage.getItem('finku_set_aside') || '')
-  const [taxPulse, setTaxPulse] = useState(false)
-  const prevTaxRef = useRef(null)
   const { toasts, showToast } = useToast()
   const [firstName, setFirstName] = useState('')
 
@@ -202,26 +110,6 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
     document.title = 'Dashboard · Finku'
     posthog?.identify(userId, { email: session.user.email })
   }, [])
-
-  useEffect(() => {
-    if (setAside) localStorage.setItem('finku_set_aside', setAside)
-    else localStorage.removeItem('finku_set_aside')
-  }, [setAside])
-
-  function togglePaid(dateKey, paymentName) {
-    const lsKey = `finku_paid_${dateKey}`
-    setPaidKeys(prev => {
-      if (prev[dateKey]) {
-        localStorage.removeItem(lsKey)
-        const next = { ...prev }
-        delete next[dateKey]
-        return next
-      }
-      localStorage.setItem(lsKey, '1')
-      posthog?.capture('payment_marked_paid', { payment_type: paymentName })
-      return { ...prev, [dateKey]: true }
-    })
-  }
 
   useEffect(() => { fetchName() }, [])
   useEffect(() => { fetchData(selectedYear) }, [selectedYear])
@@ -244,64 +132,33 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
     setLoading(false)
   }
 
-  const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0)
-  const totalExpenses = expenses.reduce((s, r) => s + Number(r.amount), 0)
-  const netIncome = totalIncome - totalExpenses
-  const currentMonth = new Date().getMonth() + 1
-  const isPastYear = selectedYear < currentYear
-  const monthsElapsed = isPastYear ? 12 : currentMonth
-  const avgMonthly = monthsElapsed > 0 ? totalIncome / monthsElapsed : 0
-
-  const legalFormEff = legalForm || 'svobodna_profesiya'
-  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false, monthsElapsed)
-  const projectedAnnual = (totalIncome / currentMonth) * 12
-
-  useEffect(() => {
-    if (tax?.total != null) {
-      if (prevTaxRef.current !== null && prevTaxRef.current !== tax.total) {
-        setTaxPulse(true)
-        const timer = setTimeout(() => setTaxPulse(false), 400)
-        return () => clearTimeout(timer)
-      }
-      prevTaxRef.current = tax.total
-    }
-  }, [tax?.total])
-
-  const taxTotalDisplay = useCountUp(tax?.total ?? 0)
-  const deadline = tax ? nextTaxDeadline() : null
-  const setAsideNum = parseFloat(setAside) || 0
-
-  const chartMonths = isPastYear ? 12 : currentMonth
-  const monthlyData = Array.from({ length: chartMonths }, (_, i) => {
-    const m = String(i + 1).padStart(2, '0')
-    const inc = income.filter(r => r.date.startsWith(`${selectedYear}-${m}`)).reduce((s, r) => s + Number(r.amount), 0)
-    const exp = expenses.filter(r => r.date.startsWith(`${selectedYear}-${m}`)).reduce((s, r) => s + Number(r.amount), 0)
-    return { inc, exp }
-  })
-
-  const maxBar = Math.max(...monthlyData.map(d => Math.max(d.inc, d.exp)), 1)
-
   async function handleLogout() {
     await supabase.auth.signOut()
     navigate('/')
   }
 
+  const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0)
+  const totalExpenses = expenses.reduce((s, r) => s + Number(r.amount), 0)
+  const currentMonth = new Date().getMonth() + 1
+  const isPastYear = selectedYear < currentYear
+  const monthsElapsed = isPastYear ? 12 : currentMonth
+
+  const legalFormEff = legalForm || 'svobodna_profesiya'
+  const isTracking = legalFormEff === 'just_tracking'
+  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false, monthsElapsed)
+  const deadline = tax ? nextTaxDeadline() : null
+  const quarter = Math.floor(new Date().getMonth() / 3) + 1
+  const insDue = nextInsuranceDeadline()
+  const insDays = Math.ceil((insDue - new Date()) / 86400000)
+
   return (
     <>
       <style>{`
         .dash-nav {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0 2rem;
-          height: 60px;
-          position: fixed;
-          top: 0; left: 0; right: 0;
-          z-index: 50;
-          background: rgba(14,14,12,0.9);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-bottom: 0.5px solid rgba(240,237,228,0.08);
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 0 2rem; height: 60px; position: fixed; top: 0; left: 0; right: 0;
+          z-index: 50; background: rgba(14,14,12,0.9); backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px); border-bottom: 0.5px solid rgba(240,237,228,0.08);
         }
         .dash-nav-logo { font-family: 'Instrument Serif', serif; font-size: 20px; color: #f0ede4; letter-spacing: -0.3px; }
         .dash-nav-right { display: flex; align-items: center; gap: 8px; }
@@ -313,64 +170,19 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
         .dash-nav-logout:hover { color: #f0ede4; border-color: rgba(240,237,228,0.25); background: rgba(240,237,228,0.04); }
 
         .dash-page { min-height: 100vh; background: #0e0e0c; padding-top: 60px; }
-        .dash-content { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
-        .dash-header { margin-bottom: 1.75rem; }
+        .dash-content { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
         .dash-greeting { font-size: 20px; font-weight: 500; color: #f0ede4; letter-spacing: -0.3px; }
-        .dash-subheading { font-size: 13px; color: rgba(240,237,228,0.35); margin-top: 3px; }
+        .dash-subheading { font-size: 13px; color: rgba(240,237,228,0.35); margin-top: 3px; margin-bottom: 1.75rem; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
-        .kpi-card { background: #161614; border: 1px solid rgba(240,237,228,0.08); border-radius: 12px; padding: 1rem; }
-        .kpi-label { font-size: 11px; color: rgba(240,237,228,0.35); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
-        .kpi-sub { font-size: 11px; color: rgba(240,237,228,0.25); margin-top: 3px; }
-
-        @keyframes taxPulse {
-          0% { transform: scale(1); color: #c8f03a; }
-          40% { transform: scale(1.08); color: #ffffff; }
-          100% { transform: scale(1); color: #c8f03a; }
-        }
-        .tax-amount {
-          font-size: 42px;
-          font-weight: 600;
-          color: #c8f03a;
-          letter-spacing: -1px;
-          margin-bottom: 0.3rem;
-          font-variant-numeric: tabular-nums;
-          display: inline-block;
-        }
-        .tax-amount.pulsing { animation: taxPulse 400ms ease-out forwards; }
-
-        .set-aside-input {
-          width: 80px;
-          background: rgba(240,237,228,0.06);
-          border: 1px solid rgba(240,237,228,0.12);
-          border-radius: 6px;
-          padding: 3px 8px;
-          font-size: 13px;
-          color: #f0ede4;
-          font-family: 'DM Sans', sans-serif;
-          outline: none;
-          transition: border-color 0.15s;
-        }
-        .set-aside-input:focus { border-color: rgba(200,240,58,0.35); }
-
-        .breakdown-section { border-top: 0.5px solid rgba(240,237,228,0.06); padding-top: 0.5rem; margin-top: 0.25rem; margin-bottom: 0.5rem; }
-        .payment-row { background: #161614; border: 0.5px solid rgba(240,237,228,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 12px; transition: border-color 0.15s; }
-        .payment-row:hover { border-color: rgba(240,237,228,0.12); }
-        .payment-checkbox { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: all 0.15s; }
-        .entry-row { display: flex; align-items: center; justify-content: space-between; background: rgba(240,237,228,0.04); border-radius: 9px; padding: 8px 10px; position: relative; cursor: pointer; }
+        .entry-row { display: flex; align-items: center; justify-content: space-between; background: rgba(240,237,228,0.04); border-radius: 9px; padding: 9px 12px; cursor: pointer; transition: background 0.12s; }
         .entry-row:hover { background: rgba(240,237,228,0.07); }
         .entry-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-        .entry-date { font-size: 11px; color: rgba(240,237,228,0.3); }
-        .chart-legend-dot { width: 7px; height: 7px; border-radius: 50%; }
-        .entries-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+        .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        .entry-date { font-size: 11px; color: rgba(240,237,228,0.3); margin-top: 1px; }
 
         @media (max-width: 640px) {
-          .entries-grid { grid-template-columns: 1fr; }
           .dash-nav { padding: 0 1rem; }
-          .dash-content { padding: 1.5rem 1rem 3rem; }
-          .tax-amount { font-size: 34px; }
+          .dash-content { padding: 1.5rem 1rem 4rem; }
         }
       `}</style>
 
@@ -409,28 +221,17 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
             >
               + {language === 'bg' ? 'Нова фактура' : 'New invoice'}
             </button>
-            <button className="dash-nav-btn" onClick={() => navigate('/changelog')}>
-              Changelog
-            </button>
-            <button className="dash-nav-btn" onClick={() => navigate('/blog')}>
-              Blog
-            </button>
-            <button className="dash-nav-btn" onClick={() => navigate('/profile')}>
-              Profile
-            </button>
-            <button className="dash-nav-logout" onClick={handleLogout}>
-              {lang.logout}
-            </button>
+            <button className="dash-nav-btn" onClick={() => navigate('/blog')}>Blog</button>
+            <button className="dash-nav-btn" onClick={() => navigate('/profile')}>Profile</button>
+            <button className="dash-nav-logout" onClick={handleLogout}>{lang.logout}</button>
           </div>
         </nav>
 
-        {/* Loading */}
         {loading ? (
           <div className="dash-content">
             <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(240,237,228,0.3)' }}>…</div>
           </div>
 
-        /* First-time empty state */
         ) : income.length === 0 && expenses.length === 0 ? (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -440,8 +241,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
             <h1 style={{
               fontFamily: "'Instrument Serif', serif",
               fontSize: 'clamp(32px, 5vw, 52px)',
-              color: '#f0ede4', letterSpacing: '-0.5px',
-              marginBottom: '1rem', lineHeight: 1.1,
+              color: '#f0ede4', letterSpacing: '-0.5px', marginBottom: '1rem', lineHeight: 1.1,
             }}>
               {language === 'bg' ? 'Нека видим колко дължиш' : "Let's see what you owe"}
             </h1>
@@ -458,334 +258,223 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
               + {language === 'bg' ? 'Добави първия си приход' : 'Add your first income'}
             </button>
             <div style={{ fontSize: 14, color: 'rgba(240,237,228,0.35)' }}>
-              <CSVImport userId={userId} language={language} onImported={fetchData} />
+              <CSVImport userId={userId} language={language} onImported={() => fetchData(selectedYear)} />
             </div>
           </div>
 
-        /* Normal dashboard */
         ) : (
           <div className="dash-content">
-            <div className="dash-header">
-              <div className="dash-greeting">
-                {greeting(lang)}{firstName ? `, ${firstName}` : ''}
-              </div>
-              <div className="dash-subheading">{formatCurrentDate(language)}</div>
+            {/* Greeting */}
+            <div className="dash-greeting">
+              {greeting(lang)}{firstName ? `, ${firstName}` : ''}
             </div>
+            <div className="dash-subheading">{formatCurrentDate(language)}</div>
 
-            {/* Tax Section — Layer 1 + Layer 2 */}
-            {tax && (
-              <>
-                {/* Layer 1: Tax Card */}
-                <div style={{
-                  background: 'rgba(200,240,58,0.04)',
-                  border: '0.5px solid rgba(200,240,58,0.2)',
-                  borderRadius: 12,
-                  padding: '1.25rem 1.5rem',
-                  marginBottom: '0.75rem',
-                }}>
-                  {/* Top row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: 8 }}>
-                    <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                      {lang.taxEstimate} · {lang.taxAuthority}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {(() => {
-                        const pill = setAsideNum >= tax.total
-                          ? { bg: 'rgba(200,240,58,0.1)', color: '#c8f03a', label: lang.covered }
-                          : (setAsideNum > 0 && setAsideNum >= tax.total * 0.7)
-                          ? { bg: 'rgba(255,200,0,0.08)', color: '#e8a84a', label: lang.almostThere }
-                          : { bg: 'rgba(224,112,112,0.1)', color: '#e07070', label: lang.notCovered }
-                        return (
-                          <span style={{ background: pill.bg, color: pill.color, fontSize: 11, borderRadius: 20, padding: '3px 9px', fontWeight: 500 }}>
-                            {pill.label}
-                          </span>
-                        )
-                      })()}
-                      {deadline && (() => {
-                        const s = urgencyStyle(deadline.days)
-                        return (
-                          <span style={{ background: s.bg, color: s.color, fontSize: 11, borderRadius: 20, padding: '3px 9px', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                            {deadline.isAnnual
-                              ? `${lang.annualDeclaration}: ${formatDeadlineLabel(deadline.date, language)} · ${deadline.days} ${lang.daysAway}`
-                              : `${formatDeadlineLabel(deadline.date, language)} · ${deadline.days} ${lang.daysAway}`}
-                          </span>
-                        )
-                      })()}
-                      <Link to="/how-to-pay" style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textDecoration: 'none', whiteSpace: 'nowrap', transition: 'color 0.15s' }}
-                        onMouseOver={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.7)' }}
-                        onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.4)' }}>
-                        {language === 'bg' ? 'Как да платиш →' : 'How to pay →'}
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* Large total with count-up */}
-                  <div className={`tax-amount${taxPulse ? ' pulsing' : ''}`}>
-                    ~{fmt(taxTotalDisplay)} {lang.currency}
-                  </div>
-
-                  {/* Subtitle */}
-                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.38)', marginBottom: '0.75rem' }}>
-                    153 {lang.currency}/{language === 'bg' ? 'мес. осигуровки' : 'month insurance'}
-                    {' · '}{fmt(tax.incomeTax)} {lang.currency} {language === 'bg' ? 'данък' : 'income tax'}
-                    {' · '}{tax.monthsElapsed} {language === 'bg' ? 'месеца' : 'months elapsed'}
-                  </div>
-
-                  {/* Set aside row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.6rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>{lang.setAside}:</span>
-                    <input
-                      className="set-aside-input"
-                      type="number"
-                      min="0"
-                      value={setAside}
-                      onChange={e => setSetAside(e.target.value)}
-                      placeholder="0"
-                    />
-                    <span style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>€</span>
-                    {setAsideNum > 0 && (() => {
-                      const pill = setAsideNum >= tax.total
-                        ? { bg: 'rgba(200,240,58,0.1)', color: '#c8f03a', label: lang.covered }
-                        : setAsideNum >= tax.total * 0.7
-                        ? { bg: 'rgba(255,200,0,0.08)', color: '#e8a84a', label: lang.almostThere }
-                        : { bg: 'rgba(224,112,112,0.1)', color: '#e07070', label: lang.notCovered }
-                      return (
-                        <span style={{ background: pill.bg, color: pill.color, fontSize: 12, borderRadius: 20, padding: '3px 10px', fontWeight: 500 }}>
-                          {pill.label}
-                        </span>
-                      )
-                    })()}
-                  </div>
-
-                  {/* Breakdown toggle */}
-                  <button
-                    onClick={() => {
-                      setShowBreakdown(v => {
-                        if (!v) posthog?.capture('tax_breakdown_viewed', { legal_form: legalFormEff })
-                        return !v
-                      })
-                    }}
-                    style={{
-                      background: 'none', border: 'none', padding: 0,
-                      fontSize: 12, color: 'rgba(240,237,228,0.35)',
-                      cursor: 'pointer', textDecoration: 'underline',
-                      fontFamily: 'DM Sans, sans-serif',
-                      marginBottom: showBreakdown ? '0.25rem' : '0.5rem',
-                      display: 'block',
-                    }}
-                  >
-                    {showBreakdown ? lang.hideCalculation : `${lang.howCalculated} ↓`}
-                  </button>
-
-                  {/* Breakdown rows */}
-                  {showBreakdown && (
-                    <div className="breakdown-section">
-                      {legalFormEff === 'ET' ? (
-                        <>
-                          <BreakdownRow label={language === 'bg' ? 'Брутен доход' : 'Gross income'} value={`${fmt(totalIncome)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Общи разходи' : 'Total expenses'} value={`− ${fmt(totalExpenses)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Печалба' : 'Profit'} value={`${fmt(tax.profit)} €`} />
-                          <BreakdownRow label={language === 'bg' ? `Осигуровки (${tax.monthsElapsed} × 153 €)` : `Insurance (${tax.monthsElapsed} × 153 €)`} value={`− ${fmt(tax.insuranceDeduction)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Данъчна основа' : 'Taxable base'} value={tax.taxableBase === 0 ? (language === 'bg' ? '0 — приспаданията надвишават дохода' : '0 — deductions exceed income') : `${fmt(tax.taxableBase)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Данък 15%' : 'Income tax 15%'} value={`${fmt(tax.incomeTax)} €`} />
-                          <BreakdownRow label={language === 'bg' ? '+ Осигуровки' : '+ Insurance'} value={`${fmt(tax.insurance)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Общо' : 'Total'} value={`${fmt(tax.total)} €`} isTotal />
-                        </>
-                      ) : (
-                        <>
-                          <BreakdownRow label={language === 'bg' ? 'Брутен доход' : 'Gross income'} value={`${fmt(totalIncome)} €`} />
-                          <BreakdownRow label={language === 'bg' ? `НПР приспадане (${tax.nprRate}%)` : `НПР deduction (${tax.nprRate}%)`} value={`− ${fmt(tax.npr)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'След НПР' : 'After НПР'} value={`${fmt(tax.afterNPR)} €`} />
-                          <BreakdownRow label={language === 'bg' ? `Осигуровки (${tax.monthsElapsed} × 153 €)` : `Insurance (${tax.monthsElapsed} × 153 €)`} value={`− ${fmt(tax.insuranceDeduction)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Данъчна основа' : 'Taxable base'} value={tax.taxableBase === 0 ? (language === 'bg' ? '0 — приспаданията надвишават дохода' : '0 — deductions exceed income') : `${fmt(tax.taxableBase)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Данък 10%' : 'Income tax 10%'} value={`${fmt(tax.incomeTax)} €`} />
-                          <BreakdownRow label={language === 'bg' ? '+ Осигуровки' : '+ Insurance'} value={`${fmt(tax.insurance)} €`} />
-                          <BreakdownRow label={language === 'bg' ? 'Общо' : 'Total'} value={`${fmt(tax.total)} €`} isTotal />
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Disclaimer */}
-                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.2)' }}>
-                    {lang.estimateDisclaimer}
-                  </div>
+            {/* Hero: Income Tax card */}
+            {isTracking ? (
+              <div style={{
+                background: '#161614', border: '0.5px solid rgba(255,255,255,0.08)',
+                borderRadius: 16, padding: '18px 20px', marginBottom: 12,
+              }}>
+                <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>
+                  {language === 'bg' ? 'Режим на проследяване' : 'Tracking mode'}
                 </div>
-
-                {/* Layer 2: Payment Timeline — current year only */}
-                {!isPastYear && <div style={{ marginBottom: '1.25rem' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.4)', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: '1rem', marginBottom: '0.6rem' }}>
-                    {lang.upcomingPayments}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {generatePayments(tax, language).map(payment => {
-                      const days = daysUntil(payment.date)
-                      const isPaid = !!paidKeys[payment.key]
-                      const s = urgencyStyle(days)
-                      const dateLabel = payment.date.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })
-                      return (
-                        <div key={payment.key} className="payment-row" style={{ opacity: isPaid ? 0.45 : 1 }}>
-                          <div
-                            className="payment-checkbox"
-                            style={{
-                              border: isPaid ? '1.5px solid #c8f03a' : '1.5px solid rgba(240,237,228,0.2)',
-                              background: isPaid ? 'rgba(200,240,58,0.1)' : 'none',
-                              color: '#c8f03a',
-                            }}
-                            onClick={() => togglePaid(payment.key, payment.name)}
-                          >
-                            {isPaid ? '✓' : ''}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, color: '#f0ede4', fontWeight: 500 }}>{payment.name}</div>
-                            <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', marginTop: 2 }}>{dateLabel}</div>
-                          </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            {payment.amount > 0 && (
-                              <div style={{ fontSize: 14, fontWeight: 500, color: '#f0ede4', fontVariantNumeric: 'tabular-nums' }}>
-                                {fmt(payment.amount)} €
-                              </div>
-                            )}
-                            <div style={{ fontSize: 11, color: isPaid ? 'rgba(240,237,228,0.35)' : s.color, marginTop: 2 }}>
-                              {isPaid ? lang.markedPaid : `${days} ${lang.daysAway}`}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'rgba(240,237,228,0.15)', marginTop: '0.5rem' }}>
-                    {lang.paymentDisclaimer}
-                  </div>
-                </div>}
-              </>
+                <div style={{ fontSize: 15, color: 'rgba(240,237,228,0.55)', lineHeight: 1.5 }}>
+                  {language === 'bg' ? 'Само проследяване — без данъчна прогноза' : 'Tracking only — no tax estimate'}
+                </div>
+              </div>
+            ) : tax && (
+              <div style={{
+                background: '#c8f03a', borderRadius: 16, padding: '22px 24px', marginBottom: 12,
+                position: 'relative',
+              }}>
+                <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 8 }}>
+                  {language === 'bg' ? `Данък — Q${quarter}` : `Income tax — Q${quarter}`}
+                </div>
+                <div style={{ fontSize: 52, fontWeight: 600, color: '#0e0e0c', letterSpacing: -1.5, lineHeight: 1, marginBottom: 6, fontVariantNumeric: 'tabular-nums' }}>
+                  ~{fmt(tax.incomeTax)} €
+                </div>
+                <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.55)', marginBottom: 14 }}>
+                  {tax.incomeTax === 0
+                    ? (language === 'bg' ? 'Приспаданията те покриват този период' : 'Your deductions cover it this quarter')
+                    : deadline && (language === 'bg'
+                        ? `До ${formatDeadlineDate(deadline.date, language)}`
+                        : `Due by ${formatDeadlineDate(deadline.date, language)}`)}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {deadline && (
+                    <span style={{
+                      background: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.65)',
+                      fontSize: 12, fontWeight: 500, borderRadius: 20, padding: '4px 10px',
+                    }}>
+                      {language === 'bg'
+                        ? `До ${formatDeadlineDate(deadline.date, language)} · ${deadline.days} дни`
+                        : `Due ${formatDeadlineDate(deadline.date, language)} · ${deadline.days} days`}
+                    </span>
+                  )}
+                  <Link
+                    to="/how-to-pay"
+                    style={{ fontSize: 12, color: 'rgba(0,0,0,0.5)', textDecoration: 'none', marginLeft: 'auto' }}
+                    onMouseOver={e => { e.currentTarget.style.color = 'rgba(0,0,0,0.75)' }}
+                    onMouseOut={e => { e.currentTarget.style.color = 'rgba(0,0,0,0.5)' }}
+                  >
+                    {language === 'bg' ? 'Как да платиш? →' : 'How to pay? →'}
+                  </Link>
+                </div>
+              </div>
             )}
 
-            {/* KPI Cards */}
-            <div className="kpi-grid">
-              {[
-                { label: lang.totalIncome, value: `${fmt(totalIncome)} ${lang.currency}`, color: '#7ec95f' },
-                { label: lang.totalExpenses, value: `${fmt(totalExpenses)} ${lang.currency}`, color: '#e07070' },
-                { label: lang.netIncome, value: `${fmt(netIncome)} ${lang.currency}`, color: '#f0ede4' },
-                { label: lang.avgMonthly, value: `${fmt(avgMonthly)} ${lang.currency}`, color: '#e8a84a' },
-              ].map((k, i) => (
-                <div key={i} className="kpi-card">
-                  <div className="kpi-label">{k.label}</div>
-                  <div className="kpi-value" style={{ color: k.color }}>{k.value}</div>
-                  <div className="kpi-sub">{lang.soFar} {selectedYear}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Projected Annual — current year only */}
-            {!isPastYear && currentMonth >= 2 && totalIncome > 0 && (
+            {/* Insurance card */}
+            {!isTracking && (
               <div style={{
-                background: '#161614', border: '1px solid rgba(240,237,228,0.06)',
-                borderRadius: 12, padding: '0.9rem 1.25rem', marginBottom: '1.25rem',
-                fontSize: 13, color: 'rgba(240,237,228,0.5)',
+                background: '#161614', border: '0.5px solid rgba(255,255,255,0.08)',
+                borderRadius: 16, padding: '18px 20px', marginBottom: 20,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
               }}>
-                {language === 'bg' ? (
-                  <>При текущото темпо ще спечелите <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> тази година</>
-                ) : (
-                  <>At your current rate you're on track to earn <span style={{ color: '#c8f03a', fontWeight: 500 }}>{fmt(projectedAnnual)} {lang.currency}</span> this year</>
+                <div>
+                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>
+                    {language === 'bg' ? 'Месечни осигуровки' : 'Monthly insurance'}
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 600, color: '#f0ede4', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
+                    153 €
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.35)', marginTop: 4 }}>
+                    {language === 'bg' ? 'Фиксирано всеки месец · Пенсия + здраве' : 'Fixed every month · Pension + health'}
+                  </div>
+                </div>
+                <div style={{
+                  background: insDays <= 14 ? 'rgba(255,200,0,0.12)' : 'rgba(200,240,58,0.1)',
+                  color: insDays <= 14 ? '#e8a84a' : '#c8f03a',
+                  fontSize: 12, fontWeight: 500, borderRadius: 20, padding: '6px 12px',
+                  whiteSpace: 'nowrap', flexShrink: 0, textAlign: 'center',
+                }}>
+                  <div>{language === 'bg' ? 'До' : 'Due'} {formatDeadlineDate(insDue, language)}</div>
+                  <div style={{ fontSize: 11, fontWeight: 400, marginTop: 2, opacity: 0.8 }}>
+                    {insDays} {language === 'bg' ? 'дни' : 'days'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            {!isPastYear && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
+                <button
+                  onClick={() => setModal({ type: 'income' })}
+                  style={{
+                    background: '#c8f03a', color: '#0e0e0c', border: 'none',
+                    borderRadius: 12, padding: '14px', fontFamily: 'DM Sans, sans-serif',
+                    fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s',
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.opacity = '0.88' }}
+                  onMouseOut={e => { e.currentTarget.style.opacity = '1' }}
+                >
+                  + {language === 'bg' ? 'Добави приход' : 'Add income'}
+                </button>
+                <button
+                  onClick={() => setModal({ type: 'expense' })}
+                  style={{
+                    background: 'none', color: 'rgba(240,237,228,0.7)',
+                    border: '1px solid rgba(240,237,228,0.14)', borderRadius: 12, padding: '14px',
+                    fontFamily: 'DM Sans, sans-serif', fontSize: 14, fontWeight: 500,
+                    cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.28)'; e.currentTarget.style.color = '#f0ede4' }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.14)'; e.currentTarget.style.color = 'rgba(240,237,228,0.7)' }}
+                >
+                  + {language === 'bg' ? 'Добави разход' : 'Add expense'}
+                </button>
+              </div>
+            )}
+
+            {/* Recent income */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(240,237,228,0.45)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                  {lang.recentIncome}
+                </span>
+                {income.length > 5 && (
+                  <button
+                    onClick={() => setShowAllIncome(v => !v)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0 }}
+                    onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.65)'}
+                    onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
+                  >
+                    {showAllIncome ? (language === 'bg' ? 'По-малко' : 'Show less') : (language === 'bg' ? 'Всички' : 'View all')}
+                  </button>
                 )}
               </div>
-            )}
-
-            {/* Income + Expenses columns */}
-            <div className="entries-grid">
-              {[
-                { type: 'income', label: lang.recentIncome, data: showAllIncome ? income : income.slice(0, 5), total: income.length, showAll: showAllIncome, toggleShowAll: () => setShowAllIncome(v => !v), addLabel: lang.addIncome, emptyMsg: lang.noIncome, color: '#7ec95f', dot: '#7ec95f' },
-                { type: 'expense', label: lang.recentExpenses, data: showAllExpenses ? expenses : expenses.slice(0, 5), total: expenses.length, showAll: showAllExpenses, toggleShowAll: () => setShowAllExpenses(v => !v), addLabel: lang.addExpense, emptyMsg: lang.noExpenses, color: '#e07070', dot: '#e07070' },
-              ].map(col => (
-                <div key={col.type} className="card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{col.label}</span>
-                      {col.total > 5 && (
-                        <button
-                          onClick={col.toggleShowAll}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0, transition: 'color 0.15s' }}
-                          onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.7)'}
-                          onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
-                        >
-                          {col.showAll ? 'Show less' : 'View all'}
-                        </button>
-                      )}
-                    </div>
-                    {!isPastYear && (
-                      <button
-                        className="btn-primary"
-                        onClick={() => setModal({ type: col.type })}
-                        style={{ padding: '5px 12px', fontSize: 12 }}
-                      >
-                        + {col.addLabel}
-                      </button>
-                    )}
-                  </div>
-
-                  {col.data.length === 0 ? (
-                    <p style={{ fontSize: 13, color: 'rgba(240,237,228,0.25)', textAlign: 'center', padding: '1.5rem 0' }}>{col.emptyMsg}</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {col.data.map(row => (
-                        <div
-                          key={row.id}
-                          className="entry-row"
-                          onClick={() => setDrawer({ entry: row, type: col.type })}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                            <div className="entry-dot" style={{ background: col.dot }} />
-                            <div style={{ minWidth: 0 }}>
-                              <div className="entry-desc">{row.description}</div>
-                              <div className="entry-date">{formatDate(row.date, language)}</div>
-                            </div>
-                          </div>
-                          <div style={{ fontSize: 13, fontWeight: 500, color: col.color, flexShrink: 0, marginLeft: 8 }}>
-                            {col.type === 'income' ? '+' : '−'}{fmt(row.amount)} {lang.currency}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {!isPastYear && <CSVImport userId={userId} language={language} onImported={() => fetchData(selectedYear)} />}
+              {income.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'rgba(240,237,228,0.2)', textAlign: 'center', padding: '1.25rem 0' }}>
+                  {lang.noIncome}
                 </div>
-              ))}
-            </div>
-
-            {/* Bar Chart */}
-            <div className="card" style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <span style={{ fontWeight: 500, fontSize: 14, color: '#f0ede4' }}>{lang.chartTitle}</span>
-                <div style={{ display: 'flex', gap: 14 }}>
-                  {[{ color: '#7ec95f', label: lang.incomeLabel }, { color: '#e07070', label: lang.expensesLabel }].map(l => (
-                    <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(240,237,228,0.4)' }}>
-                      <div className="chart-legend-dot" style={{ background: l.color }} />
-                      {l.label}
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {(showAllIncome ? income : income.slice(0, 5)).map(row => (
+                    <div key={row.id} className="entry-row" onClick={() => setDrawer({ entry: row, type: 'income' })}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        <div className="entry-dot" style={{ background: '#7ec95f' }} />
+                        <div style={{ minWidth: 0 }}>
+                          <div className="entry-desc">{row.description}</div>
+                          <div className="entry-date">{formatDate(row.date, language)}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: '#7ec95f', flexShrink: 0, marginLeft: 8, fontVariantNumeric: 'tabular-nums' }}>
+                        +{fmt(row.amount)} {lang.currency}
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
-                {monthlyData.map((d, i) => (
-                  <div key={i} style={{ flex: 1, display: 'flex', gap: 3, alignItems: 'flex-end', height: '100%' }}>
-                    <div style={{ flex: 1, background: '#7ec95f', borderRadius: '3px 3px 0 0', height: `${(d.inc / maxBar) * 100}%`, minHeight: d.inc > 0 ? 3 : 0, opacity: 0.8 }} />
-                    <div style={{ flex: 1, background: '#e07070', borderRadius: '3px 3px 0 0', height: `${(d.exp / maxBar) * 100}%`, minHeight: d.exp > 0 ? 3 : 0, opacity: 0.8 }} />
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                {monthlyData.map((_, i) => (
-                  <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 10, color: 'rgba(240,237,228,0.25)' }}>
-                    {lang.months[i]}
-                  </div>
-                ))}
-              </div>
+              )}
+              {!isPastYear && (
+                <div style={{ marginTop: 8 }}>
+                  <CSVImport userId={userId} language={language} onImported={() => fetchData(selectedYear)} />
+                </div>
+              )}
             </div>
 
-            {/* Disclaimer */}
-            <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.2)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
+            {/* Recent expenses */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(240,237,228,0.45)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                  {lang.recentExpenses}
+                </span>
+                {expenses.length > 5 && (
+                  <button
+                    onClick={() => setShowAllExpenses(v => !v)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0 }}
+                    onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.65)'}
+                    onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
+                  >
+                    {showAllExpenses ? (language === 'bg' ? 'По-малко' : 'Show less') : (language === 'bg' ? 'Всички' : 'View all')}
+                  </button>
+                )}
+              </div>
+              {expenses.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'rgba(240,237,228,0.2)', textAlign: 'center', padding: '1.25rem 0' }}>
+                  {lang.noExpenses}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {(showAllExpenses ? expenses : expenses.slice(0, 5)).map(row => (
+                    <div key={row.id} className="entry-row" onClick={() => setDrawer({ entry: row, type: 'expense' })}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        <div className="entry-dot" style={{ background: '#e07070' }} />
+                        <div style={{ minWidth: 0 }}>
+                          <div className="entry-desc">{row.description}</div>
+                          <div className="entry-date">{formatDate(row.date, language)}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: '#e07070', flexShrink: 0, marginLeft: 8, fontVariantNumeric: 'tabular-nums' }}>
+                        −{fmt(row.amount)} {lang.currency}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.15)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
               {lang.disclaimer}
             </p>
           </div>
