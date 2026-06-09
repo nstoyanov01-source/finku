@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
@@ -88,6 +88,10 @@ function formatDeadlineDate(date, language) {
   return date.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'short' })
 }
 
+function Skeleton({ height, radius = 16, style = {} }) {
+  return <div className="skel" style={{ height, borderRadius: radius, ...style }} />
+}
+
 export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
   const lang = t[language]
   const posthog = usePostHog()
@@ -101,8 +105,6 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
   const [drawer, setDrawer] = useState(null)
-  const [showAllIncome, setShowAllIncome] = useState(false)
-  const [showAllExpenses, setShowAllExpenses] = useState(false)
   const { toasts, showToast } = useToast()
   const [firstName, setFirstName] = useState('')
 
@@ -174,11 +176,24 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
         .dash-greeting { font-size: 20px; font-weight: 500; color: #f0ede4; letter-spacing: -0.3px; }
         .dash-subheading { font-size: 13px; color: rgba(240,237,228,0.35); margin-top: 3px; margin-bottom: 1.75rem; }
 
-        .entry-row { display: flex; align-items: center; justify-content: space-between; background: rgba(240,237,228,0.04); border-radius: 9px; padding: 9px 12px; cursor: pointer; transition: background 0.12s; }
-        .entry-row:hover { background: rgba(240,237,228,0.07); }
-        .entry-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-        .entry-date { font-size: 11px; color: rgba(240,237,228,0.3); margin-top: 1px; }
+        .entry-row { display: flex; align-items: center; justify-content: space-between; background: #161614; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; cursor: pointer; transition: background 0.12s; }
+        .entry-row:hover { background: #1c1c1a; }
+        .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+        .entry-date { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+
+        .section-label { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px; }
+        .view-all-link { font-size: 12px; color: rgba(240,237,228,0.3); text-decoration: none; transition: color 0.15s; }
+        .view-all-link:hover { color: rgba(240,237,228,0.65); }
+
+        @keyframes shimmer {
+          0%   { background-position: -800px 0 }
+          100% { background-position: 800px 0 }
+        }
+        .skel {
+          background: linear-gradient(90deg, rgba(240,237,228,0.04) 25%, rgba(240,237,228,0.08) 50%, rgba(240,237,228,0.04) 75%);
+          background-size: 1600px 100%;
+          animation: shimmer 1.5s infinite linear;
+        }
 
         @media (max-width: 640px) {
           .dash-nav { padding: 0 1rem; }
@@ -227,12 +242,8 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
           </div>
         </nav>
 
-        {loading ? (
-          <div className="dash-content">
-            <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(240,237,228,0.3)' }}>…</div>
-          </div>
-
-        ) : income.length === 0 && expenses.length === 0 ? (
+        {/* Empty state — no entries at all */}
+        {!loading && income.length === 0 && expenses.length === 0 ? (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             justifyContent: 'center', minHeight: 'calc(100vh - 60px)',
@@ -264,23 +275,31 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
 
         ) : (
           <div className="dash-content">
-            {/* Greeting */}
-            <div className="dash-greeting">
-              {greeting(lang)}{firstName ? `, ${firstName}` : ''}
-            </div>
-            <div className="dash-subheading">{formatCurrentDate(language)}</div>
 
-            {/* Hero: Income Tax card */}
-            {isTracking ? (
+            {/* 1. GREETING */}
+            <div className="dash-greeting">
+              {loading
+                ? <Skeleton height={24} radius={6} style={{ width: 200 }} />
+                : <>{greeting(lang)}{firstName ? `, ${firstName}` : ''}</>
+              }
+            </div>
+            <div className="dash-subheading" style={{ marginBottom: loading ? '1.75rem' : undefined }}>
+              {loading ? <Skeleton height={14} radius={4} style={{ width: 180, marginTop: 6 }} /> : formatCurrentDate(language)}
+            </div>
+
+            {/* 2. HERO CARD — Income tax */}
+            {loading ? (
+              <Skeleton height={140} style={{ marginBottom: 12 }} />
+            ) : isTracking ? (
               <div style={{
                 background: '#161614', border: '0.5px solid rgba(255,255,255,0.08)',
-                borderRadius: 16, padding: '18px 20px', marginBottom: 12,
+                borderRadius: 16, padding: '22px 24px', marginBottom: 12,
               }}>
-                <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>
+                <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', textTransform: 'uppercase', letterSpacing: 0.7, fontWeight: 500, marginBottom: 8 }}>
                   {language === 'bg' ? 'Режим на проследяване' : 'Tracking mode'}
                 </div>
-                <div style={{ fontSize: 15, color: 'rgba(240,237,228,0.55)', lineHeight: 1.5 }}>
-                  {language === 'bg' ? 'Само проследяване — без данъчна прогноза' : 'Tracking only — no tax estimate'}
+                <div style={{ fontSize: 16, color: 'rgba(240,237,228,0.5)', lineHeight: 1.5 }}>
+                  {language === 'bg' ? 'Без данъчна прогноза' : 'No tax estimate'}
                 </div>
               </div>
             ) : tax && (
@@ -288,24 +307,24 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                 background: '#c8f03a', borderRadius: 16, padding: '22px 24px', marginBottom: 12,
                 position: 'relative',
               }}>
-                <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 8 }}>
-                  {language === 'bg' ? `Данък — Q${quarter}` : `Income tax — Q${quarter}`}
+                <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', letterSpacing: 0.7, fontWeight: 500, marginBottom: 10 }}>
+                  {language === 'bg' ? `Данък върху дохода — Q${quarter}` : `Income tax — Q${quarter}`}
                 </div>
-                <div style={{ fontSize: 52, fontWeight: 600, color: '#0e0e0c', letterSpacing: -1.5, lineHeight: 1, marginBottom: 6, fontVariantNumeric: 'tabular-nums' }}>
+                <div style={{ fontSize: 52, fontWeight: 600, color: '#0e0e0c', letterSpacing: -1.5, lineHeight: 1, marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
                   ~{fmt(tax.incomeTax)} €
                 </div>
-                <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.55)', marginBottom: 14 }}>
+                <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginBottom: 16 }}>
                   {tax.incomeTax === 0
-                    ? (language === 'bg' ? 'Приспаданията те покриват този период' : 'Your deductions cover it this quarter')
-                    : deadline && (language === 'bg'
-                        ? `До ${formatDeadlineDate(deadline.date, language)}`
-                        : `Due by ${formatDeadlineDate(deadline.date, language)}`)}
+                    ? (language === 'bg' ? 'Приспаданията покриват това тримесечие' : 'Your deductions cover it this quarter')
+                    : (language === 'bg'
+                        ? `Основа: ~${fmt(tax.taxableBase)} € × ${tax.rate}%`
+                        : `Base: ~${fmt(tax.taxableBase)} € × ${tax.rate}%`)}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {deadline && (
                     <span style={{
-                      background: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.65)',
-                      fontSize: 12, fontWeight: 500, borderRadius: 20, padding: '4px 10px',
+                      background: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.6)',
+                      fontSize: 12, borderRadius: 20, padding: '4px 12px',
                     }}>
                       {language === 'bg'
                         ? `До ${formatDeadlineDate(deadline.date, language)} · ${deadline.days} дни`
@@ -314,7 +333,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                   )}
                   <Link
                     to="/how-to-pay"
-                    style={{ fontSize: 12, color: 'rgba(0,0,0,0.5)', textDecoration: 'none', marginLeft: 'auto' }}
+                    style={{ fontSize: 12, color: 'rgba(0,0,0,0.5)', textDecoration: 'none', marginLeft: 'auto', transition: 'color 0.15s' }}
                     onMouseOver={e => { e.currentTarget.style.color = 'rgba(0,0,0,0.75)' }}
                     onMouseOut={e => { e.currentTarget.style.color = 'rgba(0,0,0,0.5)' }}
                   >
@@ -324,46 +343,53 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
               </div>
             )}
 
-            {/* Insurance card */}
-            {!isTracking && (
+            {/* 3. INSURANCE CARD */}
+            {loading ? (
+              <Skeleton height={88} style={{ marginBottom: 20 }} />
+            ) : !isTracking && (
               <div style={{
                 background: '#161614', border: '0.5px solid rgba(255,255,255,0.08)',
                 borderRadius: 16, padding: '18px 20px', marginBottom: 20,
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
               }}>
                 <div>
-                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 500, marginBottom: 6 }}>
                     {language === 'bg' ? 'Месечни осигуровки' : 'Monthly insurance'}
                   </div>
-                  <div style={{ fontSize: 28, fontWeight: 600, color: '#f0ede4', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontSize: 28, fontWeight: 500, color: '#f0ede4', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
                     153 €
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.35)', marginTop: 4 }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
                     {language === 'bg' ? 'Фиксирано всеки месец · Пенсия + здраве' : 'Fixed every month · Pension + health'}
                   </div>
                 </div>
                 <div style={{
-                  background: insDays <= 14 ? 'rgba(255,200,0,0.12)' : 'rgba(200,240,58,0.1)',
-                  color: insDays <= 14 ? '#e8a84a' : '#c8f03a',
+                  background: insDays <= 14 ? 'rgba(255,180,0,0.12)' : 'rgba(200,240,58,0.1)',
+                  color: insDays <= 14 ? '#ffb400' : '#c8f03a',
+                  border: `1px solid ${insDays <= 14 ? 'rgba(255,180,0,0.3)' : 'rgba(200,240,58,0.3)'}`,
                   fontSize: 12, fontWeight: 500, borderRadius: 20, padding: '6px 12px',
-                  whiteSpace: 'nowrap', flexShrink: 0, textAlign: 'center',
+                  whiteSpace: 'nowrap', flexShrink: 0,
                 }}>
-                  <div>{language === 'bg' ? 'До' : 'Due'} {formatDeadlineDate(insDue, language)}</div>
-                  <div style={{ fontSize: 11, fontWeight: 400, marginTop: 2, opacity: 0.8 }}>
-                    {insDays} {language === 'bg' ? 'дни' : 'days'}
-                  </div>
+                  {language === 'bg'
+                    ? `До ${formatDeadlineDate(insDue, language)} · ${insDays} дни`
+                    : `Due ${formatDeadlineDate(insDue, language)} · ${insDays} days`}
                 </div>
               </div>
             )}
 
-            {/* Action buttons */}
-            {!isPastYear && (
+            {/* 4. ACTION BUTTONS */}
+            {loading ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
+                <Skeleton height={48} radius={10} />
+                <Skeleton height={48} radius={10} />
+              </div>
+            ) : !isPastYear && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
                 <button
                   onClick={() => setModal({ type: 'income' })}
                   style={{
                     background: '#c8f03a', color: '#0e0e0c', border: 'none',
-                    borderRadius: 12, padding: '14px', fontFamily: 'DM Sans, sans-serif',
+                    borderRadius: 10, padding: '14px', fontFamily: 'DM Sans, sans-serif',
                     fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s',
                   }}
                   onMouseOver={e => { e.currentTarget.style.opacity = '0.88' }}
@@ -374,109 +400,110 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                 <button
                   onClick={() => setModal({ type: 'expense' })}
                   style={{
-                    background: 'none', color: 'rgba(240,237,228,0.7)',
-                    border: '1px solid rgba(240,237,228,0.14)', borderRadius: 12, padding: '14px',
+                    background: 'rgba(255,255,255,0.05)', color: '#f0ede4',
+                    border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '14px',
                     fontFamily: 'DM Sans, sans-serif', fontSize: 14, fontWeight: 500,
-                    cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+                    cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
                   }}
-                  onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.28)'; e.currentTarget.style.color = '#f0ede4' }}
-                  onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.14)'; e.currentTarget.style.color = 'rgba(240,237,228,0.7)' }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
                 >
                   + {language === 'bg' ? 'Добави разход' : 'Add expense'}
                 </button>
               </div>
             )}
 
-            {/* Recent income */}
+            {/* 5. RECENT INCOME */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(240,237,228,0.45)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                  {lang.recentIncome}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span className="section-label">
+                  {language === 'bg' ? 'Последни приходи' : 'Recent income'}
                 </span>
-                {income.length > 5 && (
-                  <button
-                    onClick={() => setShowAllIncome(v => !v)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0 }}
-                    onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.65)'}
-                    onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
-                  >
-                    {showAllIncome ? (language === 'bg' ? 'По-малко' : 'Show less') : (language === 'bg' ? 'Всички' : 'View all')}
-                  </button>
+                {!loading && income.length > 0 && (
+                  <Link to="/income" className="view-all-link">
+                    {language === 'bg' ? 'Всички →' : 'View all →'}
+                  </Link>
                 )}
               </div>
-              {income.length === 0 ? (
+
+              {loading ? (
+                <>
+                  <Skeleton height={48} radius={8} style={{ marginBottom: 6 }} />
+                  <Skeleton height={48} radius={8} style={{ marginBottom: 6 }} />
+                  <Skeleton height={48} radius={8} style={{ marginBottom: 6 }} />
+                </>
+              ) : income.length === 0 ? (
                 <div style={{ fontSize: 13, color: 'rgba(240,237,228,0.2)', textAlign: 'center', padding: '1.25rem 0' }}>
-                  {lang.noIncome}
+                  {language === 'bg'
+                    ? 'Все още няма приходи — добави първия си приход по-горе'
+                    : 'No income yet — add your first entry above'}
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {(showAllIncome ? income : income.slice(0, 5)).map(row => (
-                    <div key={row.id} className="entry-row" onClick={() => setDrawer({ entry: row, type: 'income' })}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                        <div className="entry-dot" style={{ background: '#7ec95f' }} />
-                        <div style={{ minWidth: 0 }}>
-                          <div className="entry-desc">{row.description}</div>
-                          <div className="entry-date">{formatDate(row.date, language)}</div>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: '#7ec95f', flexShrink: 0, marginLeft: 8, fontVariantNumeric: 'tabular-nums' }}>
-                        +{fmt(row.amount)} {lang.currency}
-                      </div>
+                income.slice(0, 5).map(row => (
+                  <div key={row.id} className="entry-row" onClick={() => setDrawer({ entry: row, type: 'income' })}>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="entry-desc">{row.description}</div>
+                      <div className="entry-date">{formatDate(row.date, language)}</div>
                     </div>
-                  ))}
-                </div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: '#c8f03a', flexShrink: 0, marginLeft: 12, fontVariantNumeric: 'tabular-nums' }}>
+                      +{fmt(row.amount)} {lang.currency}
+                    </div>
+                  </div>
+                ))
               )}
-              {!isPastYear && (
+
+              {!loading && !isPastYear && (
                 <div style={{ marginTop: 8 }}>
                   <CSVImport userId={userId} language={language} onImported={() => fetchData(selectedYear)} />
                 </div>
               )}
             </div>
 
-            {/* Recent expenses */}
+            {/* 6. RECENT EXPENSES */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(240,237,228,0.45)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                  {lang.recentExpenses}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span className="section-label">
+                  {language === 'bg' ? 'Последни разходи' : 'Recent expenses'}
                 </span>
-                {expenses.length > 5 && (
-                  <button
-                    onClick={() => setShowAllExpenses(v => !v)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(240,237,228,0.35)', fontFamily: 'DM Sans, sans-serif', padding: 0 }}
-                    onMouseOver={e => e.currentTarget.style.color = 'rgba(240,237,228,0.65)'}
-                    onMouseOut={e => e.currentTarget.style.color = 'rgba(240,237,228,0.35)'}
-                  >
-                    {showAllExpenses ? (language === 'bg' ? 'По-малко' : 'Show less') : (language === 'bg' ? 'Всички' : 'View all')}
-                  </button>
+                {!loading && expenses.length > 0 && (
+                  <Link to="/expenses" className="view-all-link">
+                    {language === 'bg' ? 'Всички →' : 'View all →'}
+                  </Link>
                 )}
               </div>
-              {expenses.length === 0 ? (
+
+              {loading ? (
+                <>
+                  <Skeleton height={48} radius={8} style={{ marginBottom: 6 }} />
+                  <Skeleton height={48} radius={8} style={{ marginBottom: 6 }} />
+                  <Skeleton height={48} radius={8} style={{ marginBottom: 6 }} />
+                </>
+              ) : expenses.length === 0 ? (
                 <div style={{ fontSize: 13, color: 'rgba(240,237,228,0.2)', textAlign: 'center', padding: '1.25rem 0' }}>
-                  {lang.noExpenses}
+                  {language === 'bg'
+                    ? 'Все още няма разходи — добави първия си разход по-горе'
+                    : 'No expenses yet — add your first entry above'}
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {(showAllExpenses ? expenses : expenses.slice(0, 5)).map(row => (
-                    <div key={row.id} className="entry-row" onClick={() => setDrawer({ entry: row, type: 'expense' })}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                        <div className="entry-dot" style={{ background: '#e07070' }} />
-                        <div style={{ minWidth: 0 }}>
-                          <div className="entry-desc">{row.description}</div>
-                          <div className="entry-date">{formatDate(row.date, language)}</div>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: '#e07070', flexShrink: 0, marginLeft: 8, fontVariantNumeric: 'tabular-nums' }}>
-                        −{fmt(row.amount)} {lang.currency}
-                      </div>
+                expenses.slice(0, 5).map(row => (
+                  <div key={row.id} className="entry-row" onClick={() => setDrawer({ entry: row, type: 'expense' })}>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="entry-desc">{row.description}</div>
+                      <div className="entry-date">{formatDate(row.date, language)}</div>
                     </div>
-                  ))}
-                </div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: '#e07070', flexShrink: 0, marginLeft: 12, fontVariantNumeric: 'tabular-nums' }}>
+                      −{fmt(row.amount)} {lang.currency}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
 
-            <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.15)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
-              {lang.disclaimer}
-            </p>
+            {!loading && (
+              <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.15)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
+                {lang.disclaimer}
+              </p>
+            )}
           </div>
         )}
       </div>
