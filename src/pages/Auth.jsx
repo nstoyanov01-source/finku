@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { usePostHog } from '@posthog/react'
@@ -7,8 +7,15 @@ function translateError(msg) {
   if (msg.includes('Invalid login credentials')) return 'Wrong email or password. Please try again.'
   if (msg.includes('Email not confirmed')) return 'Please check your email and confirm your account first.'
   if (msg.includes('User already registered')) return 'An account with this email already exists. Try logging in instead.'
-  if (msg.includes('Password should be at least 6 characters')) return 'Password must be at least 6 characters.'
+  if (msg.includes('Password should be at least')) return 'Password must be at least 8 characters.'
   return 'Something went wrong. Please try again.'
+}
+
+function getPasswordStrength(pw) {
+  if (!pw || pw.length < 8) return 'weak'
+  const classes = [/[A-Z]/.test(pw), /[a-z]/.test(pw), /\d/.test(pw), /[^A-Za-z0-9]/.test(pw)].filter(Boolean).length
+  if (classes <= 2) return 'medium'
+  return 'strong'
 }
 
 export default function Auth() {
@@ -19,10 +26,24 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)
+  const [resetCooldown, setResetCooldown] = useState(0)
+  const cooldownRef = useRef(null)
   const [signupSuccess, setSignupSuccess] = useState(false)
   const posthog = usePostHog()
 
   useEffect(() => { document.title = 'Sign in · Finku' }, [])
+  useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }, [])
+
+  function startResetCooldown() {
+    setResetCooldown(60)
+    if (cooldownRef.current) clearInterval(cooldownRef.current)
+    cooldownRef.current = setInterval(() => {
+      setResetCooldown(prev => {
+        if (prev <= 1) { clearInterval(cooldownRef.current); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
 
   function switchMode(next) { setMode(next); setError(''); setResetSent(false); setSignupSuccess(false) }
 
@@ -40,11 +61,12 @@ export default function Auth() {
     setError('')
 
     if (mode === 'reset') {
+      if (resetCooldown > 0) { setLoading(false); return }
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/update-password`,
       })
       if (error) setError(translateError(error.message))
-      else setResetSent(true)
+      else { setResetSent(true); startResetCooldown() }
       setLoading(false)
       return
     }
@@ -58,6 +80,11 @@ export default function Auth() {
         posthog?.capture('user_logged_in', { method: 'email' })
       }
     } else {
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters.')
+        setLoading(false)
+        return
+      }
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) { setError(translateError(error.message)); setLoading(false); return }
       posthog?.capture('user_signed_up', { method: 'email' })
@@ -67,6 +94,22 @@ export default function Auth() {
     }
     setLoading(false)
   }
+
+  async function handleResend() {
+    if (resetCooldown > 0) return
+    setLoading(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/update-password`,
+    })
+    if (error) setError(translateError(error.message))
+    else startResetCooldown()
+    setLoading(false)
+  }
+
+  const passwordStrength = mode === 'signup' && password ? getPasswordStrength(password) : null
+  const strengthColor = { weak: '#e07070', medium: '#f0a040', strong: '#c8f03a' }
+  const strengthLabel = { weak: 'Weak', medium: 'Medium', strong: 'Strong' }
+  const strengthBars = { weak: 1, medium: 2, strong: 3 }
 
   return (
     <>
@@ -209,6 +252,12 @@ export default function Auth() {
                     <div className="auth-success">
                       Check your email — we've sent a password reset link to <strong>{email}</strong>.
                     </div>
+                    <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(240,237,228,0.35)', marginTop: '1rem' }}>
+                      {resetCooldown > 0
+                        ? `Resend in ${resetCooldown}s`
+                        : <button className="auth-switch-btn" onClick={handleResend} style={{ fontSize: 12 }} disabled={loading}>Resend email</button>
+                      }
+                    </p>
                     <p className="auth-switch">
                       <button className="auth-switch-btn" onClick={() => switchMode('login')}>← Back to login</button>
                     </p>
@@ -230,8 +279,8 @@ export default function Auth() {
                         />
                       </div>
                       {error && <div className="auth-error">{error}</div>}
-                      <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
-                        {loading ? 'Sending…' : 'Send reset link'}
+                      <button className="btn-primary" type="submit" disabled={loading || resetCooldown > 0} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
+                        {loading ? 'Sending…' : resetCooldown > 0 ? `Resend in ${resetCooldown}s` : 'Send reset link'}
                       </button>
                     </form>
                     <p className="auth-switch">
@@ -313,6 +362,18 @@ export default function Auth() {
                       <button type="button" className="auth-forgot" onClick={() => switchMode('reset')}>
                         Forgot password?
                       </button>
+                    )}
+                    {passwordStrength && (
+                      <>
+                        <div style={{ marginTop: 6, display: 'flex', gap: 4 }}>
+                          {[0, 1, 2].map(i => (
+                            <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < strengthBars[passwordStrength] ? strengthColor[passwordStrength] : 'rgba(240,237,228,0.1)' }} />
+                          ))}
+                        </div>
+                        <div style={{ fontSize: 11, color: strengthColor[passwordStrength], marginTop: 4 }}>
+                          {strengthLabel[passwordStrength]}
+                        </div>
+                      </>
                     )}
                   </div>
 

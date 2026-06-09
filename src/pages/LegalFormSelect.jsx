@@ -5,12 +5,18 @@ import { usePostHog } from '@posthog/react'
 export default function LegalFormSelect({ userId, language, onComplete }) {
   const [selected, setSelected] = useState(null)
   const [firstName, setFirstName] = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const isBg = language === 'bg'
   const posthog = usePostHog()
 
   async function handleContinue() {
     if (!selected) return
+    if (firstName.trim().length > 100) {
+      setError(isBg ? 'Името е прекалено дълго (макс. 100 символа).' : 'Name is too long (max 100 characters).')
+      return
+    }
+    setError('')
     setLoading(true)
     await supabase.from('profiles').update({ legal_form: selected, onboarded: true, first_name: firstName.trim() }).eq('id', userId)
     posthog?.capture('onboarding_completed', { legal_form: selected })
@@ -73,6 +79,7 @@ export default function LegalFormSelect({ userId, language, onComplete }) {
               value={firstName}
               onChange={e => setFirstName(e.target.value)}
               placeholder={isBg ? 'Никола' : 'Nikola'}
+              maxLength={100}
               autoComplete="given-name"
               autoFocus
               onFocus={e => { e.target.style.borderColor = 'rgba(200,240,58,0.35)' }}
@@ -93,6 +100,12 @@ export default function LegalFormSelect({ userId, language, onComplete }) {
               </button>
             ))}
           </div>
+
+          {error && (
+            <div style={{ fontSize: 13, color: '#e07070', background: 'rgba(224,112,112,0.1)', border: '1px solid rgba(224,112,112,0.2)', padding: '8px 12px', borderRadius: 8, marginBottom: '0.75rem' }}>
+              {error}
+            </div>
+          )}
 
           <button
             className="btn-primary"

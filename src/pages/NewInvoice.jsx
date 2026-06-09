@@ -44,8 +44,25 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
   }, [])
 
   async function handleGenerate() {
+    const parsedAmount = parseFloat(amount)
     if (!yourName.trim() || !clientName.trim() || !serviceDescription.trim() || !amount) {
       setError(isBg ? 'Попълнете всички задължителни полета.' : 'Please fill in all required fields.')
+      return
+    }
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError(isBg ? 'Въведете валидна положителна сума.' : 'Please enter a valid positive amount.')
+      return
+    }
+    if (yourName.trim().length > 100) {
+      setError(isBg ? 'Вашето име е прекалено дълго (макс. 100 символа).' : 'Your name is too long (max 100 characters).')
+      return
+    }
+    if (clientName.trim().length > 100) {
+      setError(isBg ? 'Името на клиента е прекалено дълго (макс. 100 символа).' : 'Client name is too long (max 100 characters).')
+      return
+    }
+    if (serviceDescription.trim().length > 500) {
+      setError(isBg ? 'Описанието е прекалено дълго (макс. 500 символа).' : 'Service description is too long (max 500 characters).')
       return
     }
     setLoading(true)
@@ -58,20 +75,20 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
       client_address: clientAddress.trim(),
       client_email: clientEmail.trim(),
       service_description: serviceDescription.trim(),
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       currency,
       date: invoiceDate,
       due_date: dueDate || null,
       notes: notes.trim(),
       status: 'sent',
     })
-    if (invErr) { setError(invErr.message); setLoading(false); return }
+    if (invErr) { setError(isBg ? 'Нещо се обърка. Опитайте отново.' : 'Something went wrong. Please try again.'); setLoading(false); return }
 
     await supabase.from('income').insert({
       user_id: userId,
       description: `${clientName.trim()} — ${serviceDescription.trim()}`.slice(0, 200),
       client: clientName.trim().slice(0, 100),
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       date: invoiceDate,
     })
 
@@ -174,15 +191,15 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
               <div className="inv-section-title">{isBg ? 'Вашите данни' : 'Your details'}</div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Вашето име *' : 'Your name *'}</label>
-                <input style={inputStyle} value={yourName} onChange={e => setYourName(e.target.value)} placeholder="John Doe" />
+                <input style={inputStyle} value={yourName} onChange={e => setYourName(e.target.value)} placeholder="John Doe" maxLength={100} />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Адрес' : 'Your address'}</label>
-                <textarea style={textareaStyle} rows={2} value={yourAddress} onChange={e => setYourAddress(e.target.value)} placeholder="123 Main Street, Sofia 1000, Bulgaria" />
+                <textarea style={textareaStyle} rows={2} value={yourAddress} onChange={e => setYourAddress(e.target.value)} placeholder="123 Main Street, Sofia 1000, Bulgaria" maxLength={200} />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>EGN / EIK</label>
-                <input style={inputStyle} value={yourTaxId} onChange={e => setYourTaxId(e.target.value)} placeholder="XXXXXXXXXX" />
+                <input style={inputStyle} value={yourTaxId} onChange={e => setYourTaxId(e.target.value)} placeholder="XXXXXXXXXX" maxLength={30} />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Имейл' : 'Your email'}</label>
@@ -195,11 +212,11 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
               <div className="inv-section-title">{isBg ? 'Данни на клиента' : 'Client details'}</div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Клиент *' : 'Client name *'}</label>
-                <input style={inputStyle} value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Acme Ltd." />
+                <input style={inputStyle} value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Acme Ltd." maxLength={100} />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Адрес на клиента' : 'Client address'}</label>
-                <textarea style={textareaStyle} rows={2} value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="456 Business Ave, London EC1A 1BB" />
+                <textarea style={textareaStyle} rows={2} value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="456 Business Ave, London EC1A 1BB" maxLength={200} />
               </div>
               <div className="inv-field">
                 <label style={labelStyle}>{isBg ? 'Имейл на клиента' : 'Client email'}</label>
@@ -227,7 +244,7 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
             </div>
             <div style={{ marginBottom: '1rem' }}>
               <label style={labelStyle}>{isBg ? 'Описание на услугата *' : 'Service description *'}</label>
-              <textarea style={textareaStyle} rows={3} value={serviceDescription} onChange={e => setServiceDescription(e.target.value)} placeholder={isBg ? 'Уеб разработка — м. май 2026' : 'Web design and development services'} />
+              <textarea style={textareaStyle} rows={3} value={serviceDescription} onChange={e => setServiceDescription(e.target.value)} placeholder={isBg ? 'Уеб разработка — м. май 2026' : 'Web design and development services'} maxLength={500} />
             </div>
             <div className="inv-row">
               <div>
@@ -246,7 +263,7 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
             </div>
             <div style={{ marginTop: '1rem' }}>
               <label style={labelStyle}>{isBg ? 'Бележки / детайли за плащане' : 'Notes / payment details'}</label>
-              <textarea style={textareaStyle} rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder={isBg ? 'IBAN: BG...  BIC: XXXXX' : 'Payment due within 30 days. Bank transfer preferred.'} />
+              <textarea style={textareaStyle} rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder={isBg ? 'IBAN: BG...  BIC: XXXXX' : 'Payment due within 30 days. Bank transfer preferred.'} maxLength={500} />
             </div>
           </div>
 

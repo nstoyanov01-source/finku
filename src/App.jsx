@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import posthog from 'posthog-js'
@@ -25,6 +25,8 @@ export default function App() {
   const [authorRate, setAuthorRate] = useState(false)
   const [needsLegalForm, setNeedsLegalForm] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [sessionWarning, setSessionWarning] = useState(false)
+  const lastActivity = useRef(Date.now())
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -46,11 +48,33 @@ export default function App() {
       if (session) {
         posthog.identify(session.user.id, { email: session.user.email })
         loadProfile(session.user.id)
-      } else { setLanguage(null); setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false) }
+      } else {
+        localStorage.removeItem('finku_set_aside')
+        localStorage.removeItem('finku_visited')
+        localStorage.removeItem('finku_tax_explained')
+        Object.keys(localStorage).filter(k => k.startsWith('finku_paid_')).forEach(k => localStorage.removeItem(k))
+        setLanguage(null); setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false)
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!session) { setSessionWarning(false); return }
+    lastActivity.current = Date.now()
+    const resetActivity = () => { lastActivity.current = Date.now(); setSessionWarning(false) }
+    window.addEventListener('mousemove', resetActivity)
+    window.addEventListener('keypress', resetActivity)
+    const timer = setInterval(() => {
+      if (Date.now() - lastActivity.current >= 30 * 60 * 1000) setSessionWarning(true)
+    }, 60_000)
+    return () => {
+      window.removeEventListener('mousemove', resetActivity)
+      window.removeEventListener('keypress', resetActivity)
+      clearInterval(timer)
+    }
+  }, [session])
 
   async function loadProfile(userId) {
     const { data } = await supabase
@@ -87,6 +111,24 @@ export default function App() {
   }
 
   return (
+    <>
+    {sessionWarning && (
+      <div style={{
+        position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)',
+        background: '#161614', border: '1px solid rgba(240,237,228,0.15)',
+        borderRadius: 12, padding: '12px 20px', fontSize: 13, color: 'rgba(240,237,228,0.85)',
+        zIndex: 9999, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        display: 'flex', alignItems: 'center', gap: 12, whiteSpace: 'nowrap',
+      }}>
+        Your session will expire soon
+        <button
+          onClick={() => setSessionWarning(false)}
+          style={{ background: 'none', border: 'none', color: 'rgba(240,237,228,0.4)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 0 }}
+        >
+          ×
+        </button>
+      </div>
+    )}
     <Routes>
       <Route path="/" element={
         session && onboarded ? <Navigate to="/dashboard" /> : <Landing />
@@ -126,5 +168,6 @@ export default function App() {
       <Route path="/how-to-pay" element={<HowToPay language={language || 'en'} />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   )
 }

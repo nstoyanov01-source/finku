@@ -3,6 +3,12 @@ import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
 import { usePostHog } from '@posthog/react'
 
+function translateDbError(msg) {
+  if (!msg) return 'Something went wrong. Please try again.'
+  if (msg.includes('duplicate') || msg.includes('unique')) return 'This entry already exists.'
+  return 'Something went wrong. Please try again.'
+}
+
 export default function AddEntryModal({ type, userId, language, onClose, onSaved, onDeleted, initialData, entryId }) {
   const lang = t[language]
   const isEdit = !!entryId
@@ -34,6 +40,8 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     const amt = parseFloat(form.amount)
 
     if (!desc) { setError(lang.descriptionRequired); return }
+    if (desc.length > 200) { setError('Description must be 200 characters or fewer.'); return }
+    if (form.client.trim().length > 100) { setError('Client name must be 100 characters or fewer.'); return }
     if (!form.amount || isNaN(amt)) { setError(lang.descriptionRequired); return }
     if (amt < 0) { setError(lang.amountNegative); return }
     if (amt > 9999999) { setError(lang.amountTooLarge); return }
@@ -62,14 +70,14 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
         ? { description: desc, client: form.client.trim(), amount: amt, date: form.date }
         : { description: desc, category: form.category, amount: amt, date: form.date }
       const { error } = await supabase.from(table).update(patch).eq('id', entryId)
-      if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
+      if (error) { setError(translateDbError(error.message)); setLoading(false); submitting.current = false; return }
       posthog?.capture('entry_updated', { type, amount: amt })
     } else {
       const payload = type === 'income'
         ? { user_id: userId, description: desc, client: form.client.trim(), amount: amt, date: form.date }
         : { user_id: userId, description: desc, category: form.category, amount: amt, date: form.date }
       const { error } = await supabase.from(table).insert(payload)
-      if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
+      if (error) { setError(translateDbError(error.message)); setLoading(false); submitting.current = false; return }
       posthog?.capture(type === 'income' ? 'income_added' : 'expense_added', {
         amount: amt,
         ...(type === 'expense' ? { category: form.category } : {}),
@@ -86,7 +94,7 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     setLoading(true)
     const table = type === 'income' ? 'income' : 'expenses'
     const { error } = await supabase.from(table).delete().eq('id', entryId)
-    if (error) { setError(error.message); setLoading(false); submitting.current = false; return }
+    if (error) { setError(translateDbError(error.message)); setLoading(false); submitting.current = false; return }
     posthog?.capture('entry_deleted', { type })
     if (onDeleted) onDeleted(); else onSaved()
     onClose()
