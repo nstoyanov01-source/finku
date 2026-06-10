@@ -88,6 +88,7 @@ export default function Landing({ language = 'en' }) {
   }
 
   const taxAuth = language === 'bg' ? 'НАП' : 'NRA'
+  const heroLang = localStorage.getItem('finku_lang') === 'en' ? 'en' : 'bg'
 
   useEffect(() => { document.title = 'Finku — Know what you owe, always' }, [])
 
@@ -171,36 +172,19 @@ export default function Landing({ language = 'en' }) {
         .btn-cta:hover { opacity: 0.9; transform: translateY(-1px); }
 
         /* HERO */
-        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 8rem 4rem 4rem; position: relative; }
-        .hero-inner { display: grid; grid-template-columns: 1fr 240px; gap: 4rem; align-items: center; width: 100%; max-width: 1100px; }
+        .hero { min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 80px 48px; padding-top: 144px; position: relative; }
+        .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; width: 100%; max-width: 1100px; }
         .hero-glow {
           position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
           width: 600px; height: 600px;
           background: radial-gradient(circle, rgba(200,240,58,0.07) 0%, transparent 70%);
           pointer-events: none;
         }
-        .hero-badge {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(200,240,58,0.1); border: 0.5px solid rgba(200,240,58,0.3);
-          color: #c8f03a; font-size: 12px; font-weight: 500; padding: 5px 14px;
-          border-radius: 100px; margin-bottom: 2rem; letter-spacing: 0.5px; text-transform: uppercase;
-        }
-        .hero-title { font-family: 'Instrument Serif', serif; font-size: clamp(40px, 5.5vw, 72px); line-height: 1.05; letter-spacing: -1.5px; color: #f0ede4; max-width: 580px; margin-bottom: 1.5rem; }
+        .hero-title { font-family: 'Instrument Serif', serif; font-size: 64px; line-height: 1.05; letter-spacing: -1.5px; color: #f0ede4; max-width: 540px; margin-bottom: 1.75rem; }
         .hero-title em { font-style: italic; color: #c8f03a; }
-        .hero-sub { font-size: 18px; color: rgba(240,237,228,0.55); max-width: 460px; line-height: 1.65; margin-bottom: 2.5rem; }
-        .hero-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-        .btn-primary-lg { background: #c8f03a; color: #0e0e0c; border: none; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; padding: 13px 28px; border-radius: 10px; transition: opacity 0.2s, transform 0.15s; }
+        .btn-primary-lg { background: #c8f03a; color: #0e0e0c; border: none; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; padding: 16px 32px; border-radius: 10px; transition: opacity 0.2s, transform 0.15s; }
         .btn-primary-lg:hover { opacity: 0.9; transform: translateY(-1px); }
-        .hero-note { font-size: 13px; color: rgba(240,237,228,0.35); }
-        .beta-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(200,240,58,0.07); border: 0.5px solid rgba(200,240,58,0.18); color: rgba(200,240,58,0.7); font-size: 12px; padding: 4px 12px; border-radius: 100px; letter-spacing: 0.2px; }
-
-        /* PHONE MOCKUP */
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        .hero-right { display: flex; justify-content: center; align-items: center; }
-        .phone-mockup { animation: float 4s ease-in-out infinite; flex-shrink: 0; }
+        .hero-right { display: flex; flex-direction: column; gap: 10px; filter: drop-shadow(0 0 40px rgba(200,240,58,0.08)); }
 
         /* CALC SECTION */
         .calc-section { padding: 4rem 2rem; max-width: 760px; margin: 0 auto; }
@@ -313,16 +297,13 @@ export default function Landing({ language = 'en' }) {
           .features-grid { grid-template-columns: 1fr !important; }
           .taxman-panels { grid-template-columns: 1fr; }
         }
-        .phone-scale-wrapper { flex-shrink: 0; }
-
         @media (max-width: 768px) {
-          .hero { min-height: auto; padding: 7rem 2rem 3rem; }
+          .hero { min-height: auto; padding: 100px 20px 40px; }
           .hero-inner { grid-template-columns: 1fr; }
-          .hero-right { display: flex; justify-content: center; width: 100%; margin-top: 2rem; }
-          .phone-scale-wrapper { transform: scale(0.55); transform-origin: top center; margin-bottom: -198px; }
+          .hero-title { font-size: 38px; }
+          .hero-right { margin-top: 2rem; }
         }
         @media (max-width: 640px) {
-          .hero-sub { font-size: 16px; }
           nav .nav-right .btn-ghost { display: none; }
           .calc-card { padding: 1.5rem; }
         }
@@ -342,151 +323,105 @@ export default function Landing({ language = 'en' }) {
           <div className="hero-glow" />
           <div className="hero-inner">
             <div className="hero-left">
-              <div className="hero-badge reveal">Free to start · No card needed</div>
-              <h1 className="hero-title reveal" style={{ transitionDelay: '0.1s' }}>
-                Know exactly what<br />you owe, <em>always</em>
-              </h1>
-              <p className="hero-sub reveal" style={{ transitionDelay: '0.2s' }}>
-                Finku tracks your income and expenses and shows your live tax estimate — so you're never caught off guard at year end.
-              </p>
-              <div className="hero-actions reveal" style={{ transitionDelay: '0.3s' }}>
-                {returning && (
-                  <button
-                    onClick={() => navigate('/auth')}
-                    style={{
-                      background: 'none', border: '1px solid rgba(240,237,228,0.2)', color: '#f0ede4',
-                      fontFamily: 'DM Sans, sans-serif', fontSize: 15, fontWeight: 500,
-                      padding: '13px 28px', borderRadius: 10, cursor: 'pointer', transition: 'border-color 0.15s',
-                    }}
-                  >Log in</button>
+              <h1 className="hero-title reveal">
+                {heroLang === 'bg' ? (
+                  <>
+                    НАП знае колко си спечелил.<br />
+                    Ти — не.<br />
+                    <em>Поправи това.</em>
+                  </>
+                ) : (
+                  <>
+                    НАП knows what you earned.<br />
+                    You don't.<br />
+                    <em>Fix that.</em>
+                  </>
                 )}
+              </h1>
+              <div className="reveal" style={{ transitionDelay: '0.15s' }}>
                 <button className="btn-primary-lg" onClick={() => navigate('/auth?mode=signup')}>
-                  {returning ? 'Create free account' : 'Start for free'}
+                  {heroLang === 'bg' ? 'Виж колко дължиш →' : 'See what you owe →'}
                 </button>
-                {!returning && <span className="hero-note">No credit card · Takes 30 seconds</span>}
               </div>
-              <div className="reveal" style={{ transitionDelay: '0.35s' }}>
-                <span className="beta-tag">Currently free · Beta access open</span>
+              <div className="reveal" style={{ transitionDelay: '0.2s', marginTop: 14, fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', letterSpacing: '1.5px' }}>
+                {heroLang === 'bg' ? 'FREE · БЕЗ КАРТА · 30 СЕКУНДИ' : 'FREE · NO CARD · 30 SECONDS'}
               </div>
             </div>
 
-            {/* Phone Mockup */}
+            {/* Live dashboard preview */}
             <div className="hero-right reveal" style={{ transitionDelay: '0.2s' }}>
-              <div className="phone-scale-wrapper">
-                <div className="phone-mockup">
-                <div style={{
-                  width: 220, height: 440,
-                  background: '#0e0e0c',
-                  border: '2px solid #2a2a28',
-                  borderRadius: 32,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: '0 0 60px rgba(200,240,58,0.08)',
-                }}>
-                  {/* Notch */}
-                  <div style={{
-                    position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-                    width: 70, height: 20, background: '#2a2a28', borderRadius: '0 0 12px 12px', zIndex: 2,
-                  }} />
-                  {/* Screen content */}
-                  <div style={{ padding: '26px 10px 10px', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {/* Nav bar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px', flexShrink: 0 }}>
-                      <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 14, color: '#f0ede4' }}>Finku</span>
-                      <div style={{
-                        width: 22, height: 22, borderRadius: '50%',
-                        background: '#c8f03a', color: '#0e0e0c',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 10, fontWeight: 700,
-                      }}>N</div>
-                    </div>
+              {/* Tax card */}
+              <div style={{ background: '#c8f03a', borderRadius: 14, padding: '20px 24px' }}>
+                <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', fontWeight: 600, letterSpacing: '0.8px', marginBottom: 8 }}>
+                  {heroLang === 'bg' ? 'ДАНЪК ВЪРХУ ДОХОДА · Q2' : 'INCOME TAX · Q2'}
+                </div>
+                <div style={{ fontSize: 48, fontWeight: 700, color: '#0e0e0c', lineHeight: 1, marginBottom: 10 }}>~321 €</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.1)', borderRadius: 100, padding: '4px 12px', fontSize: 12, color: '#0e0e0c' }}>
+                    {heroLang === 'bg' ? 'До 31 юли · 51 дни' : 'By July 31 · 51 days'}
+                  </div>
+                  <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}>
+                    {heroLang === 'bg' ? 'Как да платя?' : 'How to pay?'}
+                  </span>
+                </div>
+              </div>
 
-                    {/* Tax banner */}
-                    <div style={{
-                      background: 'rgba(200,240,58,0.06)', border: '1px solid rgba(200,240,58,0.15)',
-                      borderRadius: 10, padding: '8px 10px', flexShrink: 0,
-                    }}>
-                      <div style={{ fontSize: 9, color: 'rgba(240,237,228,0.45)', marginBottom: 3 }}>
-                        Tax estimate · {taxAuth}
-                      </div>
-                      <div style={{ fontSize: 18, fontWeight: 600, color: '#c8f03a', marginBottom: 2 }}>~1,842 €</div>
-                      <div style={{ fontSize: 8, color: 'rgba(240,237,228,0.3)' }}>Income tax 1,117 € · Insurance 725 €</div>
-                    </div>
-
-                    {/* KPI cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, flexShrink: 0 }}>
-                      {[
-                        { label: 'Total income', value: '7,440 €', color: '#7ec95f' },
-                        { label: 'Total expenses', value: '1,230 €', color: '#e07070' },
-                      ].map(k => (
-                        <div key={k.label} style={{
-                          background: 'rgba(240,237,228,0.04)', border: '1px solid rgba(240,237,228,0.07)',
-                          borderRadius: 8, padding: '7px 8px',
-                        }}>
-                          <div style={{ fontSize: 8, color: 'rgba(240,237,228,0.35)', marginBottom: 3 }}>{k.label}</div>
-                          <div style={{ fontSize: 12, fontWeight: 500, color: k.color }}>{k.value}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Recent income */}
-                    <div style={{ flexShrink: 0 }}>
-                      <div style={{ fontSize: 8.5, color: 'rgba(240,237,228,0.28)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.4 }}>Recent income</div>
-                      {[
-                        { desc: 'Website redesign — TechCo', amount: '+2,400 €' },
-                        { desc: 'Logo design — StartupBG', amount: '+800 €' },
-                        { desc: 'Consulting — RetailMax', amount: '+1,200 €' },
-                      ].map(e => (
-                        <div key={e.desc} style={{
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '4px 6px', background: 'rgba(240,237,228,0.03)', borderRadius: 5, marginBottom: 3,
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-                            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#7ec95f', flexShrink: 0 }} />
-                            <div style={{ fontSize: 8.5, color: 'rgba(240,237,228,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.desc}</div>
-                          </div>
-                          <div style={{ fontSize: 9, color: '#7ec95f', fontWeight: 500, flexShrink: 0, marginLeft: 4 }}>{e.amount}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Recent expenses */}
-                    <div style={{ flexShrink: 0 }}>
-                      <div style={{ fontSize: 8.5, color: 'rgba(240,237,228,0.28)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.4 }}>Recent expenses</div>
-                      {[
-                        { desc: 'Adobe Creative Cloud', amount: '-60 €' },
-                        { desc: 'Laptop — work equipment', amount: '-850 €' },
-                        { desc: 'Coworking space', amount: '-320 €' },
-                      ].map(e => (
-                        <div key={e.desc} style={{
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '4px 6px', background: 'rgba(240,237,228,0.03)', borderRadius: 5, marginBottom: 3,
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-                            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#e07070', flexShrink: 0 }} />
-                            <div style={{ fontSize: 8.5, color: 'rgba(240,237,228,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.desc}</div>
-                          </div>
-                          <div style={{ fontSize: 9, color: '#e07070', fontWeight: 500, flexShrink: 0, marginLeft: 4 }}>{e.amount}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Bottom buttons */}
-                    <div style={{ display: 'flex', gap: 5, flexShrink: 0, marginTop: 'auto' }}>
-                      <button style={{
-                        flex: 1, background: '#c8f03a', color: '#0e0e0c', border: 'none',
-                        borderRadius: 7, padding: '7px 4px', fontSize: 9, fontWeight: 600,
-                        fontFamily: 'DM Sans, sans-serif', cursor: 'default',
-                      }}>+ Add income</button>
-                      <button style={{
-                        flex: 1, background: 'none', color: 'rgba(240,237,228,0.45)',
-                        border: '1px solid rgba(240,237,228,0.14)', borderRadius: 7,
-                        padding: '7px 4px', fontSize: 9, fontFamily: 'DM Sans, sans-serif', cursor: 'default',
-                      }}>+ Add expense</button>
-                    </div>
+              {/* Insurance card */}
+              <div style={{
+                background: '#161614', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.8px', marginBottom: 4 }}>
+                    {heroLang === 'bg' ? 'ОСИГУРОВКИ' : 'INSURANCE'}
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 500, color: '#f0ede4', lineHeight: 1.15, marginBottom: 3 }}>153 €</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+                    {heroLang === 'bg' ? 'Фиксирано · Всеки месец' : 'Fixed · Every month'}
                   </div>
                 </div>
+                <div style={{ background: 'rgba(245,158,11,0.15)', border: '0.5px solid rgba(245,158,11,0.3)', color: '#f59e0b', borderRadius: 100, padding: '4px 12px', fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  {heroLang === 'bg' ? 'До 25 юни' : 'By June 25'}
                 </div>
+              </div>
+
+              {/* Recent income card */}
+              <div style={{ background: '#161614', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 18px' }}>
+                <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.8px', marginBottom: 10 }}>
+                  {heroLang === 'bg' ? 'ПОСЛЕДНИ ПРИХОДИ' : 'RECENT INCOME'}
+                </div>
+                {(heroLang === 'bg' ? [
+                  { name: 'Уеб дизайн — TechCo', amount: '+2,400 €' },
+                  { name: 'Лого — StartupBG', amount: '+800 €' },
+                  { name: 'Консултация — RetailMax', amount: '+1,200 €' },
+                ] : [
+                  { name: 'Web design — TechCo', amount: '+2,400 €' },
+                  { name: 'Logo — StartupBG', amount: '+800 €' },
+                  { name: 'Consulting — RetailMax', amount: '+1,200 €' },
+                ]).map((row, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0' }}>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{row.name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: '#c8f03a' }}>{row.amount}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button style={{
+                  flex: 1, background: '#c8f03a', color: '#0e0e0c', border: 'none',
+                  borderRadius: 8, padding: 12, fontSize: 12, fontWeight: 700,
+                  fontFamily: 'DM Sans, sans-serif', cursor: 'default',
+                }}>
+                  {heroLang === 'bg' ? '+ Добави приход' : '+ Add income'}
+                </button>
+                <button style={{
+                  flex: 1, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)',
+                  border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 12, fontSize: 12,
+                  fontFamily: 'DM Sans, sans-serif', cursor: 'default',
+                }}>
+                  {heroLang === 'bg' ? '+ Добави разход' : '+ Add expense'}
+                </button>
               </div>
             </div>
           </div>
