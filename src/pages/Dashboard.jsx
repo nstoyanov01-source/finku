@@ -33,10 +33,12 @@ function formatCurrentDate(language) {
   })
 }
 
-function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false, monthsElapsed = null) {
+const INSURANCE_BY_YEAR = { 2024: 140, 2025: 147, 2026: 153.08 }
+
+function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false, monthsElapsed = null, insuranceRate = 153.08) {
   if (legalForm === 'just_tracking') return null
   if (monthsElapsed === null) monthsElapsed = new Date().getMonth() + 1
-  const insurancePerMonth = 153.08
+  const insurancePerMonth = insuranceRate
   const totalInsurance = insurancePerMonth * monthsElapsed
 
   if (legalForm === 'ET') {
@@ -90,6 +92,43 @@ function formatDeadlineDate(date, language) {
 
 function Skeleton({ height, radius = 16, style = {} }) {
   return <div className="skel" style={{ height, borderRadius: radius, ...style }} />
+}
+
+function Tooltip({ text }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', marginLeft: 5 }}>
+      <button
+        type="button"
+        style={{
+          width: 16, height: 16, borderRadius: '50%',
+          border: '1px solid rgba(240,237,228,0.2)',
+          background: 'none', cursor: 'help',
+          fontSize: 11, color: 'rgba(240,237,228,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 0, fontFamily: 'DM Sans, sans-serif', lineHeight: 1,
+          flexShrink: 0,
+        }}
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onClick={() => setShow(s => !s)}
+        aria-label="More info"
+      >?</button>
+      {show && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#1e1e1c', border: '1px solid rgba(240,237,228,0.1)',
+          borderRadius: 8, padding: '10px 14px', fontSize: 12,
+          width: 260, zIndex: 100, color: 'rgba(240,237,228,0.7)',
+          lineHeight: 1.55, whiteSpace: 'normal', pointerEvents: 'none',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+        }}>
+          {text}
+        </div>
+      )}
+    </span>
+  )
 }
 
 export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
@@ -147,11 +186,24 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
 
   const legalFormEff = legalForm || 'svobodna_profesiya'
   const isTracking = legalFormEff === 'just_tracking'
-  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false, monthsElapsed)
+  const insuranceRate = INSURANCE_BY_YEAR[selectedYear] || 153.08
+  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false, monthsElapsed, insuranceRate)
   const deadline = tax ? nextTaxDeadline() : null
   const quarter = Math.floor(new Date().getMonth() / 3) + 1
   const insDue = nextInsuranceDeadline()
   const insDays = Math.ceil((insDue - new Date()) / 86400000)
+
+  const tooltips = {
+    incomeTax: language === 'bg'
+      ? 'Това е авансовият данък върху дохода ти за тримесечието. Формула: (приход × 75% - осигуровки) × 10%. Плаща се 3 пъти годишно.'
+      : 'This is your advance income tax payment for the quarter. Formula: (income × 75% − insurance) × 10%. Paid 3 times a year.',
+    insurance: language === 'bg'
+      ? 'Фиксирана месечна вноска за пенсионно и здравно осигуряване. Минимум 153 €/месец независимо от дохода. Плаща се до 25-о всеки месец.'
+      : 'Fixed monthly contribution to pension and health insurance. Minimum 153 €/month regardless of income. Paid by the 25th of each month.',
+    recentIncome: language === 'bg'
+      ? 'Приходи от фактури или плащания от клиенти. Добавяй всяко плащане което получаваш.'
+      : 'Income from invoices or client payments. Add each payment you receive.',
+  }
 
   return (
     <>
@@ -181,7 +233,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
         .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
         .entry-date { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px; }
 
-        .section-label { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px; }
+        .section-label { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.7px; }
         .view-all-link { font-size: 12px; color: rgba(240,237,228,0.3); text-decoration: none; transition: color 0.15s; }
         .view-all-link:hover { color: rgba(240,237,228,0.65); }
 
@@ -283,7 +335,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                 : <>{greeting(lang)}{firstName ? `, ${firstName}` : ''}</>
               }
             </div>
-            <div className="dash-subheading" style={{ marginBottom: loading ? '1.75rem' : undefined }}>
+            <div className="dash-subheading">
               {loading ? <Skeleton height={14} radius={4} style={{ width: 180, marginTop: 6 }} /> : formatCurrentDate(language)}
             </div>
 
@@ -307,8 +359,13 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                 background: '#c8f03a', borderRadius: 16, padding: '22px 24px', marginBottom: 12,
                 position: 'relative',
               }}>
-                <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', letterSpacing: 0.7, fontWeight: 500, marginBottom: 10 }}>
-                  {language === 'bg' ? `Данък върху дохода — Q${quarter}` : `Income tax — Q${quarter}`}
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', letterSpacing: 0.7, fontWeight: 500 }}>
+                    {language === 'bg' ? `Данък върху дохода — Q${quarter}` : `Income tax — Q${quarter}`}
+                  </span>
+                  <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', marginLeft: 6 }}>
+                    <Tooltip text={tooltips.incomeTax} />
+                  </span>
                 </div>
                 <div style={{ fontSize: 52, fontWeight: 600, color: '#0e0e0c', letterSpacing: -1.5, lineHeight: 1, marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
                   ~{fmt(tax.incomeTax)} €
@@ -353,11 +410,14 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
               }}>
                 <div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 500, marginBottom: 6 }}>
-                    {language === 'bg' ? 'Месечни осигуровки' : 'Monthly insurance'}
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 500 }}>
+                      {language === 'bg' ? 'Месечни осигуровки' : 'Monthly insurance'}
+                    </span>
+                    <Tooltip text={tooltips.insurance} />
                   </div>
                   <div style={{ fontSize: 28, fontWeight: 500, color: '#f0ede4', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
-                    153 €
+                    {Math.round(insuranceRate)} €
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
                     {language === 'bg' ? 'Фиксирано всеки месец · Пенсия + здраве' : 'Fixed every month · Pension + health'}
@@ -416,8 +476,11 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
             {/* 5. RECENT INCOME */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span className="section-label">
-                  {language === 'bg' ? 'Последни приходи' : 'Recent income'}
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="section-label">
+                    {language === 'bg' ? 'Последни приходи' : 'Recent income'}
+                  </span>
+                  {!loading && <Tooltip text={tooltips.recentIncome} />}
                 </span>
                 {!loading && income.length > 0 && (
                   <Link to="/income" className="view-all-link">
@@ -520,8 +583,10 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
             setModal({ type, entry })
           }}
           onDeleted={() => {
+            const { entry, type } = drawer
             setDrawer(null)
-            fetchData(selectedYear)
+            if (type === 'income') setIncome(prev => prev.filter(e => e.id !== entry.id))
+            else setExpenses(prev => prev.filter(e => e.id !== entry.id))
             showToast('Entry deleted', 'success')
           }}
         />
@@ -533,12 +598,32 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
           userId={userId}
           language={language}
           onClose={() => setModal(null)}
-          onSaved={() => {
-            fetchData(selectedYear)
-            if (modal.entry) showToast('Entry updated ✓', 'success')
-            else showToast(modal.type === 'income' ? 'Income added ✓' : 'Expense added ✓', 'success')
+          onSaved={(savedEntry) => {
+            if (modal.entry) {
+              // Edit: replace entry in state
+              if (modal.type === 'income') {
+                setIncome(prev => prev.map(e => e.id === savedEntry.id ? savedEntry : e))
+              } else {
+                setExpenses(prev => prev.map(e => e.id === savedEntry.id ? savedEntry : e))
+              }
+              showToast('Entry updated ✓', 'success')
+            } else {
+              // Add: prepend and re-sort by date desc
+              if (modal.type === 'income') {
+                setIncome(prev => [savedEntry, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)))
+              } else {
+                setExpenses(prev => [savedEntry, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)))
+              }
+              showToast(modal.type === 'income' ? 'Income added ✓' : 'Expense added ✓', 'success')
+            }
           }}
-          onDeleted={() => { fetchData(selectedYear); showToast('Entry deleted', 'success') }}
+          onDeleted={() => {
+            const id = modal.entry?.id
+            const type = modal.type
+            if (type === 'income') setIncome(prev => prev.filter(e => e.id !== id))
+            else setExpenses(prev => prev.filter(e => e.id !== id))
+            showToast('Entry deleted', 'success')
+          }}
           initialData={modal.entry}
           entryId={modal.entry?.id}
         />

@@ -65,26 +65,30 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
     setError('')
     const table = type === 'income' ? 'income' : 'expenses'
 
+    let savedEntry = null
+
     if (isEdit) {
       const patch = type === 'income'
         ? { description: desc, client: form.client.trim(), amount: amt, date: form.date }
         : { description: desc, category: form.category, amount: amt, date: form.date }
-      const { error } = await supabase.from(table).update(patch).eq('id', entryId)
+      const { data, error } = await supabase.from(table).update(patch).eq('id', entryId).select().single()
       if (error) { setError(translateDbError(error.message)); setLoading(false); submitting.current = false; return }
+      savedEntry = data
       posthog?.capture('entry_updated', { type, amount: amt })
     } else {
       const payload = type === 'income'
         ? { user_id: userId, description: desc, client: form.client.trim(), amount: amt, date: form.date }
         : { user_id: userId, description: desc, category: form.category, amount: amt, date: form.date }
-      const { error } = await supabase.from(table).insert(payload)
+      const { data, error } = await supabase.from(table).insert(payload).select().single()
       if (error) { setError(translateDbError(error.message)); setLoading(false); submitting.current = false; return }
+      savedEntry = data
       posthog?.capture(type === 'income' ? 'income_added' : 'expense_added', {
         amount: amt,
         ...(type === 'expense' ? { category: form.category } : {}),
       })
     }
 
-    onSaved()
+    onSaved(savedEntry)
     onClose()
   }
 

@@ -92,11 +92,50 @@ export default function Landing({ language = 'en' }) {
   useEffect(() => { document.title = 'Finku — Know what you owe, always' }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initOneTap = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) { navigate('/dashboard'); return }
+
       if (localStorage.getItem('finku_visited')) setReturning(true)
       localStorage.setItem('finku_visited', 'true')
-    })
+
+      const generateNonce = async () => {
+        const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+        const encoder = new TextEncoder()
+        const encodedNonce = encoder.encode(nonce)
+        const hashBuffer = await crypto.subtle.digest('SHA-256', encodedNonce)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        const hashedNonce = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+        return [nonce, hashedNonce]
+      }
+
+      const [nonce, hashedNonce] = await generateNonce()
+
+      const initGoogle = () => {
+        window.google?.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: async (response) => {
+            const { data, error } = await supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: response.credential,
+              nonce,
+            })
+            if (!error && data.session) navigate('/dashboard')
+          },
+          nonce: hashedNonce,
+          use_fedcm_for_prompt: true,
+        })
+        window.google?.accounts.id.prompt()
+      }
+
+      if (window.google) {
+        initGoogle()
+      } else {
+        window.addEventListener('load', initGoogle)
+      }
+    }
+
+    initOneTap()
   }, [])
 
   useEffect(() => {

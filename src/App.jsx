@@ -15,6 +15,8 @@ import NewInvoice from './pages/NewInvoice'
 import Blog from './pages/Blog'
 import BlogPost from './pages/BlogPost'
 import HowToPay from './pages/HowToPay'
+import IncomeList from './pages/IncomeList'
+import ExpenseList from './pages/ExpenseList'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -162,6 +164,16 @@ export default function App() {
         !session ? <Navigate to="/auth" /> :
         !onboarded ? <Navigate to="/language" /> :
         <NewInvoice session={session} language={language} onLanguageChange={setLanguage} />
+      } />
+      <Route path="/income" element={
+        !session ? <Navigate to="/auth" /> :
+        !onboarded ? <Navigate to="/language" /> :
+        <IncomeList session={session} language={language || 'en'} />
+      } />
+      <Route path="/expenses" element={
+        !session ? <Navigate to="/auth" /> :
+        !onboarded ? <Navigate to="/language" /> :
+        <ExpenseList session={session} language={language || 'en'} />
       } />
       <Route path="/blog" element={<Blog language={language || 'en'} />} />
       <Route path="/blog/:slug" element={<BlogPost language={language || 'en'} />} />
