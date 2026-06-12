@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../lib/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
@@ -132,6 +134,7 @@ function Tooltip({ text }) {
 }
 
 export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
+  const { language } = useLanguage()
   const lang = t[language]
   const posthog = usePostHog()
   const navigate = useNavigate()
@@ -290,6 +293,7 @@ export default function Dashboard({ session, language, legalForm, authorRate, on
             </button>
             <button className="dash-nav-btn" onClick={() => navigate('/blog')}>Blog</button>
             <button className="dash-nav-btn" onClick={() => navigate('/profile')}>Profile</button>
+            <LanguageToggle />
             <button className="dash-nav-logout" onClick={handleLogout}>{lang.logout}</button>
           </div>
         </nav>

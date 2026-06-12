@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../lib/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { blogPosts } from '../data/blogPosts'
 
-export default function Blog({ language = 'en' }) {
+export default function Blog() {
   const navigate = useNavigate()
   const isBg = language === 'bg'
   const [session, setSession] = useState(null)
@@ -94,7 +96,8 @@ export default function Blog({ language = 'en' }) {
             ) : (
               <>
                 <button className="blog-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
-                <button className="blog-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+                <LanguageToggle />
+            <button className="blog-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
               </>
             )}
           </div>

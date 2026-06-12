@@ -46,7 +46,7 @@ const deadlines = [
   { labelEn: 'Monthly insurance', labelBg: 'Месечни осигуровки', dateEn: '25th of each month', dateBg: '25-о всеки месец' },
 ]
 
-export default function HowToPay({ language = 'en' }) {
+export default function HowToPay() {
   const navigate = useNavigate()
   const isBg = language === 'bg'
 
@@ -100,6 +100,7 @@ export default function HowToPay({ language = 'en' }) {
           <Link to="/" className="htp-nav-logo">Finku</Link>
           <div className="htp-nav-right">
             <button className="htp-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
+            <LanguageToggle />
             <button className="htp-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
           </div>
         </nav>

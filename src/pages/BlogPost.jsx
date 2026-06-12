@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../lib/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { blogPosts } from '../data/blogPosts'
@@ -120,7 +122,7 @@ function inlineFormat(text) {
   return parts.length ? parts : text
 }
 
-export default function BlogPost({ language = 'en' }) {
+export default function BlogPost() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const isBg = language === 'bg'
@@ -196,7 +198,8 @@ export default function BlogPost({ language = 'en' }) {
             ) : (
               <>
                 <button className="bpost-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
-                <button className="bpost-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+                <LanguageToggle />
+            <button className="bpost-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
               </>
             )}
           </div>

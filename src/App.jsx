@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
+import { useLanguage } from './lib/LanguageContext'
 import posthog from 'posthog-js'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
@@ -21,7 +22,7 @@ import NotFound from './pages/NotFound'
 
 export default function App() {
   const [session, setSession] = useState(null)
-  const [language, setLanguage] = useState(null)
+  const { language, setLanguage } = useLanguage()
   const [onboarded, setOnboarded] = useState(null)
   const [legalForm, setLegalForm] = useState(null)
   const [authorRate, setAuthorRate] = useState(false)
@@ -55,7 +56,7 @@ export default function App() {
         localStorage.removeItem('finku_visited')
         localStorage.removeItem('finku_tax_explained')
         Object.keys(localStorage).filter(k => k.startsWith('finku_paid_')).forEach(k => localStorage.removeItem(k))
-        setLanguage(null); setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false)
+        setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false)
       }
     })
 
@@ -84,7 +85,7 @@ export default function App() {
       .select('language, onboarded, legal_form, author_rate')
       .eq('id', userId)
       .single()
-    setLanguage(data?.language || 'en')
+    setLanguage(data?.language || 'bg')
     setOnboarded(data?.onboarded ?? false)
     setLegalForm(data?.legal_form || null)
     setAuthorRate(data?.author_rate ?? false)

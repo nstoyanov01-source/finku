@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabase'
 import { usePostHog } from '@posthog/react'
 
-export default function LegalFormSelect({ userId, language, onComplete }) {
+export default function LegalFormSelect({ userId, onComplete }) {
+  const { language } = useLanguage()
   const [selected, setSelected] = useState(null)
   const [firstName, setFirstName] = useState('')
   const [error, setError] = useState('')

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useLanguage } from '../lib/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 
 const faqs = [
   {
@@ -37,7 +39,7 @@ function calcEstimate(totalEarned, legalForm) {
   return { earned: Math.round(totalEarned), taxable: Math.round(taxable), incomeTax, insurance, total: incomeTax + insurance }
 }
 
-export default function Landing({ language = 'en' }) {
+export default function Landing() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
   const [openFaq, setOpenFaq] = useState(null)
@@ -87,8 +89,8 @@ export default function Landing({ language = 'en' }) {
     withLines: ['Live tax estimate, always', 'Income & expenses tracked', 'No surprises at year-end'],
   }
 
+  const { language } = useLanguage()
   const taxAuth = language === 'bg' ? 'НАП' : 'NRA'
-  const heroLang = localStorage.getItem('finku_lang') === 'en' ? 'en' : 'bg'
 
   useEffect(() => { document.title = 'Finku — Know what you owe, always' }, [])
 
@@ -313,6 +315,7 @@ export default function Landing({ language = 'en' }) {
         <nav>
           <div className="nav-logo">Finku</div>
           <div className="nav-right">
+            <LanguageToggle />
             <button className="btn-ghost" onClick={() => navigate('/auth')}>Log in</button>
             <button className="btn-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
           </div>
@@ -324,7 +327,7 @@ export default function Landing({ language = 'en' }) {
           <div className="hero-inner">
             <div className="hero-left">
               <h1 className="hero-title reveal">
-                {heroLang === 'bg' ? (
+                {language === 'bg' ? (
                   <>
                     НАП знае колко си спечелил.<br />
                     Ти — не.<br />
@@ -340,11 +343,11 @@ export default function Landing({ language = 'en' }) {
               </h1>
               <div className="reveal" style={{ transitionDelay: '0.15s' }}>
                 <button className="btn-primary-lg" onClick={() => navigate('/auth?mode=signup')}>
-                  {heroLang === 'bg' ? 'Виж колко дължиш →' : 'See what you owe →'}
+                  {language === 'bg' ? 'Виж колко дължиш →' : 'See what you owe →'}
                 </button>
               </div>
               <div className="reveal" style={{ transitionDelay: '0.2s', marginTop: 14, fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', letterSpacing: '1.5px' }}>
-                {heroLang === 'bg' ? 'FREE · БЕЗ КАРТА · 30 СЕКУНДИ' : 'FREE · NO CARD · 30 SECONDS'}
+                {language === 'bg' ? 'FREE · БЕЗ КАРТА · 30 СЕКУНДИ' : 'FREE · NO CARD · 30 SECONDS'}
               </div>
             </div>
 
@@ -353,15 +356,15 @@ export default function Landing({ language = 'en' }) {
               {/* Tax card */}
               <div style={{ background: '#c8f03a', borderRadius: 14, padding: '20px 24px' }}>
                 <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', fontWeight: 600, letterSpacing: '0.8px', marginBottom: 8 }}>
-                  {heroLang === 'bg' ? 'ДАНЪК ВЪРХУ ДОХОДА · Q2' : 'INCOME TAX · Q2'}
+                  {language === 'bg' ? 'ДАНЪК ВЪРХУ ДОХОДА · Q2' : 'INCOME TAX · Q2'}
                 </div>
                 <div style={{ fontSize: 48, fontWeight: 700, color: '#0e0e0c', lineHeight: 1, marginBottom: 10 }}>~321 €</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ background: 'rgba(0,0,0,0.1)', borderRadius: 100, padding: '4px 12px', fontSize: 12, color: '#0e0e0c' }}>
-                    {heroLang === 'bg' ? 'До 31 юли · 51 дни' : 'By July 31 · 51 days'}
+                    {language === 'bg' ? 'До 31 юли · 51 дни' : 'By July 31 · 51 days'}
                   </div>
                   <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}>
-                    {heroLang === 'bg' ? 'Как да платя?' : 'How to pay?'}
+                    {language === 'bg' ? 'Как да платя?' : 'How to pay?'}
                   </span>
                 </div>
               </div>
@@ -373,24 +376,24 @@ export default function Landing({ language = 'en' }) {
               }}>
                 <div>
                   <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.8px', marginBottom: 4 }}>
-                    {heroLang === 'bg' ? 'ОСИГУРОВКИ' : 'INSURANCE'}
+                    {language === 'bg' ? 'ОСИГУРОВКИ' : 'INSURANCE'}
                   </div>
                   <div style={{ fontSize: 26, fontWeight: 500, color: '#f0ede4', lineHeight: 1.15, marginBottom: 3 }}>153 €</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
-                    {heroLang === 'bg' ? 'Фиксирано · Всеки месец' : 'Fixed · Every month'}
+                    {language === 'bg' ? 'Фиксирано · Всеки месец' : 'Fixed · Every month'}
                   </div>
                 </div>
                 <div style={{ background: 'rgba(245,158,11,0.15)', border: '0.5px solid rgba(245,158,11,0.3)', color: '#f59e0b', borderRadius: 100, padding: '4px 12px', fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' }}>
-                  {heroLang === 'bg' ? 'До 25 юни' : 'By June 25'}
+                  {language === 'bg' ? 'До 25 юни' : 'By June 25'}
                 </div>
               </div>
 
               {/* Recent income card */}
               <div style={{ background: '#161614', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 18px' }}>
                 <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.8px', marginBottom: 10 }}>
-                  {heroLang === 'bg' ? 'ПОСЛЕДНИ ПРИХОДИ' : 'RECENT INCOME'}
+                  {language === 'bg' ? 'ПОСЛЕДНИ ПРИХОДИ' : 'RECENT INCOME'}
                 </div>
-                {(heroLang === 'bg' ? [
+                {(language === 'bg' ? [
                   { name: 'Уеб дизайн — TechCo', amount: '+2,400 €' },
                   { name: 'Лого — StartupBG', amount: '+800 €' },
                   { name: 'Консултация — RetailMax', amount: '+1,200 €' },
@@ -413,14 +416,14 @@ export default function Landing({ language = 'en' }) {
                   borderRadius: 8, padding: 12, fontSize: 12, fontWeight: 700,
                   fontFamily: 'DM Sans, sans-serif', cursor: 'default',
                 }}>
-                  {heroLang === 'bg' ? '+ Добави приход' : '+ Add income'}
+                  {language === 'bg' ? '+ Добави приход' : '+ Add income'}
                 </button>
                 <button style={{
                   flex: 1, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)',
                   border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 12, fontSize: 12,
                   fontFamily: 'DM Sans, sans-serif', cursor: 'default',
                 }}>
-                  {heroLang === 'bg' ? '+ Добави разход' : '+ Add expense'}
+                  {language === 'bg' ? '+ Добави разход' : '+ Add expense'}
                 </button>
               </div>
             </div>

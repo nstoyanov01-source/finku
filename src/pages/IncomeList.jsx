@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../lib/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
@@ -22,7 +24,8 @@ function fmtMonth(ym, language) {
   return new Date(y, m - 1).toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { month: 'long', year: 'numeric' })
 }
 
-export default function IncomeList({ session, language }) {
+export default function IncomeList({ session }) {
+  const { language } = useLanguage()
   const lang = t[language]
   const navigate = useNavigate()
   const userId = session.user.id
@@ -94,7 +97,10 @@ export default function IncomeList({ session, language }) {
       <div className="list-page">
         <nav className="list-nav">
           <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: '#f0ede4', letterSpacing: '-0.3px' }}>Finku</div>
-          <button className="list-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <LanguageToggle />
+            <button className="list-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
+          </div>
         </nav>
 
         <div className="list-content">

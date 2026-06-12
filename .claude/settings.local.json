@@ -10,7 +10,8 @@
       "Bash(~/.nvm/versions/node/v24.16.0/bin/claude --version)",
       "Bash(npm install *)",
       "Bash(node *)",
-      "Bash(grep -n \"income.length\\\\|entries-grid\\\\|welcome-card\\\\|\\)} $\\\\|\\)}\\\\s*$\" /Users/nikolastoyanov/Downloads/finku/src/pages/Dashboard.jsx)"
+      "Bash(grep -n \"income.length\\\\|entries-grid\\\\|welcome-card\\\\|\\)} $\\\\|\\)}\\\\s*$\" /Users/nikolastoyanov/Downloads/finku/src/pages/Dashboard.jsx)",
+      "Bash(npm run *)"
     ]
   }
 }

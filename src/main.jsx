@@ -20,7 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <PostHogProvider client={posthog}>
       <BrowserRouter>
         <ErrorBoundary>
-          <App />
+          <LanguageProvider><App /></LanguageProvider>
         </ErrorBoundary>
       </BrowserRouter>
     </PostHogProvider>

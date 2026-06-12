@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../lib/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n/translations'
@@ -42,7 +44,8 @@ const profileLabels = {
   },
 }
 
-export default function Profile({ session, language, onLanguageChange }) {
+export default function Profile({ session }) {
+  const { language } = useLanguage()
   const lang = t[language]
   const pl = profileLabels[language] || profileLabels.en
   const navigate = useNavigate()
@@ -405,7 +408,8 @@ export default function Profile({ session, language, onLanguageChange }) {
       <div className="profile-page">
         <nav className="profile-nav">
           <Link to="/dashboard" className="profile-nav-logo">Finku</Link>
-          <button className="profile-back-btn" onClick={() => navigate('/dashboard')}>
+          <LanguageToggle />
+            <button className="profile-back-btn" onClick={() => navigate('/dashboard')}>
             {pl.back}
           </button>
         </nav>

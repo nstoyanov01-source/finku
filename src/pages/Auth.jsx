@@ -20,9 +20,11 @@ function getPasswordStrength(pw) {
 
 export default function Auth() {
   const [searchParams] = useSearchParams()
+  const { language } = useLanguage()
   const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const { language } = useLanguage()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)

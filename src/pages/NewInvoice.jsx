@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../lib/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { usePostHog } from '@posthog/react'
@@ -11,7 +13,8 @@ function fmtInvoiceDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-export default function NewInvoice({ session, language, onLanguageChange }) {
+export default function NewInvoice({ session }) {
+  const { language } = useLanguage()
   const navigate = useNavigate()
   const userId = session.user.id
   const isBg = language === 'bg'
@@ -170,6 +173,7 @@ export default function NewInvoice({ session, language, onLanguageChange }) {
               <option value="bg">БГ</option>
             </select>
             <button className="inv-nav-btn" onClick={() => navigate('/profile')}>Profile</button>
+            <LanguageToggle />
             <button
               className="inv-nav-btn"
               style={{ border: '1px solid rgba(240,237,228,0.12)' }}
