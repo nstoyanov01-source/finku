@@ -23,6 +23,11 @@ const profileLabels = {
     legal: 'Legal',
     privacyPolicy: 'Privacy Policy',
     terms: 'Terms',
+    accountSection: 'Account',
+    securitySection: 'Security',
+    dangerZone: 'Danger zone',
+    changePassword: 'Change password',
+    pwResetSentMsg: 'Password reset email sent. Check your inbox.',
   },
   bg: {
     heading: 'Профил',
@@ -41,6 +46,11 @@ const profileLabels = {
     legal: 'Правни документи',
     privacyPolicy: 'Политика за поверителност',
     terms: 'Общи условия',
+    accountSection: 'Акаунт',
+    securitySection: 'Сигурност',
+    dangerZone: 'Опасна зона',
+    changePassword: 'Промени паролата',
+    pwResetSentMsg: 'Имейл за нулиране изпратен. Провери входящата кутия.',
   },
 }
 
@@ -419,7 +429,7 @@ export default function Profile({ session }) {
 
           {/* Personal info */}
           <div className="profile-section">
-            <div className="profile-section-title">Account</div>
+            <div className="profile-section-title">{pl.accountSection}</div>
 
             <div className="profile-field">
               <label className="label">{pl.emailLabel}</label>
@@ -429,10 +439,10 @@ export default function Profile({ session }) {
 
           {/* Change password */}
           <div className="profile-section">
-            <div className="profile-section-title">Security</div>
+            <div className="profile-section-title">{pl.securitySection}</div>
             {pwResetSent ? (
               <p style={{ fontSize: 13, color: '#c8f03a', lineHeight: 1.6 }}>
-                Password reset email sent. Check your inbox.
+                {pl.pwResetSentMsg}
               </p>
             ) : (
               <button
@@ -448,7 +458,7 @@ export default function Profile({ session }) {
                 onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.25)'; e.currentTarget.style.color = '#f0ede4' }}
                 onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.12)'; e.currentTarget.style.color = 'rgba(240,237,228,0.7)' }}
               >
-                {pwResetLoading ? '…' : 'Change password'}
+                {pwResetLoading ? '…' : pl.changePassword}
               </button>
             )}
           </div>
@@ -569,7 +579,7 @@ export default function Profile({ session }) {
 
           {/* Delete account */}
           <div className="profile-section">
-            <div className="profile-section-title">Danger zone</div>
+            <div className="profile-section-title">{pl.dangerZone}</div>
             {showDeleteConfirm ? (
               <div className="delete-confirm">
                 {deleteSuccess ? (

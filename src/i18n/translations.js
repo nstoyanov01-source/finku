@@ -37,10 +37,10 @@ export const t = {
 
     recentIncome: 'Recent income',
     recentExpenses: 'Recent expenses',
-    addIncome: 'Add income',
-    addExpense: 'Add expense',
-    noIncome: 'No income logged yet.',
-    noExpenses: 'No expenses logged yet.',
+    addIncome: '+ Add income',
+    addExpense: '+ Add expense',
+    noIncome: 'No income yet',
+    noExpenses: 'No expenses yet',
 
     csvImport: 'Import from bank CSV (Revolut, DSK, UniCredit…)',
     uploadFile: 'Upload file',
@@ -73,14 +73,11 @@ export const t = {
       marketing: 'Marketing',
       professional: 'Professional services',
       other: 'Other',
+    },
 
     sessionExpiringSoon: 'Your session will expire soon',
     backToDashboard: '← Dashboard',
     viewAll: 'View all →',
-    addIncome: '+ Add income',
-    addExpense: '+ Add expense',
-    noIncome: 'No income yet',
-    noExpenses: 'No expenses yet',
     noResults: 'No results found',
     searchPlaceholder: 'Search...',
     allMonths: 'All months',
@@ -96,7 +93,6 @@ export const t = {
     expenseAdded: 'Expense added ✓',
     logIn: 'Log in',
     signUp: 'Sign up',
-  },
 
     months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
     logout: 'Log out',
@@ -127,6 +123,125 @@ export const t = {
     insuranceLabel: 'Insurance',
     annualDeclaration: 'Annual declaration',
     daysAway: 'days',
+
+    // Landing — nav
+    navCreateFree: 'Create free account',
+
+    // Landing — calculator
+    calcTitle: 'How much do you owe?',
+    calcSub: 'Enter your income so far this year — see your estimate instantly. No signup needed.',
+    calcPlaceholder: 'Earned so far in 2026 (€)',
+    calcHelper: 'Your total income this year to date',
+    calcEarned: 'Your income so far',
+    calcTaxable: 'Taxable income',
+    calcIncomeTax: 'Income tax (15%)',
+    calcInsurance: 'Insurance',
+    calcTotalOwed: 'Total owed so far',
+    calcProjected: 'Projected annual income',
+    calcCta: 'Track this automatically, free →',
+    calcFormFreelancer: 'Freelancer',
+    calcFormET: 'Sole trader',
+    calcFormTracking: 'Just tracking',
+
+    // Landing — taxman
+    taxmanTitle: 'Finally know what you owe',
+    withoutFinku: 'Without Finku',
+    withFinku: 'With Finku',
+    withoutLines: ["Surprise bills at year-end", "No idea what's coming", "Panic every April"],
+    withLines: ['Live tax estimate, always', 'Income & expenses tracked', 'No surprises at year-end'],
+
+    // Landing — features
+    featuresLabel: 'What Finku does',
+    featuresTitle: 'Everything you actually need',
+    feature1Title: 'Income & expense tracking',
+    feature1Desc: 'Log payments and business expenses as they happen. Add a client, amount, and date — or import directly from your Revolut CSV.',
+    feature2Title: 'Live tax estimate',
+    feature2Desc: 'Based on your actual income, Finku calculates your income tax and insurance contributions in real time. No surprises.',
+    feature3Title: 'Invoice generator',
+    feature3Desc: 'Create professional EUR invoices to send to your clients in seconds. Auto-numbered, downloadable as PDF, income tracked automatically.',
+    featurePill1: '✓ Revolut CSV import',
+    featurePill2: '✓ English & Bulgarian',
+    featurePill3: '✓ EU data storage',
+
+    // Landing — social proof
+    proofFree: 'to get started',
+    proofSetup: 'to set up',
+    proofTracking: "of tracking per month, that's it",
+
+    // Landing — how it works
+    howLabel: 'How it works',
+    howTitle: 'Up and running in three steps',
+    how1Title: 'Sign up free',
+    how1Desc: 'Create your account in 30 seconds. No credit card, no setup fees, no catch.',
+    how2Title: 'Log your income',
+    how2Desc: 'Add payments as they come in, or import directly from a Revolut CSV export. Takes seconds per entry.',
+    how3Title: 'See what you owe',
+    how3Desc: 'Your live tax estimate updates automatically as you go. Check it anytime — no year-end surprises.',
+
+    // Landing — FAQ
+    faqLabel: 'FAQ',
+    faqTitle: 'Common questions',
+    faq1Q: 'Is Finku really free?',
+    faq1A: "Yes — completely free during beta. No credit card, no hidden trial. We'll give plenty of notice before anything changes.",
+    faq2Q: 'How is the tax estimate calculated?',
+    faq2A: "Based on Bulgarian tax law for self-employed individuals: 75% of your gross income is taxable, then 15% income tax applies, plus fixed monthly insurance contributions. It's an estimate — always consult an accountant for your official declaration.",
+    faq3Q: 'Is my financial data safe?',
+    faq3A: 'Your data is stored encrypted in EU-based servers (Ireland). Nobody else can access your entries — not even us. You can delete your account and all data at any time.',
+    faq4Q: 'Is this for VAT-registered businesses?',
+    faq4A: 'Not yet. Finku is currently built for the self-employed who are not VAT registered. VAT tracking is on the roadmap.',
+
+    // Landing — why it matters
+    whyLabel: 'Why it matters',
+
+    // Landing — CTA
+    ctaTitle: 'Start knowing your numbers.',
+    ctaSub: 'Free to use. No credit card. Takes 30 seconds.',
+    ctaBtn: 'Create your account',
+
+    // Landing — footer
+    footerDisclaimer: 'Tax estimates are approximate and do not constitute tax advice.',
+    footerBlog: 'Blog',
+    footerHowToPay: 'How to pay',
+    footerPrivacy: 'Privacy Policy',
+    footerTerms: 'Terms',
+
+    // Auth page
+    resetPassword: 'Reset your password',
+    resetSentPre: "Check your email — we've sent a password reset link to",
+    resendIn: (s) => `Resend in ${s}s`,
+    resendEmail: 'Resend email',
+    backToLogin: '← Back to login',
+    sendResetLink: 'Send reset link',
+    sending: 'Sending…',
+    checkEmail: 'Check your email',
+    emailSentPre: 'We sent a confirmation link to',
+    emailSentSuf: 'Click it to activate your account.',
+    spamMsg: "Can't find it? Check your spam folder.",
+    loginTitle: 'Log in to your account',
+    signupTitle: 'Create your account',
+    continueWithGoogle: 'Continue with Google',
+    or: 'or',
+    forgotPassword: 'Forgot password?',
+    pleaseWait: 'Please wait…',
+    passwordWeak: 'Weak',
+    passwordMedium: 'Medium',
+    passwordStrong: 'Strong',
+    passwordTooShort: 'Password must be at least 8 characters.',
+    wrongCredentials: 'Wrong email or password. Please try again.',
+    emailNotConfirmed: 'Please check your email and confirm your account first.',
+    userAlreadyExists: 'An account with this email already exists. Try logging in instead.',
+
+    // Profile page
+    accountSection: 'Account',
+    securitySection: 'Security',
+    dangerZone: 'Danger zone',
+    changePassword: 'Change password',
+    pwResetSentMsg: 'Password reset email sent. Check your inbox.',
+    profileNav: 'Profile',
+
+    // Blog / shared nav
+    navProfile: 'Profile',
+    navLogout: 'Log out',
   },
 
   bg: {
@@ -167,10 +282,10 @@ export const t = {
 
     recentIncome: 'Последни приходи',
     recentExpenses: 'Последни разходи',
-    addIncome: 'Добави приход',
-    addExpense: 'Добави разход',
-    noIncome: 'Все още няма добавени приходи.',
-    noExpenses: 'Все още няма добавени разходи.',
+    addIncome: '+ Добави приход',
+    addExpense: '+ Добави разход',
+    noIncome: 'Все още няма приходи',
+    noExpenses: 'Все още няма разходи',
 
     csvImport: 'Импортирай от банков CSV (Revolut, DSK, UniCredit…)',
     uploadFile: 'Качи файл',
@@ -203,14 +318,11 @@ export const t = {
       marketing: 'Маркетинг',
       professional: 'Професионални услуги',
       other: 'Друго',
+    },
 
     sessionExpiringSoon: 'Сесията ти скоро ще изтече',
     backToDashboard: '← Начало',
     viewAll: 'Виж всички →',
-    addIncome: '+ Добави приход',
-    addExpense: '+ Добави разход',
-    noIncome: 'Все още няма приходи',
-    noExpenses: 'Все още няма разходи',
     noResults: 'Няма резултати',
     searchPlaceholder: 'Търси...',
     allMonths: 'Всички месеци',
@@ -226,7 +338,6 @@ export const t = {
     expenseAdded: 'Разходът е добавен ✓',
     logIn: 'Вход',
     signUp: 'Регистрация',
-  },
 
     months: ['Ян','Фев','Мар','Апр','Май','Юни','Юли','Авг','Сеп','Окт','Ное','Дек'],
     logout: 'Изход',
@@ -257,5 +368,124 @@ export const t = {
     insuranceLabel: 'Осигуровки',
     annualDeclaration: 'Годишна декларация',
     daysAway: 'дни',
+
+    // Landing — nav
+    navCreateFree: 'Създай безплатен профил',
+
+    // Landing — calculator
+    calcTitle: 'Колко дължиш?',
+    calcSub: 'Въведи приходите си за тази година — виж прогнозата веднага. Без регистрация.',
+    calcPlaceholder: 'Спечелени през 2026 (€)',
+    calcHelper: 'Общ доход за тази година до момента',
+    calcEarned: 'Твоят доход досега',
+    calcTaxable: 'Облагаема основа',
+    calcIncomeTax: 'Данък върху дохода (15%)',
+    calcInsurance: 'Осигуровки',
+    calcTotalOwed: 'Общо дължимо досега',
+    calcProjected: 'Прогноза за годината',
+    calcCta: 'Проследявай автоматично, безплатно →',
+    calcFormFreelancer: 'Свободна професия',
+    calcFormET: 'ЕТ',
+    calcFormTracking: 'Само проследяване',
+
+    // Landing — taxman
+    taxmanTitle: 'Знай колко дължиш',
+    withoutFinku: 'Без Finku',
+    withFinku: 'С Finku',
+    withoutLines: ['Изненадващи сметки накрая', 'Никаква представа предварително', 'Паника всеки април'],
+    withLines: ['Жива прогноза за данъци', 'Приходи и разходи проследени', 'Без изненади в края на годината'],
+
+    // Landing — features
+    featuresLabel: 'Какво прави Finku',
+    featuresTitle: 'Всичко което реално ти трябва',
+    feature1Title: 'Проследяване на приходи и разходи',
+    feature1Desc: 'Записвай плащания и бизнес разходи в момента на получаването им. Добави клиент, сума и дата — или импортирай директно от Revolut CSV.',
+    feature2Title: 'Жива данъчна прогноза',
+    feature2Desc: 'На база реалните ти приходи, Finku изчислява данъка върху дохода и осигуровките в реално време. Без изненади.',
+    feature3Title: 'Генератор на фактури',
+    feature3Desc: 'Създавай професионални EUR фактури за клиентите си за секунди. Автоматично номерирани, сваляеми като PDF, приходите се проследяват автоматично.',
+    featurePill1: '✓ Импорт от Revolut CSV',
+    featurePill2: '✓ Английски и Български',
+    featurePill3: '✓ Данни в ЕС',
+
+    // Landing — social proof
+    proofFree: 'за да започнеш',
+    proofSetup: 'за настройка',
+    proofTracking: 'проследяване на месец, толкова',
+
+    // Landing — how it works
+    howLabel: 'Как работи',
+    howTitle: 'Готово за три стъпки',
+    how1Title: 'Регистрирай се безплатно',
+    how1Desc: 'Създай акаунт за 30 секунди. Без карта, без такси за настройка, без уловка.',
+    how2Title: 'Записвай приходите си',
+    how2Desc: 'Добавяй плащанията при получаване или импортирай от Revolut CSV. Отнема секунди за запис.',
+    how3Title: 'Виж колко дължиш',
+    how3Desc: 'Живата данъчна прогноза се обновява автоматично. Проверявай по всяко време — без изненади в края на годината.',
+
+    // Landing — FAQ
+    faqLabel: 'ЧЗВ',
+    faqTitle: 'Чести въпроси',
+    faq1Q: 'Наистина ли е безплатно?',
+    faq1A: 'Да — напълно безплатно по време на бета. Без карта, без скрит пробен период. Ще предупредим навреме преди каквато и да е промяна.',
+    faq2Q: 'Как се изчислява данъчната прогноза?',
+    faq2A: 'На база българското данъчно законодателство за самоосигуряващи се: 75% от брутния доход е облагаем, след което се прилага 15% данък, плюс фиксирани месечни осигуровки. Това е прогноза — винаги се консултирайте със счетоводител за официалната декларация.',
+    faq3Q: 'Финансовите ми данни в безопасност ли са?',
+    faq3A: 'Данните ти се съхраняват криптирани на сървъри в ЕС (Ирландия). Никой друг няма достъп до записите ти — дори ние. Можеш да изтриеш акаунта и всички данни по всяко време.',
+    faq4Q: 'Подходящо ли е за регистрирани по ДДС фирми?',
+    faq4A: 'Все още не. Finku е изграден за самоосигуряващи се, нерегистрирани по ДДС. Проследяването на ДДС е в плановете ни.',
+
+    // Landing — why it matters
+    whyLabel: 'Защо е важно',
+
+    // Landing — CTA
+    ctaTitle: 'Знай числата си.',
+    ctaSub: 'Безплатно. Без карта. Отнема 30 секунди.',
+    ctaBtn: 'Създай акаунт',
+
+    // Landing — footer
+    footerDisclaimer: 'Данъчните прогнози са ориентировъчни и не представляват данъчен съвет.',
+    footerBlog: 'Блог',
+    footerHowToPay: 'Как да платиш',
+    footerPrivacy: 'Политика за поверителност',
+    footerTerms: 'Общи условия',
+
+    // Auth page
+    resetPassword: 'Нулирай паролата',
+    resetSentPre: 'Провери имейла — изпратихме линк за нулиране на',
+    resendIn: (s) => `Изпрати отново след ${s}s`,
+    resendEmail: 'Изпрати отново',
+    backToLogin: '← Обратно към вход',
+    sendResetLink: 'Изпрати линк за нулиране',
+    sending: 'Изпращане…',
+    checkEmail: 'Провери имейла',
+    emailSentPre: 'Изпратихме линк за потвърждение на',
+    emailSentSuf: 'Кликни върху него, за да активираш акаунта си.',
+    spamMsg: 'Не намираш? Провери папката SPAM.',
+    loginTitle: 'Вход в акаунта',
+    signupTitle: 'Създай акаунт',
+    continueWithGoogle: 'Продължи с Google',
+    or: 'или',
+    forgotPassword: 'Забравена парола?',
+    pleaseWait: 'Изчакай…',
+    passwordWeak: 'Слаба',
+    passwordMedium: 'Средна',
+    passwordStrong: 'Силна',
+    passwordTooShort: 'Паролата трябва да е поне 8 знака.',
+    wrongCredentials: 'Грешен имейл или парола. Моля, опитайте отново.',
+    emailNotConfirmed: 'Моля, провери имейла си и потвърди акаунта си.',
+    userAlreadyExists: 'Акаунт с този имейл вече съществува. Опитай да влезеш.',
+
+    // Profile page
+    accountSection: 'Акаунт',
+    securitySection: 'Сигурност',
+    dangerZone: 'Опасна зона',
+    changePassword: 'Промени паролата',
+    pwResetSentMsg: 'Имейл за нулиране изпратен. Провери входящата кутия.',
+    profileNav: 'Профил',
+
+    // Blog / shared nav
+    navProfile: 'Профил',
+    navLogout: 'Изход',
   },
 }

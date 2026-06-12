@@ -133,7 +133,7 @@ function Tooltip({ text }) {
   )
 }
 
-export default function Dashboard({ session, language, legalForm, authorRate, onLanguageChange }) {
+export default function Dashboard({ session, legalForm, authorRate, onLanguageChange }) {
   const { language } = useLanguage()
   const lang = t[language]
   const posthog = usePostHog()

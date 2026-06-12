@@ -99,13 +99,13 @@ export default function ExpenseList({ session }) {
           <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: '#f0ede4', letterSpacing: '-0.3px' }}>Finku</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LanguageToggle />
-            <button className="list-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
+            <button className="list-back" onClick={() => navigate('/dashboard')}>{lang.backToDashboard}</button>
           </div>
         </nav>
 
         <div className="list-content">
           <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 32, color: '#f0ede4', letterSpacing: '-0.5px', marginBottom: '0.35rem' }}>
-            {language === 'bg' ? 'Всички разходи' : 'All Expenses'}
+            {lang.allExpenses}
           </h1>
           {!loading && (
             <div style={{ fontSize: 28, fontWeight: 600, color: '#e07070', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums', marginBottom: '1.75rem' }}>
@@ -118,21 +118,21 @@ export default function ExpenseList({ session }) {
             <input
               className="list-search"
               style={{ flex: 1, minWidth: 160 }}
-              placeholder={language === 'bg' ? 'Търси...' : 'Search...'}
+              placeholder={lang.searchPlaceholder}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
             <select style={sel} value={monthFilter} onChange={e => setMonthFilter(e.target.value)}>
-              <option value="">{language === 'bg' ? 'Всички месеци' : 'All months'}</option>
+              <option value="">{lang.allMonths}</option>
               {months.map(m => (
                 <option key={m} value={m}>{fmtMonth(m, language)}</option>
               ))}
             </select>
             <select style={sel} value={sort} onChange={e => setSort(e.target.value)}>
-              <option value="newest">{language === 'bg' ? 'Най-нови' : 'Newest'}</option>
-              <option value="oldest">{language === 'bg' ? 'Най-стари' : 'Oldest'}</option>
-              <option value="highest">{language === 'bg' ? 'Най-висок' : 'Highest'}</option>
-              <option value="lowest">{language === 'bg' ? 'Най-нисък' : 'Lowest'}</option>
+              <option value="newest">{lang.sortNewest}</option>
+              <option value="oldest">{lang.sortOldest}</option>
+              <option value="highest">{lang.sortHighest}</option>
+              <option value="lowest">{lang.sortLowest}</option>
             </select>
           </div>
 
@@ -141,9 +141,7 @@ export default function ExpenseList({ session }) {
             <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(240,237,228,0.3)', fontSize: 13 }}>…</div>
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 0', fontSize: 13, color: 'rgba(240,237,228,0.2)' }}>
-              {search || monthFilter
-                ? (language === 'bg' ? 'Няма резултати' : 'No results found')
-                : (language === 'bg' ? 'Все още няма разходи' : 'No expenses yet')}
+              {search || monthFilter ? lang.noResults : lang.noExpenses}
             </div>
           ) : (
             filtered.map(row => (
@@ -178,7 +176,7 @@ export default function ExpenseList({ session }) {
             const { entry } = drawer
             setDrawer(null)
             setExpenses(prev => prev.filter(e => e.id !== entry.id))
-            showToast(language === 'bg' ? 'Записът е изтрит' : 'Entry deleted', 'success')
+            showToast(lang.entryDeleted, 'success')
           }}
         />
       )}
@@ -192,16 +190,16 @@ export default function ExpenseList({ session }) {
           onSaved={(savedEntry) => {
             if (modal.entry) {
               setExpenses(prev => prev.map(e => e.id === savedEntry.id ? savedEntry : e))
-              showToast(language === 'bg' ? 'Записът е обновен ✓' : 'Entry updated ✓', 'success')
+              showToast(lang.entryUpdated, 'success')
             } else {
               setExpenses(prev => [savedEntry, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)))
-              showToast(language === 'bg' ? 'Разходът е добавен ✓' : 'Expense added ✓', 'success')
+              showToast(lang.expenseAdded, 'success')
             }
           }}
           onDeleted={() => {
             const id = modal.entry?.id
             setExpenses(prev => prev.filter(e => e.id !== id))
-            showToast('Entry deleted', 'success')
+            showToast(lang.entryDeleted, 'success')
           }}
           initialData={modal.entry}
           entryId={modal.entry?.id}

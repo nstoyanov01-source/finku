@@ -1,5 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useLanguage } from '../lib/LanguageContext'
+import { t } from '../i18n/translations'
+import LanguageToggle from '../components/LanguageToggle'
 
 const steps = [
   {
@@ -48,6 +51,8 @@ const deadlines = [
 
 export default function HowToPay() {
   const navigate = useNavigate()
+  const { language } = useLanguage()
+  const lang = t[language]
   const isBg = language === 'bg'
 
   useEffect(() => { document.title = 'How to Pay Your Tax · Finku' }, [])
@@ -99,9 +104,9 @@ export default function HowToPay() {
         <nav className="htp-nav">
           <Link to="/" className="htp-nav-logo">Finku</Link>
           <div className="htp-nav-right">
-            <button className="htp-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
+            <button className="htp-nav-ghost" onClick={() => navigate('/auth')}>{lang.login}</button>
             <LanguageToggle />
-            <button className="htp-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+            <button className="htp-nav-cta" onClick={() => navigate('/auth?mode=signup')}>{lang.navCreateFree}</button>
           </div>
         </nav>
 

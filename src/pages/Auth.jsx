@@ -1,15 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useLanguage } from '../lib/LanguageContext'
+import { t } from '../i18n/translations'
 import { usePostHog } from '@posthog/react'
-
-function translateError(msg) {
-  if (msg.includes('Invalid login credentials')) return 'Wrong email or password. Please try again.'
-  if (msg.includes('Email not confirmed')) return 'Please check your email and confirm your account first.'
-  if (msg.includes('User already registered')) return 'An account with this email already exists. Try logging in instead.'
-  if (msg.includes('Password should be at least')) return 'Password must be at least 8 characters.'
-  return 'Something went wrong. Please try again.'
-}
 
 function getPasswordStrength(pw) {
   if (!pw || pw.length < 8) return 'weak'
@@ -21,10 +15,10 @@ function getPasswordStrength(pw) {
 export default function Auth() {
   const [searchParams] = useSearchParams()
   const { language } = useLanguage()
+  const lang = t[language]
   const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { language } = useLanguage()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resetSent, setResetSent] = useState(false)
@@ -32,6 +26,14 @@ export default function Auth() {
   const cooldownRef = useRef(null)
   const [signupSuccess, setSignupSuccess] = useState(false)
   const posthog = usePostHog()
+
+  function translateError(msg) {
+    if (msg.includes('Invalid login credentials')) return lang.wrongCredentials
+    if (msg.includes('Email not confirmed')) return lang.emailNotConfirmed
+    if (msg.includes('User already registered')) return lang.userAlreadyExists
+    if (msg.includes('Password should be at least')) return lang.passwordTooShort
+    return lang.authError
+  }
 
   useEffect(() => { document.title = 'Sign in · Finku' }, [])
   useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }, [])
@@ -83,7 +85,7 @@ export default function Auth() {
       }
     } else {
       if (password.length < 8) {
-        setError('Password must be at least 8 characters.')
+        setError(lang.passwordTooShort)
         setLoading(false)
         return
       }
@@ -110,7 +112,7 @@ export default function Auth() {
 
   const passwordStrength = mode === 'signup' && password ? getPasswordStrength(password) : null
   const strengthColor = { weak: '#e07070', medium: '#f0a040', strong: '#c8f03a' }
-  const strengthLabel = { weak: 'Weak', medium: 'Medium', strong: 'Strong' }
+  const strengthLabel = { weak: lang.passwordWeak, medium: lang.passwordMedium, strong: lang.passwordStrong }
   const strengthBars = { weak: 1, medium: 2, strong: 3 }
 
   return (
@@ -243,32 +245,32 @@ export default function Auth() {
       <div className="auth-page">
         <div style={{ width: '100%', maxWidth: 400 }}>
           <div className="auth-logo">Finku</div>
-          <p className="auth-tagline">Your freelance finances, simplified.</p>
+          <p className="auth-tagline">{lang.appTagline}</p>
 
           <div className="auth-card">
             {mode === 'reset' ? (
               <>
-                <h2>Reset your password</h2>
+                <h2>{lang.resetPassword}</h2>
                 {resetSent ? (
                   <>
                     <div className="auth-success">
-                      Check your email — we've sent a password reset link to <strong>{email}</strong>.
+                      {lang.resetSentPre} <strong>{email}</strong>.
                     </div>
                     <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(240,237,228,0.35)', marginTop: '1rem' }}>
                       {resetCooldown > 0
-                        ? `Resend in ${resetCooldown}s`
-                        : <button className="auth-switch-btn" onClick={handleResend} style={{ fontSize: 12 }} disabled={loading}>Resend email</button>
+                        ? lang.resendIn(resetCooldown)
+                        : <button className="auth-switch-btn" onClick={handleResend} style={{ fontSize: 12 }} disabled={loading}>{lang.resendEmail}</button>
                       }
                     </p>
                     <p className="auth-switch">
-                      <button className="auth-switch-btn" onClick={() => switchMode('login')}>← Back to login</button>
+                      <button className="auth-switch-btn" onClick={() => switchMode('login')}>{lang.backToLogin}</button>
                     </p>
                   </>
                 ) : (
                   <>
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div>
-                        <label className="label">Email address</label>
+                        <label className="label">{lang.email}</label>
                         <input
                           className="input-field"
                           type="email"
@@ -282,11 +284,11 @@ export default function Auth() {
                       </div>
                       {error && <div className="auth-error">{error}</div>}
                       <button className="btn-primary" type="submit" disabled={loading || resetCooldown > 0} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
-                        {loading ? 'Sending…' : resetCooldown > 0 ? `Resend in ${resetCooldown}s` : 'Send reset link'}
+                        {loading ? lang.sending : resetCooldown > 0 ? lang.resendIn(resetCooldown) : lang.sendResetLink}
                       </button>
                     </form>
                     <p className="auth-switch">
-                      <button className="auth-switch-btn" onClick={() => switchMode('login')}>← Back to login</button>
+                      <button className="auth-switch-btn" onClick={() => switchMode('login')}>{lang.backToLogin}</button>
                     </p>
                   </>
                 )}
@@ -303,42 +305,42 @@ export default function Auth() {
                   </svg>
                 </div>
                 <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 28, fontWeight: 400, color: '#f0ede4', marginBottom: '0.75rem', letterSpacing: '-0.3px' }}>
-                  Check your email
+                  {lang.checkEmail}
                 </h2>
                 <p style={{ fontSize: 14, color: 'rgba(240,237,228,0.55)', lineHeight: 1.65, marginBottom: '0.6rem' }}>
-                  We sent a confirmation link to <strong style={{ color: '#f0ede4' }}>{email}</strong>. Click it to activate your account.
+                  {lang.emailSentPre} <strong style={{ color: '#f0ede4' }}>{email}</strong>. {lang.emailSentSuf}
                 </p>
                 <p style={{ fontSize: 12, color: 'rgba(240,237,228,0.3)', marginBottom: '1.5rem' }}>
-                  Can't find it? Check your spam folder.
+                  {lang.spamMsg}
                 </p>
                 <button
                   className="btn-primary"
                   onClick={() => switchMode('login')}
                   style={{ width: '100%', justifyContent: 'center', background: '#c8f03a', color: '#0e0e0c' }}
                 >
-                  ← Back to login
+                  {lang.backToLogin}
                 </button>
               </div>
             ) : (
               <>
-                <h2>{mode === 'login' ? 'Log in to your account' : 'Create your account'}</h2>
+                <h2>{mode === 'login' ? lang.loginTitle : lang.signupTitle}</h2>
 
                 <button type="button" className="google-btn" onClick={handleGoogleSignIn}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
                     <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"/>
                   </svg>
-                  Continue with Google
+                  {lang.continueWithGoogle}
                 </button>
 
                 <div className="auth-divider">
                   <div className="auth-divider-line" />
-                  <span className="auth-divider-text">or</span>
+                  <span className="auth-divider-text">{lang.or}</span>
                   <div className="auth-divider-line" />
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div>
-                    <label className="label">Email address</label>
+                    <label className="label">{lang.email}</label>
                     <input
                       className="input-field"
                       type="email"
@@ -350,7 +352,7 @@ export default function Auth() {
                     />
                   </div>
                   <div>
-                    <label className="label">Password</label>
+                    <label className="label">{lang.password}</label>
                     <input
                       className="input-field"
                       type="password"
@@ -362,7 +364,7 @@ export default function Auth() {
                     />
                     {mode === 'login' && (
                       <button type="button" className="auth-forgot" onClick={() => switchMode('reset')}>
-                        Forgot password?
+                        {lang.forgotPassword}
                       </button>
                     )}
                     {passwordStrength && (
@@ -382,17 +384,17 @@ export default function Auth() {
                   {error && <div className="auth-error">{error}</div>}
 
                   <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
-                    {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
+                    {loading ? lang.pleaseWait : mode === 'login' ? lang.login : lang.signup}
                   </button>
                 </form>
 
                 <p className="auth-switch">
-                  {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+                  {mode === 'login' ? lang.noAccount : lang.hasAccount}{' '}
                   <button
                     className="auth-switch-btn"
                     onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
                   >
-                    {mode === 'login' ? 'Sign up' : 'Log in'}
+                    {mode === 'login' ? lang.signup : lang.login}
                   </button>
                 </p>
               </>

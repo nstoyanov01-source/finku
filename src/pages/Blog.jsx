@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLanguage } from '../lib/LanguageContext'
+import { t } from '../i18n/translations'
 import LanguageToggle from '../components/LanguageToggle'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -7,6 +8,8 @@ import { blogPosts } from '../data/blogPosts'
 
 export default function Blog() {
   const navigate = useNavigate()
+  const { language } = useLanguage()
+  const lang = t[language]
   const isBg = language === 'bg'
   const [session, setSession] = useState(null)
 
@@ -90,14 +93,14 @@ export default function Blog() {
           <div className="blog-nav-right">
             {session ? (
               <>
-                <button className="blog-nav-ghost" onClick={() => navigate('/profile')}>Profile</button>
-                <button className="blog-nav-ghost" onClick={async () => { await supabase.auth.signOut(); navigate('/') }}>Log out</button>
+                <button className="blog-nav-ghost" onClick={() => navigate('/profile')}>{lang.navProfile}</button>
+                <button className="blog-nav-ghost" onClick={async () => { await supabase.auth.signOut(); navigate('/') }}>{lang.logout}</button>
               </>
             ) : (
               <>
-                <button className="blog-nav-ghost" onClick={() => navigate('/auth')}>Log in</button>
+                <button className="blog-nav-ghost" onClick={() => navigate('/auth')}>{lang.login}</button>
                 <LanguageToggle />
-            <button className="blog-nav-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+                <button className="blog-nav-cta" onClick={() => navigate('/auth?mode=signup')}>{lang.navCreateFree}</button>
               </>
             )}
           </div>

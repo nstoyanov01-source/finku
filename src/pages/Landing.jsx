@@ -2,26 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLanguage } from '../lib/LanguageContext'
+import { t } from '../i18n/translations'
 import LanguageToggle from '../components/LanguageToggle'
-
-const faqs = [
-  {
-    q: 'Is Finku really free?',
-    a: "Yes — completely free during beta. No credit card, no hidden trial. We'll give plenty of notice before anything changes.",
-  },
-  {
-    q: 'How is the tax estimate calculated?',
-    a: "Based on Bulgarian tax law for self-employed individuals: 75% of your gross income is taxable, then 15% income tax applies, plus fixed monthly insurance contributions. It's an estimate — always consult an accountant for your official declaration.",
-  },
-  {
-    q: 'Is my financial data safe?',
-    a: 'Your data is stored encrypted in EU-based servers (Ireland). Nobody else can access your entries — not even us. You can delete your account and all data at any time.',
-  },
-  {
-    q: 'Is this for VAT-registered businesses?',
-    a: 'Not yet. Finku is currently built for the self-employed who are not VAT registered. VAT tracking is on the roadmap.',
-  },
-]
 
 function fmt(n) {
   return Math.round(n).toLocaleString('en-US')
@@ -47,50 +29,19 @@ export default function Landing() {
   const [calcIncome, setCalcIncome] = useState('')
   const [calcForm, setCalcForm] = useState('svobodna')
 
+  const { language } = useLanguage()
+  const lang = t[language]
+
   const currentMonth = new Date().getMonth() + 1
   const earned = parseFloat(calcIncome) || 0
   const res = calcEstimate(earned, calcForm)
 
-  const lx = language === 'bg' ? {
-    calcTitle: 'Колко дължиш?',
-    calcSub: 'Въведи приходите си за тази година — виж прогнозата мигновено. Без регистрация.',
-    placeholder: 'Приход досега в 2026 (€)',
-    inputHelper: 'Общият ти приход от началото на годината',
-    earned: 'Приход досега',
-    taxable: 'Облагаем доход',
-    incomeTax: 'Данък (15%)',
-    insurance: 'Осигуровки',
-    totalOwed: 'Общо задължение досега',
-    projected: 'Прогноза за годината',
-    ctaCalc: 'Проследи автоматично, безплатно →',
-    forms: { svobodna: 'Свободна професия', ET: 'ЕТ', tracking: 'Само проследяване' },
-    taxmanTitle: 'Знай колко дължиш',
-    withoutFinku: 'Без Finku',
-    withFinku: 'С Finku',
-    withoutLines: ['Изненадващи сметки накрая', 'Никаква представа предварително', 'Паника всеки април'],
-    withLines: ['Жива прогноза за данъци', 'Приходи и разходи проследени', 'Без изненади в края на годината'],
-  } : {
-    calcTitle: 'How much do you owe?',
-    calcSub: 'Enter your income so far this year — see your estimate instantly. No signup needed.',
-    placeholder: 'Earned so far in 2026 (€)',
-    inputHelper: 'Your total income this year to date',
-    earned: 'Your income so far',
-    taxable: 'Taxable income',
-    incomeTax: 'Income tax (15%)',
-    insurance: 'Insurance',
-    totalOwed: 'Total owed so far',
-    projected: 'Projected annual income',
-    ctaCalc: 'Track this automatically, free →',
-    forms: { svobodna: 'Freelancer', ET: 'Sole trader', tracking: 'Just tracking' },
-    taxmanTitle: 'Finally know what you owe',
-    withoutFinku: 'Without Finku',
-    withFinku: 'With Finku',
-    withoutLines: ["Surprise bills at year-end", "No idea what's coming", "Panic every April"],
-    withLines: ['Live tax estimate, always', 'Income & expenses tracked', 'No surprises at year-end'],
-  }
-
-  const { language } = useLanguage()
-  const taxAuth = language === 'bg' ? 'НАП' : 'NRA'
+  const faqs = [
+    { q: lang.faq1Q, a: lang.faq1A },
+    { q: lang.faq2Q, a: lang.faq2A },
+    { q: lang.faq3Q, a: lang.faq3A },
+    { q: lang.faq4Q, a: lang.faq4A },
+  ]
 
   useEffect(() => { document.title = 'Finku — Know what you owe, always' }, [])
 
@@ -316,8 +267,8 @@ export default function Landing() {
           <div className="nav-logo">Finku</div>
           <div className="nav-right">
             <LanguageToggle />
-            <button className="btn-ghost" onClick={() => navigate('/auth')}>Log in</button>
-            <button className="btn-cta" onClick={() => navigate('/auth?mode=signup')}>Create free account</button>
+            <button className="btn-ghost" onClick={() => navigate('/auth')}>{lang.login}</button>
+            <button className="btn-cta" onClick={() => navigate('/auth?mode=signup')}>{lang.navCreateFree}</button>
           </div>
         </nav>
 
@@ -416,14 +367,14 @@ export default function Landing() {
                   borderRadius: 8, padding: 12, fontSize: 12, fontWeight: 700,
                   fontFamily: 'DM Sans, sans-serif', cursor: 'default',
                 }}>
-                  {language === 'bg' ? '+ Добави приход' : '+ Add income'}
+                  {lang.addIncome}
                 </button>
                 <button style={{
                   flex: 1, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)',
                   border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 12, fontSize: 12,
                   fontFamily: 'DM Sans, sans-serif', cursor: 'default',
                 }}>
-                  {language === 'bg' ? '+ Добави разход' : '+ Add expense'}
+                  {lang.addExpense}
                 </button>
               </div>
             </div>
@@ -433,10 +384,10 @@ export default function Landing() {
         {/* Interactive Tax Calculator */}
         <section className="calc-section reveal">
           <div className="calc-card">
-            <h2 className="calc-title">{lx.calcTitle}</h2>
-            <p className="calc-sub">{lx.calcSub}</p>
+            <h2 className="calc-title">{lang.calcTitle}</h2>
+            <p className="calc-sub">{lang.calcSub}</p>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(240,237,228,0.6)', marginBottom: '0.4rem' }}>
-              {lx.placeholder}
+              {lang.calcPlaceholder}
             </label>
             <input
               className="calc-input"
@@ -447,13 +398,13 @@ export default function Landing() {
               onChange={e => setCalcIncome(e.target.value)}
             />
             <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.3)', marginTop: '-0.5rem', marginBottom: '1.25rem' }}>
-              {lx.inputHelper}
+              {lang.calcHelper}
             </div>
             <div className="calc-toggles">
               {[
-                { key: 'svobodna', label: lx.forms.svobodna },
-                { key: 'ET', label: lx.forms.ET },
-                { key: 'tracking', label: lx.forms.tracking },
+                { key: 'svobodna', label: lang.calcFormFreelancer },
+                { key: 'ET', label: lang.calcFormET },
+                { key: 'tracking', label: lang.calcFormTracking },
               ].map(f => (
                 <button
                   key={f.key}
@@ -468,34 +419,34 @@ export default function Landing() {
                 {calcForm === 'tracking' ? (
                   <>
                     <div className="calc-row">
-                      <span className="calc-row-label">{lx.earned}</span>
+                      <span className="calc-row-label">{lang.calcEarned}</span>
                       <span className="calc-row-val">{fmt(res.earned)} €</span>
                     </div>
                     <div className="calc-total-row">
-                      <span className="calc-total-label">{lx.projected}</span>
+                      <span className="calc-total-label">{lang.calcProjected}</span>
                       <span className="calc-total-val">{fmt(res.projected)} €</span>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="calc-row">
-                      <span className="calc-row-label">{lx.earned}</span>
+                      <span className="calc-row-label">{lang.calcEarned}</span>
                       <span className="calc-row-val">{fmt(res.earned)} €</span>
                     </div>
                     <div className="calc-row">
-                      <span className="calc-row-label">{lx.taxable}</span>
+                      <span className="calc-row-label">{lang.calcTaxable}</span>
                       <span className="calc-row-val">{fmt(res.taxable)} €</span>
                     </div>
                     <div className="calc-row">
-                      <span className="calc-row-label">{lx.incomeTax}</span>
+                      <span className="calc-row-label">{lang.calcIncomeTax}</span>
                       <span className="calc-row-val">{fmt(res.incomeTax)} €</span>
                     </div>
                     <div className="calc-row">
-                      <span className="calc-row-label">{lx.insurance}</span>
+                      <span className="calc-row-label">{lang.calcInsurance}</span>
                       <span className="calc-row-val">~{fmt(res.insurance)} €</span>
                     </div>
                     <div className="calc-total-row">
-                      <span className="calc-total-label">{lx.totalOwed}</span>
+                      <span className="calc-total-label">{lang.calcTotalOwed}</span>
                       <span className="calc-total-val">~{fmt(res.total)} €</span>
                     </div>
                   </>
@@ -504,7 +455,7 @@ export default function Landing() {
                   className="btn-primary-lg"
                   onClick={() => navigate('/auth?mode=signup')}
                   style={{ marginTop: '1rem', width: '100%' }}
-                >{lx.ctaCalc}</button>
+                >{lang.calcCta}</button>
               </div>
             )}
           </div>
@@ -512,21 +463,21 @@ export default function Landing() {
 
         {/* Features */}
         <section className="features">
-          <p className="section-label reveal">What Finku does</p>
+          <p className="section-label reveal">{lang.featuresLabel}</p>
           <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>
-            Everything you actually need
+            {lang.featuresTitle}
           </h2>
           <div className="features-grid">
             {[
               {
                 icon: '↑↓', iconClass: 'icon-green',
-                title: 'Income & expense tracking',
-                desc: 'Log payments and business expenses as they happen. Add a client, amount, and date — or import directly from your Revolut CSV.',
+                title: lang.feature1Title,
+                desc: lang.feature1Desc,
               },
               {
                 icon: '€', iconClass: 'icon-amber',
-                title: 'Live tax estimate',
-                desc: 'Based on your actual income, Finku calculates your income tax and insurance contributions in real time. No surprises.',
+                title: lang.feature2Title,
+                desc: lang.feature2Desc,
               },
               {
                 icon: (
@@ -537,8 +488,8 @@ export default function Landing() {
                     <line x1="16" y1="17" x2="8" y2="17"/>
                   </svg>
                 ), iconClass: 'icon-amber',
-                title: 'Invoice generator',
-                desc: 'Create professional EUR invoices to send to your clients in seconds. Auto-numbered, downloadable as PDF, income tracked automatically.',
+                title: lang.feature3Title,
+                desc: lang.feature3Desc,
               },
             ].map((f, i) => (
               <div key={i} className="feature-card reveal" style={{ transitionDelay: `${i * 0.07}s` }}>
@@ -549,7 +500,7 @@ export default function Landing() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: '1.75rem', flexWrap: 'wrap', marginTop: '1.25rem', paddingLeft: 2 }}>
-            {['✓ Revolut CSV import', '✓ English & Bulgarian', '✓ EU data storage'].map(item => (
+            {[lang.featurePill1, lang.featurePill2, lang.featurePill3].map(item => (
               <span key={item} style={{ fontSize: 13, color: 'rgba(240,237,228,0.35)' }}>{item}</span>
             ))}
           </div>
@@ -560,30 +511,30 @@ export default function Landing() {
           <div className="proof-grid">
             <div>
               <div className="proof-number">€0</div>
-              <div className="proof-label">to get started</div>
+              <div className="proof-label">{lang.proofFree}</div>
             </div>
             <div>
               <div className="proof-number">30s</div>
-              <div className="proof-label">to set up</div>
+              <div className="proof-label">{lang.proofSetup}</div>
             </div>
             <div>
               <div className="proof-number">5 min</div>
-              <div className="proof-label">of tracking per month, that's it</div>
+              <div className="proof-label">{lang.proofTracking}</div>
             </div>
           </div>
         </section>
 
         {/* How it works */}
         <section className="how-section">
-          <p className="section-label reveal">How it works</p>
+          <p className="section-label reveal">{lang.howLabel}</p>
           <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>
-            Up and running in three steps
+            {lang.howTitle}
           </h2>
           <div className="how-grid">
             {[
-              { n: '01', title: 'Sign up free', desc: 'Create your account in 30 seconds. No credit card, no setup fees, no catch.' },
-              { n: '02', title: 'Log your income', desc: 'Add payments as they come in, or import directly from a Revolut CSV export. Takes seconds per entry.' },
-              { n: '03', title: 'See what you owe', desc: 'Your live tax estimate updates automatically as you go. Check it anytime — no year-end surprises.' },
+              { n: '01', title: lang.how1Title, desc: lang.how1Desc },
+              { n: '02', title: lang.how2Title, desc: lang.how2Desc },
+              { n: '03', title: lang.how3Title, desc: lang.how3Desc },
             ].map((s, i) => (
               <div key={i} className="how-step reveal" style={{ transitionDelay: `${i * 0.1}s` }}>
                 <div className="how-number">{s.n}</div>
@@ -596,8 +547,8 @@ export default function Landing() {
 
         {/* FAQ */}
         <section className="faq-section">
-          <p className="section-label reveal">FAQ</p>
-          <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>Common questions</h2>
+          <p className="section-label reveal">{lang.faqLabel}</p>
+          <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>{lang.faqTitle}</h2>
           <div className="faq-list reveal" style={{ transitionDelay: '0.15s' }}>
             {faqs.map((item, i) => (
               <div key={i} className="faq-item">
@@ -613,13 +564,13 @@ export default function Landing() {
 
         {/* Taxman Animation */}
         <section className="taxman-section">
-          <p className="section-label reveal">Why it matters</p>
-          <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>{lx.taxmanTitle}</h2>
+          <p className="section-label reveal">{lang.whyLabel}</p>
+          <h2 className="section-title reveal" style={{ transitionDelay: '0.1s' }}>{lang.taxmanTitle}</h2>
           <div className="taxman-panels reveal" style={{ transitionDelay: '0.15s' }}>
 
             {/* Left: Without Finku */}
             <div className="taxman-panel">
-              <div className="taxman-panel-title">{lx.withoutFinku}</div>
+              <div className="taxman-panel-title">{lang.withoutFinku}</div>
               <div className="taxman-svg-area">
                 <svg viewBox="0 0 260 130" style={{ width: '100%', height: '100%' }} aria-hidden="true">
                   {/* Panicking freelancer */}
@@ -640,32 +591,25 @@ export default function Landing() {
 
                   {/* Taxman chasing */}
                   <g style={{ animation: 'chase 2s ease-in-out infinite' }}>
-                    {/* Body with € on chest */}
                     <rect x="170" y="56" width="30" height="40" fill="#c0392b" rx="4"/>
                     <text x="185" y="80" textAnchor="middle" fill="rgba(255,255,255,0.55)" fontSize="15" fontWeight="700" fontFamily="DM Sans, sans-serif">€</text>
-                    {/* Head — no label */}
                     <circle cx="185" cy="46" r="14" fill="#c0392b"/>
-                    {/* Angry eyes */}
                     <circle cx="181" cy="47" r="2" fill="#7f0000"/>
                     <circle cx="189" cy="47" r="2" fill="#7f0000"/>
-                    {/* Arm holding document */}
                     <line x1="170" y1="67" x2="150" y2="60" stroke="#c0392b" strokeWidth="3.5" strokeLinecap="round"/>
-                    {/* Document: white rect + TAX title + content lines */}
                     <rect x="112" y="48" width="40" height="28" fill="#f0ede4" rx="3"/>
                     <text x="132" y="61" textAnchor="middle" fill="#0e0e0c" fontSize="8" fontWeight="700" fontFamily="DM Sans, sans-serif">TAX</text>
                     <line x1="117" y1="66" x2="147" y2="66" stroke="rgba(0,0,0,0.18)" strokeWidth="1.2"/>
                     <line x1="117" y1="70" x2="143" y2="70" stroke="rgba(0,0,0,0.12)" strokeWidth="1.2"/>
                     <line x1="117" y1="73" x2="138" y2="73" stroke="rgba(0,0,0,0.1)" strokeWidth="1.2"/>
-                    {/* Other arm */}
                     <line x1="200" y1="67" x2="212" y2="60" stroke="#c0392b" strokeWidth="3.5" strokeLinecap="round"/>
-                    {/* Running legs */}
                     <line x1="178" y1="96" x2="168" y2="114" stroke="#c0392b" strokeWidth="3.5" strokeLinecap="round"/>
                     <line x1="192" y1="96" x2="202" y2="114" stroke="#c0392b" strokeWidth="3.5" strokeLinecap="round"/>
                   </g>
                 </svg>
               </div>
               <div className="taxman-lines">
-                {lx.withoutLines.map((line, i) => (
+                {lang.withoutLines.map((line, i) => (
                   <div key={i} className="taxman-line">✗ {line}</div>
                 ))}
               </div>
@@ -674,7 +618,7 @@ export default function Landing() {
 
             {/* Right: With Finku */}
             <div className="taxman-panel">
-              <div className="taxman-panel-title">{lx.withFinku}</div>
+              <div className="taxman-panel-title">{lang.withFinku}</div>
               <div className="taxman-svg-area">
                 <svg viewBox="0 0 260 130" style={{ width: '100%', height: '100%' }} aria-hidden="true">
                   {/* Calm floating freelancer */}
@@ -693,10 +637,8 @@ export default function Landing() {
                   {/* Mini phone */}
                   <rect x="138" y="20" width="58" height="94" fill="#161614" rx="10" stroke="#2a2a28" strokeWidth="2"/>
                   <rect x="155" y="20" width="24" height="9" fill="#2a2a28" rx="0 0 5px 5px"/>
-                  {/* Mini tax banner inside phone */}
                   <rect x="142" y="34" width="50" height="18" fill="rgba(200,240,58,0.08)" rx="4" stroke="rgba(200,240,58,0.2)" strokeWidth="0.5"/>
                   <text x="167" y="46" textAnchor="middle" fill="#c8f03a" fontSize="7" fontFamily="DM Sans, sans-serif">~1,842 €</text>
-                  {/* Mini KPI cards */}
                   <rect x="142" y="56" width="23" height="16" fill="rgba(240,237,228,0.05)" rx="3"/>
                   <rect x="169" y="56" width="23" height="16" fill="rgba(240,237,228,0.05)" rx="3"/>
                   {/* Pulsing checkmark */}
@@ -707,7 +649,7 @@ export default function Landing() {
                 </svg>
               </div>
               <div className="taxman-lines">
-                {lx.withLines.map((line, i) => (
+                {lang.withLines.map((line, i) => (
                   <div key={i} className="taxman-line-bright">✓ {line}</div>
                 ))}
               </div>
@@ -718,10 +660,10 @@ export default function Landing() {
 
         {/* CTA */}
         <section className="cta-section reveal">
-          <h2 className="cta-title">Start knowing your numbers.</h2>
-          <p className="cta-sub">Free to use. No credit card. Takes 30 seconds.</p>
+          <h2 className="cta-title">{lang.ctaTitle}</h2>
+          <p className="cta-sub">{lang.ctaSub}</p>
           <button className="btn-primary-lg" onClick={() => navigate('/auth?mode=signup')}>
-            Create your account
+            {lang.ctaBtn}
           </button>
         </section>
 
@@ -730,12 +672,12 @@ export default function Landing() {
             <div className="footer-logo">Finku</div>
             <span className="footer-note">© 2026</span>
           </div>
-          <div className="footer-note">Tax estimates are approximate and do not constitute tax advice.</div>
+          <div className="footer-note">{lang.footerDisclaimer}</div>
           <div className="footer-links">
-            <Link to="/blog" className="footer-link">Blog</Link>
-            <Link to="/how-to-pay" className="footer-link">How to pay</Link>
-            <Link to="/privacy" className="footer-link">Privacy Policy</Link>
-            <Link to="/terms" className="footer-link">Terms</Link>
+            <Link to="/blog" className="footer-link">{lang.footerBlog}</Link>
+            <Link to="/how-to-pay" className="footer-link">{lang.footerHowToPay}</Link>
+            <Link to="/privacy" className="footer-link">{lang.footerPrivacy}</Link>
+            <Link to="/terms" className="footer-link">{lang.footerTerms}</Link>
           </div>
         </footer>
       </div>
