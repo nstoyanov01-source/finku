@@ -7,6 +7,7 @@ import './styles/global.css'
 
 import posthog from 'posthog-js'
 import { PostHogProvider } from '@posthog/react'
+import { LanguageProvider } from './lib/LanguageContext.jsx'
 
 posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
   api_host: import.meta.env.VITE_POSTHOG_HOST,
