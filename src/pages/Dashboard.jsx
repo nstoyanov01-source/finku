@@ -250,9 +250,14 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
           animation: shimmer 1.5s infinite linear;
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .dash-nav { padding: 0 1rem; }
-          .dash-content { padding: 1.5rem 1rem 4rem; }
+          .dash-content { padding: 1.5rem 1rem 5rem; }
+          .dash-nav-btn { display: none; }
+          .dash-hide-mobile { display: none !important; }
+        }
+        @media (max-width: 390px) {
+          .dash-nav-logout { display: none; }
         }
       `}</style>
 
@@ -269,20 +274,9 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
-            <select
-              className="dash-lang-select"
-              value={language}
-              onChange={async e => {
-                const l = e.target.value
-                await supabase.from('profiles').update({ language: l }).eq('id', userId)
-                onLanguageChange(l)
-              }}
-            >
-              <option value="en">EN</option>
-              <option value="bg">БГ</option>
-            </select>
             <button
               onClick={() => navigate('/invoice/new')}
+              className="dash-hide-mobile"
               style={{
                 background: 'rgba(200,240,58,0.1)', border: '1px solid rgba(200,240,58,0.2)',
                 color: '#c8f03a', fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 500,
@@ -291,8 +285,12 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             >
               + {language === 'bg' ? 'Нова фактура' : 'New invoice'}
             </button>
-            <button className="dash-nav-btn" onClick={() => navigate('/blog')}>Blog</button>
-            <button className="dash-nav-btn" onClick={() => navigate('/profile')}>Profile</button>
+            <button className="dash-nav-btn" onClick={() => navigate('/blog')}>
+              {language === 'bg' ? 'Блог' : 'Blog'}
+            </button>
+            <button className="dash-nav-btn" onClick={() => navigate('/profile')}>
+              {language === 'bg' ? 'Профил' : 'Profile'}
+            </button>
             <LanguageToggle />
             <button className="dash-nav-logout" onClick={handleLogout}>{lang.logout}</button>
           </div>
@@ -455,6 +453,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     background: '#c8f03a', color: '#0e0e0c', border: 'none',
                     borderRadius: 10, padding: '14px', fontFamily: 'DM Sans, sans-serif',
                     fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s',
+                    minHeight: 44,
                   }}
                   onMouseOver={e => { e.currentTarget.style.opacity = '0.88' }}
                   onMouseOut={e => { e.currentTarget.style.opacity = '1' }}
@@ -468,6 +467,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '14px',
                     fontFamily: 'DM Sans, sans-serif', fontSize: 14, fontWeight: 500,
                     cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
+                    minHeight: 44,
                   }}
                   onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
                   onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}

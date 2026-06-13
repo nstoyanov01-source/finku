@@ -202,6 +202,7 @@ export const t = {
     footerDisclaimer: 'Tax estimates are approximate and do not constitute tax advice.',
     footerBlog: 'Blog',
     footerHowToPay: 'How to pay',
+    footerNapTracking: 'What NRA sees',
     footerPrivacy: 'Privacy Policy',
     footerTerms: 'Terms',
 
@@ -447,6 +448,7 @@ export const t = {
     footerDisclaimer: 'Данъчните прогнози са ориентировъчни и не представляват данъчен съвет.',
     footerBlog: 'Блог',
     footerHowToPay: 'Как да платиш',
+    footerNapTracking: 'Какво вижда НАП',
     footerPrivacy: 'Политика за поверителност',
     footerTerms: 'Общи условия',
 

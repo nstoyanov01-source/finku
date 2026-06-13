@@ -92,6 +92,10 @@ export default function IncomeList({ session }) {
           .list-nav { padding: 0 1rem; }
           .list-content { padding: 1.5rem 1rem 4rem; }
         }
+        @media (max-width: 768px) {
+          .list-filters { flex-direction: column !important; }
+          .list-filters input, .list-filters select { width: 100% !important; min-width: 0 !important; min-height: 44px; }
+        }
       `}</style>
 
       <div className="list-page">
@@ -114,7 +118,7 @@ export default function IncomeList({ session }) {
           )}
 
           {/* Filters */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+          <div className="list-filters" style={{ display: 'flex', gap: 10, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
             <input
               className="list-search"
               style={{ flex: 1, minWidth: 160 }}

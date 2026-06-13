@@ -676,6 +676,7 @@ export default function Landing() {
           <div className="footer-links">
             <Link to="/blog" className="footer-link">{lang.footerBlog}</Link>
             <Link to="/how-to-pay" className="footer-link">{lang.footerHowToPay}</Link>
+            <Link to="/nap-sledene" className="footer-link">{lang.footerNapTracking}</Link>
             <Link to="/privacy" className="footer-link">{lang.footerPrivacy}</Link>
             <Link to="/terms" className="footer-link">{lang.footerTerms}</Link>
           </div>

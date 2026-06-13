@@ -73,3 +73,18 @@ input, select { font-family: inherit; }
   margin-bottom: 5px;
   display: block;
 }
+
+/* ── Mobile globals ──────────────────────────────────── */
+@media (max-width: 768px) {
+  /* 44px minimum touch targets on all interactive elements */
+  button, .btn-primary, .btn-secondary, a.btn-primary, a.btn-secondary {
+    min-height: 44px;
+  }
+  /* Reduce outer padding to 16px */
+  .auth-page { padding: 1rem; }
+}
+
+@media (max-width: 390px) {
+  /* Prevent any horizontal overflow on very small phones */
+  body { overflow-x: hidden; }
+}

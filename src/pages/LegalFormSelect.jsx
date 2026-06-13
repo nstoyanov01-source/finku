@@ -80,7 +80,7 @@ export default function LegalFormSelect({ userId, onComplete }) {
               type="text"
               value={firstName}
               onChange={e => setFirstName(e.target.value)}
-              placeholder={isBg ? 'Никола' : 'Nikola'}
+              placeholder={isBg ? 'Иван' : 'Ivan'}
               maxLength={100}
               autoComplete="given-name"
               autoFocus
