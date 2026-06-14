@@ -240,6 +240,26 @@ export const t = {
     pwResetSentMsg: 'Password reset email sent. Check your inbox.',
     profileNav: 'Profile',
 
+    // Dashboard
+    navNewInvoice: 'New invoice',
+    emptyStateTitle: "Let's see what you owe",
+    emptyStateDesc: 'Add your first income entry and watch your tax estimate appear instantly.',
+    addFirstIncome: 'Add your first income',
+    trackingModeLabel: 'Tracking mode',
+    noTaxEstimate: 'No tax estimate',
+    monthlyInsurance: 'Monthly insurance',
+    insuranceFixedDesc: 'Fixed every month · Pension + health',
+    howToPayLink: 'How to pay? →',
+    deductionsCover: 'Your deductions cover it this quarter',
+
+    // Landing — hero
+    heroCtaBtn: 'See what you owe →',
+    heroBadge: 'FREE · NO CARD · 30 SECONDS',
+
+    // Landing — NAP marquee
+    napMarqueeTitle: 'These platforms report your income directly to НАП',
+    napMarqueeLink: 'See what НАП sees →',
+
     // Blog / shared nav
     navProfile: 'Profile',
     navLogout: 'Log out',
@@ -485,6 +505,26 @@ export const t = {
     changePassword: 'Промени паролата',
     pwResetSentMsg: 'Имейл за нулиране изпратен. Провери входящата кутия.',
     profileNav: 'Профил',
+
+    // Dashboard
+    navNewInvoice: 'Нова фактура',
+    emptyStateTitle: 'Нека видим колко дължиш',
+    emptyStateDesc: 'Добави първия си приход и виж данъчната прогноза мигновено.',
+    addFirstIncome: 'Добави първия си приход',
+    trackingModeLabel: 'Режим на проследяване',
+    noTaxEstimate: 'Без данъчна прогноза',
+    monthlyInsurance: 'Месечни осигуровки',
+    insuranceFixedDesc: 'Фиксирано всеки месец · Пенсия + здраве',
+    howToPayLink: 'Как да платиш? →',
+    deductionsCover: 'Приспаданията покриват това тримесечие',
+
+    // Landing — hero
+    heroCtaBtn: 'Виж колко дължиш →',
+    heroBadge: 'FREE · БЕЗ КАРТА · 30 СЕКУНДИ',
+
+    // Landing — NAP marquee
+    napMarqueeTitle: 'Тези платформи докладват доходите ти директно на НАП',
+    napMarqueeLink: 'Какво вижда НАП →',
 
     // Blog / shared nav
     navProfile: 'Профил',

@@ -219,8 +219,8 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
         }
         .dash-nav-logo { font-family: 'Instrument Serif', serif; font-size: 20px; color: #f0ede4; letter-spacing: -0.3px; }
         .dash-nav-right { display: flex; align-items: center; gap: 8px; }
-        .dash-lang-select { font-size: 13px; border: 1px solid rgba(240,237,228,0.12); border-radius: 8px; padding: 5px 10px; background: rgba(240,237,228,0.06); color: rgba(240,237,228,0.7); cursor: pointer; outline: none; font-family: 'DM Sans', sans-serif; color-scheme: dark; }
-        .dash-lang-select:hover { border-color: rgba(240,237,228,0.25); }
+        .dash-year-select { font-size: 13px; border: 1px solid rgba(240,237,228,0.12); border-radius: 8px; padding: 5px 10px; background: rgba(240,237,228,0.06); color: rgba(240,237,228,0.7); cursor: pointer; outline: none; font-family: 'DM Sans', sans-serif; color-scheme: dark; }
+        .dash-year-select:hover { border-color: rgba(240,237,228,0.25); }
         .dash-nav-btn { background: none; border: none; color: rgba(240,237,228,0.6); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: color 0.15s, background 0.15s; }
         .dash-nav-btn:hover { color: #f0ede4; background: rgba(240,237,228,0.06); }
         .dash-nav-logout { background: none; border: 1px solid rgba(240,237,228,0.12); color: rgba(240,237,228,0.6); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 6px 14px; border-radius: 8px; transition: color 0.15s, border-color 0.15s, background 0.15s; }
@@ -266,7 +266,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
           <div className="dash-nav-logo">Finku</div>
           <div className="dash-nav-right">
             <select
-              className="dash-lang-select"
+              className="dash-year-select"
               value={selectedYear}
               onChange={e => setSelectedYear(Number(e.target.value))}
             >
@@ -283,13 +283,13 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 padding: '6px 14px', borderRadius: 8, cursor: 'pointer', transition: 'background 0.15s',
               }}
             >
-              + {language === 'bg' ? 'Нова фактура' : 'New invoice'}
+              + {lang.navNewInvoice}
             </button>
             <button className="dash-nav-btn" onClick={() => navigate('/blog')}>
-              {language === 'bg' ? 'Блог' : 'Blog'}
+              {lang.footerBlog}
             </button>
             <button className="dash-nav-btn" onClick={() => navigate('/profile')}>
-              {language === 'bg' ? 'Профил' : 'Profile'}
+              {lang.navProfile}
             </button>
             <LanguageToggle />
             <button className="dash-nav-logout" onClick={handleLogout}>{lang.logout}</button>
@@ -308,19 +308,17 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
               fontSize: 'clamp(32px, 5vw, 52px)',
               color: '#f0ede4', letterSpacing: '-0.5px', marginBottom: '1rem', lineHeight: 1.1,
             }}>
-              {language === 'bg' ? 'Нека видим колко дължиш' : "Let's see what you owe"}
+              {lang.emptyStateTitle}
             </h1>
             <p style={{ fontSize: 16, color: 'rgba(240,237,228,0.5)', marginBottom: '2rem', maxWidth: 400, lineHeight: 1.65 }}>
-              {language === 'bg'
-                ? 'Добави първия си приход и виж данъчната прогноза мигновено.'
-                : 'Add your first income entry and watch your tax estimate appear instantly.'}
+              {lang.emptyStateDesc}
             </p>
             <button
               className="btn-primary"
               onClick={() => setModal({ type: 'income' })}
               style={{ width: '100%', maxWidth: 360, justifyContent: 'center', fontSize: 15, padding: '14px 24px', marginBottom: '1.25rem' }}
             >
-              + {language === 'bg' ? 'Добави първия си приход' : 'Add your first income'}
+              + {lang.addFirstIncome}
             </button>
             <div style={{ fontSize: 14, color: 'rgba(240,237,228,0.35)' }}>
               <CSVImport userId={userId} language={language} onImported={() => fetchData(selectedYear)} />
@@ -350,10 +348,10 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 borderRadius: 16, padding: '22px 24px', marginBottom: 12,
               }}>
                 <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.35)', textTransform: 'uppercase', letterSpacing: 0.7, fontWeight: 500, marginBottom: 8 }}>
-                  {language === 'bg' ? 'Режим на проследяване' : 'Tracking mode'}
+                  {lang.trackingModeLabel}
                 </div>
                 <div style={{ fontSize: 16, color: 'rgba(240,237,228,0.5)', lineHeight: 1.5 }}>
-                  {language === 'bg' ? 'Без данъчна прогноза' : 'No tax estimate'}
+                  {lang.noTaxEstimate}
                 </div>
               </div>
             ) : tax && (
@@ -374,7 +372,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 </div>
                 <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginBottom: 16 }}>
                   {tax.incomeTax === 0
-                    ? (language === 'bg' ? 'Приспаданията покриват това тримесечие' : 'Your deductions cover it this quarter')
+                    ? lang.deductionsCover
                     : (language === 'bg'
                         ? `Основа: ~${fmt(tax.taxableBase)} € × ${tax.rate}%`
                         : `Base: ~${fmt(tax.taxableBase)} € × ${tax.rate}%`)}
@@ -396,7 +394,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     onMouseOver={e => { e.currentTarget.style.color = 'rgba(0,0,0,0.75)' }}
                     onMouseOut={e => { e.currentTarget.style.color = 'rgba(0,0,0,0.5)' }}
                   >
-                    {language === 'bg' ? 'Как да платиш? →' : 'How to pay? →'}
+                    {lang.howToPayLink}
                   </Link>
                 </div>
               </div>
@@ -414,7 +412,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 500 }}>
-                      {language === 'bg' ? 'Месечни осигуровки' : 'Monthly insurance'}
+                      {lang.monthlyInsurance}
                     </span>
                     <Tooltip text={tooltips.insurance} />
                   </div>
@@ -422,7 +420,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     {Math.round(insuranceRate)} €
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
-                    {language === 'bg' ? 'Фиксирано всеки месец · Пенсия + здраве' : 'Fixed every month · Pension + health'}
+                    {lang.insuranceFixedDesc}
                   </div>
                 </div>
                 <div style={{
@@ -458,7 +456,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   onMouseOver={e => { e.currentTarget.style.opacity = '0.88' }}
                   onMouseOut={e => { e.currentTarget.style.opacity = '1' }}
                 >
-                  + {language === 'bg' ? 'Добави приход' : 'Add income'}
+                  {lang.addIncome}
                 </button>
                 <button
                   onClick={() => setModal({ type: 'expense' })}
@@ -472,7 +470,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
                   onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
                 >
-                  + {language === 'bg' ? 'Добави разход' : 'Add expense'}
+                  {lang.addExpense}
                 </button>
               </div>
             )}
@@ -481,15 +479,11 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <span className="section-label">
-                    {language === 'bg' ? 'Последни приходи' : 'Recent income'}
-                  </span>
+                  <span className="section-label">{lang.recentIncome}</span>
                   {!loading && <Tooltip text={tooltips.recentIncome} />}
                 </span>
                 {!loading && income.length > 0 && (
-                  <Link to="/income" className="view-all-link">
-                    {language === 'bg' ? 'Всички →' : 'View all →'}
-                  </Link>
+                  <Link to="/income" className="view-all-link">{lang.viewAll}</Link>
                 )}
               </div>
 
@@ -529,13 +523,9 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             {/* 6. RECENT EXPENSES */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span className="section-label">
-                  {language === 'bg' ? 'Последни разходи' : 'Recent expenses'}
-                </span>
+                <span className="section-label">{lang.recentExpenses}</span>
                 {!loading && expenses.length > 0 && (
-                  <Link to="/expenses" className="view-all-link">
-                    {language === 'bg' ? 'Всички →' : 'View all →'}
-                  </Link>
+                  <Link to="/expenses" className="view-all-link">{lang.viewAll}</Link>
                 )}
               </div>
 
@@ -591,7 +581,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             setDrawer(null)
             if (type === 'income') setIncome(prev => prev.filter(e => e.id !== entry.id))
             else setExpenses(prev => prev.filter(e => e.id !== entry.id))
-            showToast('Entry deleted', 'success')
+            showToast(lang.entryDeleted, 'success')
           }}
         />
       )}
@@ -604,21 +594,19 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
           onClose={() => setModal(null)}
           onSaved={(savedEntry) => {
             if (modal.entry) {
-              // Edit: replace entry in state
               if (modal.type === 'income') {
                 setIncome(prev => prev.map(e => e.id === savedEntry.id ? savedEntry : e))
               } else {
                 setExpenses(prev => prev.map(e => e.id === savedEntry.id ? savedEntry : e))
               }
-              showToast('Entry updated ✓', 'success')
+              showToast(lang.entryUpdated, 'success')
             } else {
-              // Add: prepend and re-sort by date desc
               if (modal.type === 'income') {
                 setIncome(prev => [savedEntry, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)))
               } else {
                 setExpenses(prev => [savedEntry, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)))
               }
-              showToast(modal.type === 'income' ? 'Income added ✓' : 'Expense added ✓', 'success')
+              showToast(modal.type === 'income' ? lang.incomeAdded : lang.expenseAdded, 'success')
             }
           }}
           onDeleted={() => {
@@ -626,7 +614,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             const type = modal.type
             if (type === 'income') setIncome(prev => prev.filter(e => e.id !== id))
             else setExpenses(prev => prev.filter(e => e.id !== id))
-            showToast('Entry deleted', 'success')
+            showToast(lang.entryDeleted, 'success')
           }}
           initialData={modal.entry}
           entryId={modal.entry?.id}

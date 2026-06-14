@@ -21,18 +21,29 @@ function calcEstimate(totalEarned, legalForm) {
   return { earned: Math.round(totalEarned), taxable: Math.round(taxable), incomeTax, insurance, total: incomeTax + insurance }
 }
 
+const NAP_PLATFORMS = [
+  { name: 'Revolut',   slug: 'revolut',       bg: '#191C1F', badge: 'DAC7' },
+  { name: 'Airbnb',    slug: 'airbnb',        bg: '#FF5A5F', badge: 'DAC7' },
+  { name: 'Upwork',    slug: 'upwork',        bg: '#14A800', badge: 'DAC7' },
+  { name: 'Fiverr',    slug: 'fiverr',        bg: '#1DBF73', badge: 'DAC7' },
+  { name: 'YouTube',   slug: 'youtube',       bg: '#CC0000', badge: 'DAC7' },
+  { name: 'AdSense',   slug: 'googleadsense', bg: '#4285F4', badge: 'DAC7' },
+  { name: 'Binance',   slug: 'binance',       bg: '#1B1F27', badge: 'DAC8' },
+  { name: 'PayPal',    slug: 'paypal',        bg: '#003087', badge: 'DAC7' },
+  { name: 'OnlyFans',  slug: 'onlyfans',      bg: '#009BD5', badge: 'DAC7' },
+  { name: 'Stripe',    slug: 'stripe',        bg: '#635BFF', badge: 'DAC7' },
+]
+
 export default function Landing() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
   const [openFaq, setOpenFaq] = useState(null)
-  const [returning, setReturning] = useState(false)
   const [calcIncome, setCalcIncome] = useState('')
   const [calcForm, setCalcForm] = useState('svobodna')
 
   const { language } = useLanguage()
   const lang = t[language]
 
-  const currentMonth = new Date().getMonth() + 1
   const earned = parseFloat(calcIncome) || 0
   const res = calcEstimate(earned, calcForm)
 
@@ -50,7 +61,6 @@ export default function Landing() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) { navigate('/dashboard'); return }
 
-      if (localStorage.getItem('finku_visited')) setReturning(true)
       localStorage.setItem('finku_visited', 'true')
 
       const generateNonce = async () => {
@@ -242,6 +252,34 @@ export default function Landing() {
         .footer-link { font-size: 13px; color: rgba(240,237,228,0.45); text-decoration: none; transition: color 0.2s; }
         .footer-link:hover { color: rgba(240,237,228,0.75); }
 
+        /* NAP MARQUEE */
+        @keyframes marquee-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .marquee-section { padding: 2.5rem 0; border-top: 0.5px solid rgba(240,237,228,0.06); border-bottom: 0.5px solid rgba(240,237,228,0.06); }
+        .marquee-outer {
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 100px, #000 calc(100% - 100px), transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 100px, #000 calc(100% - 100px), transparent 100%);
+        }
+        .marquee-track {
+          display: flex; gap: 10px; padding: 6px 10px;
+          width: max-content;
+          animation: marquee-scroll 32s linear infinite;
+          will-change: transform;
+        }
+        .marquee-track:hover { animation-play-state: paused; }
+        .marquee-card {
+          display: inline-flex; align-items: center; gap: 9px;
+          padding: 9px 15px; border-radius: 12px; flex-shrink: 0;
+          border: 0.5px solid rgba(255,255,255,0.1);
+          transition: transform 0.15s;
+        }
+        .marquee-card:hover { transform: translateY(-2px); }
+        .dac-auto  { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 4px; background: #e07070; color: #fff; }
+        .dac-manual { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 4px; background: #ffb400; color: #0e0e0c; }
+
         /* RESPONSIVE */
         @media (max-width: 700px) {
           nav { padding: 1.25rem 1.5rem; }
@@ -294,11 +332,11 @@ export default function Landing() {
               </h1>
               <div className="reveal" style={{ transitionDelay: '0.15s' }}>
                 <button className="btn-primary-lg" onClick={() => navigate('/auth?mode=signup')}>
-                  {language === 'bg' ? 'Виж колко дължиш →' : 'See what you owe →'}
+                  {lang.heroCtaBtn}
                 </button>
               </div>
               <div className="reveal" style={{ transitionDelay: '0.2s', marginTop: 14, fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', letterSpacing: '1.5px' }}>
-                {language === 'bg' ? 'FREE · БЕЗ КАРТА · 30 СЕКУНДИ' : 'FREE · NO CARD · 30 SECONDS'}
+                {lang.heroBadge}
               </div>
             </div>
 
@@ -378,6 +416,40 @@ export default function Landing() {
                 </button>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* NAP Platform Marquee */}
+        <section className="marquee-section">
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(240,237,228,0.3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', padding: '0 1rem' }}>
+            {lang.napMarqueeTitle}
+          </p>
+          <div className="marquee-outer">
+            <div className="marquee-track">
+              {[...NAP_PLATFORMS, ...NAP_PLATFORMS].map((p, i) => (
+                <div key={i} className="marquee-card" style={{ background: p.bg }}>
+                  <img
+                    src={`https://cdn.jsdelivr.net/npm/simple-icons@9/icons/${p.slug}.svg`}
+                    alt={p.name}
+                    width="17"
+                    height="17"
+                    style={{ filter: 'brightness(0) invert(1)', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: 13, fontWeight: 500, color: '#fff', whiteSpace: 'nowrap' }}>{p.name}</span>
+                  <span className={p.badge === 'DAC7' ? 'dac-auto' : 'dac-manual'}>{p.badge}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+            <Link
+              to="/nap-sledene"
+              style={{ fontSize: 13, color: 'rgba(240,237,228,0.35)', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseOver={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.7)' }}
+              onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.35)' }}
+            >
+              {lang.napMarqueeLink}
+            </Link>
           </div>
         </section>
 
