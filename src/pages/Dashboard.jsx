@@ -630,32 +630,6 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
               )
             })()}
 
-            {/* ACCOUNTANT CTA */}
-            {!loading && totalIncome > 0 && (
-              <div style={{ background: '#161614', border: '0.5px solid rgba(240,237,228,0.07)', borderRadius: 16, padding: '18px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#f0ede4', marginBottom: 4 }}>
-                    {language === 'bg' ? 'Нужен ти е счетоводител?' : 'Need an accountant?'}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)', lineHeight: 1.5 }}>
-                    {language === 'bg'
-                      ? 'Finku дава прогноза — счетоводителят прави официалното.'
-                      : 'Finku estimates — an accountant makes it official.'}
-                  </div>
-                </div>
-                <a
-                  href="https://nap.bg"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontSize: 12, color: 'rgba(240,237,228,0.5)', textDecoration: 'none', border: '1px solid rgba(240,237,228,0.12)', borderRadius: 8, padding: '7px 14px', whiteSpace: 'nowrap', transition: 'color 0.15s' }}
-                  onMouseOver={e => { e.currentTarget.style.color = '#f0ede4' }}
-                  onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.5)' }}
-                >
-                  {language === 'bg' ? 'НАП →' : 'NRA →'}
-                </a>
-              </div>
-            )}
-
             {!loading && (
               <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.15)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
                 {lang.disclaimer}
