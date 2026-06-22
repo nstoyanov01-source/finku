@@ -54,7 +54,7 @@ const profileLabels = {
   },
 }
 
-export default function Profile({ session }) {
+export default function Profile({ session, onLanguageChange }) {
   const { language } = useLanguage()
   const lang = t[language]
   const pl = profileLabels[language] || profileLabels.en
@@ -348,6 +348,13 @@ export default function Profile({ session }) {
           display: flex;
           gap: 1.25rem;
           margin-top: 1.5rem;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+          .profile-nav { padding: 0 1rem; }
+          .profile-content { padding: 4.5rem 1rem 3rem; }
+          .profile-back-btn { font-size: 12px; padding: 6px 8px; }
         }
 
         .profile-legal-link {
@@ -419,7 +426,7 @@ export default function Profile({ session }) {
         <nav className="profile-nav">
           <Link to="/dashboard" className="profile-nav-logo">Finku</Link>
           <LanguageToggle />
-            <button className="profile-back-btn" onClick={() => navigate('/dashboard')}>
+          <button className="profile-back-btn" onClick={() => navigate('/dashboard')}>
             {pl.back}
           </button>
         </nav>

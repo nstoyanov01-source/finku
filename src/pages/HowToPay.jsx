@@ -158,8 +158,7 @@ export default function HowToPay() {
           <div className="htp-footer">
             <div className="htp-footer-logo">Finku</div>
             <div className="htp-footer-links">
-              <Link to="/blog" className="htp-footer-link">Blog</Link>
-              <Link to="/changelog" className="htp-footer-link">Changelog</Link>
+              <Link to="/blog" className="htp-footer-link">{lang.footerBlog}</Link>
               <Link to="/privacy" className="htp-footer-link">{isBg ? 'Поверителност' : 'Privacy'}</Link>
               <Link to="/terms" className="htp-footer-link">{isBg ? 'Условия' : 'Terms'}</Link>
             </div>

@@ -297,6 +297,10 @@ export default function Landing() {
         @media (max-width: 640px) {
           nav .nav-right .btn-ghost { display: none; }
           .calc-card { padding: 1.5rem; }
+          .marquee-outer {
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 32px, #000 calc(100% - 32px), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 32px, #000 calc(100% - 32px), transparent 100%);
+          }
         }
       `}</style>
 
