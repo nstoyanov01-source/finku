@@ -76,8 +76,8 @@ input, select { font-family: inherit; }
 
 /* ── Mobile globals ──────────────────────────────────── */
 @media (max-width: 768px) {
-  /* 44px minimum touch targets on all interactive elements */
-  button, .btn-primary, .btn-secondary, a.btn-primary, a.btn-secondary {
+  /* 44px minimum touch targets, excluding icon/close buttons */
+  button:not(.btn-icon), .btn-primary, .btn-secondary, a.btn-primary, a.btn-secondary {
     min-height: 44px;
   }
   /* Reduce outer padding to 16px */

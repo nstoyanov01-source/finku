@@ -89,7 +89,7 @@ export default function EntryDrawer({ entry, type, language, onClose, onEdit, on
         {/* Header */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '1.25rem 1.5rem',
+          padding: 'calc(1.25rem + env(safe-area-inset-top, 0px)) 1.5rem 1.25rem',
           borderBottom: '0.5px solid rgba(240,237,228,0.07)',
           flexShrink: 0,
         }}>
@@ -100,6 +100,7 @@ export default function EntryDrawer({ entry, type, language, onClose, onEdit, on
             </span>
           </div>
           <button
+            className="btn-icon"
             onClick={close}
             style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'rgba(240,237,228,0.4)', lineHeight: 1, padding: '2px 4px' }}
           >×</button>
@@ -148,7 +149,7 @@ export default function EntryDrawer({ entry, type, language, onClose, onEdit, on
 
         {/* Actions */}
         <div style={{
-          padding: '1rem 1.5rem',
+          padding: '1rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0px))',
           borderTop: '0.5px solid rgba(240,237,228,0.07)',
           flexShrink: 0,
         }}>

@@ -102,6 +102,7 @@ function Tooltip({ text }) {
     <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', marginLeft: 5 }}>
       <button
         type="button"
+        className="btn-icon"
         style={{
           width: 16, height: 16, borderRadius: '50%',
           border: '1px solid rgba(240,237,228,0.2)',
@@ -117,15 +118,7 @@ function Tooltip({ text }) {
         aria-label="More info"
       >?</button>
       {show && (
-        <div style={{
-          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#1e1e1c', border: '1px solid rgba(240,237,228,0.1)',
-          borderRadius: 8, padding: '10px 14px', fontSize: 12,
-          width: 260, zIndex: 100, color: 'rgba(240,237,228,0.7)',
-          lineHeight: 1.55, whiteSpace: 'normal', pointerEvents: 'none',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-        }}>
+        <div className="tooltip-popup">
           {text}
         </div>
       )}
@@ -149,6 +142,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
   const [drawer, setDrawer] = useState(null)
   const { toasts, showToast } = useToast()
   const [firstName, setFirstName] = useState('')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     document.title = 'Dashboard · Finku'
@@ -233,12 +227,41 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
 
         .entry-row { display: flex; align-items: center; justify-content: space-between; background: #161614; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; cursor: pointer; transition: background 0.12s; }
         .entry-row:hover { background: #1c1c1a; }
-        .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+        .entry-desc { font-size: 13px; font-weight: 500; color: #f0ede4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .entry-date { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px; }
 
         .section-label { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.7px; }
         .view-all-link { font-size: 12px; color: rgba(240,237,228,0.3); text-decoration: none; transition: color 0.15s; }
         .view-all-link:hover { color: rgba(240,237,228,0.65); }
+
+        .tooltip-popup {
+          position: absolute; bottom: calc(100% + 6px); left: 50%;
+          transform: translateX(-50%);
+          background: #1e1e1c; border: 1px solid rgba(240,237,228,0.1);
+          border-radius: 8px; padding: 10px 14px; font-size: 12px;
+          width: 260px; z-index: 100; color: rgba(240,237,228,0.7);
+          line-height: 1.55; white-space: normal; pointer-events: none;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .dash-mobile-menu-btn {
+          display: none; background: none; border: 1px solid rgba(240,237,228,0.12);
+          color: rgba(240,237,228,0.6); border-radius: 8px; padding: 5px 7px;
+          cursor: pointer; align-items: center; justify-content: center;
+        }
+        .dash-mobile-menu {
+          position: absolute; top: calc(100% + 8px); right: 0;
+          background: #1e1e1c; border: 1px solid rgba(240,237,228,0.1);
+          border-radius: 12px; padding: 6px; min-width: 160px; z-index: 200;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .dash-mobile-menu button {
+          display: block; width: 100%; text-align: left; background: none;
+          border: none; color: rgba(240,237,228,0.7); font-family: 'DM Sans', sans-serif;
+          font-size: 14px; padding: 9px 12px; border-radius: 8px; cursor: pointer;
+          transition: background 0.12s; min-height: unset;
+        }
+        .dash-mobile-menu button:hover { background: rgba(240,237,228,0.06); }
+        .dash-mobile-menu-logout { color: rgba(220,90,90,0.85) !important; }
 
         @keyframes shimmer {
           0%   { background-position: -800px 0 }
@@ -255,6 +278,8 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
           .dash-content { padding: 1.5rem 1rem 5rem; }
           .dash-nav-btn { display: none; }
           .dash-hide-mobile { display: none !important; }
+          .dash-mobile-menu-btn { display: inline-flex; }
+          .tooltip-popup { left: 0; transform: none; width: min(260px, calc(100vw - 2rem)); }
         }
         @media (max-width: 390px) {
           .dash-nav-logout { display: none; }
@@ -293,6 +318,30 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             </button>
             <LanguageToggle />
             <button className="dash-nav-logout" onClick={handleLogout}>{lang.logout}</button>
+            <div style={{ position: 'relative' }}>
+              <button
+                className="dash-mobile-menu-btn btn-icon"
+                onClick={e => { e.stopPropagation(); setMobileMenuOpen(o => !o) }}
+                aria-label="Menu"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <line x1="3" y1="12" x2="21" y2="12"/>
+                  <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+              </button>
+              {mobileMenuOpen && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 199 }} onClick={() => setMobileMenuOpen(false)} />
+                  <div className="dash-mobile-menu">
+                    <button onClick={() => { navigate('/profile'); setMobileMenuOpen(false) }}>{lang.navProfile}</button>
+                    <button onClick={() => { navigate('/blog'); setMobileMenuOpen(false) }}>{lang.footerBlog}</button>
+                    <button onClick={() => { navigate('/invoice/new'); setMobileMenuOpen(false) }}>+ {lang.navNewInvoice}</button>
+                    <button className="dash-mobile-menu-logout" onClick={handleLogout}>{lang.logout}</button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </nav>
 
@@ -367,7 +416,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     <Tooltip text={tooltips.incomeTax} />
                   </span>
                 </div>
-                <div style={{ fontSize: 52, fontWeight: 600, color: '#0e0e0c', letterSpacing: -1.5, lineHeight: 1, marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
+                <div style={{ fontSize: 'clamp(28px, 7vw, 52px)', fontWeight: 600, color: '#0e0e0c', letterSpacing: -1.5, lineHeight: 1, marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
                   ~{fmt(tax.incomeTax)} €
                 </div>
                 <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginBottom: 16 }}>

@@ -111,15 +111,20 @@ export default function AddEntryModal({ type, userId, language, onClose, onSaved
   const overlay = {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 100, padding: '1rem',
+    zIndex: 100, padding: '1rem', overflowY: 'auto',
   }
 
   return (
-    <div style={overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay" style={overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <style>{`
+        @media (max-width: 640px) {
+          .modal-overlay { align-items: flex-start !important; padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+        }
+      `}</style>
       <div className="card" style={{ width: '100%', maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600 }}>{title}</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'rgba(240,237,228,0.4)', lineHeight: 1 }}>×</button>
+          <button className="btn-icon" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'rgba(240,237,228,0.4)', lineHeight: 1 }}>×</button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
