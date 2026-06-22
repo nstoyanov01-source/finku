@@ -13,7 +13,7 @@ function fmtInvoiceDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-export default function NewInvoice({ session }) {
+export default function NewInvoice({ session, onLanguageChange }) {
   const { language } = useLanguage()
   const navigate = useNavigate()
   const userId = session.user.id

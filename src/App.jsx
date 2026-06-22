@@ -19,6 +19,7 @@ import HowToPay from './pages/HowToPay'
 import NapTracking from './pages/NapTracking'
 import IncomeList from './pages/IncomeList'
 import ExpenseList from './pages/ExpenseList'
+import InvoiceList from './pages/InvoiceList'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -176,6 +177,11 @@ export default function App() {
         !session ? <Navigate to="/auth" /> :
         !onboarded ? <Navigate to="/language" /> :
         <ExpenseList session={session} language={language || 'en'} />
+      } />
+      <Route path="/invoices" element={
+        !session ? <Navigate to="/auth" /> :
+        !onboarded ? <Navigate to="/language" /> :
+        <InvoiceList session={session} />
       } />
       <Route path="/blog" element={<Blog language={language || 'en'} />} />
       <Route path="/blog/:slug" element={<BlogPost language={language || 'en'} />} />

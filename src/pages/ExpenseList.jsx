@@ -71,6 +71,21 @@ export default function ExpenseList({ session }) {
 
   const total = expenses.reduce((s, e) => s + Number(e.amount), 0)
 
+  function downloadCSV() {
+    const rows = [['Date', 'Description', 'Category', 'Amount (€)']]
+    filtered.forEach(e => rows.push([e.date, `"${e.description.replace(/"/g, '""')}"`, e.category || 'other', e.amount]))
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const a = document.createElement('a')
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
+    a.download = `finku-expenses-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+  }
+
+  const categoryTotals = Object.fromEntries(
+    Object.keys(lang.categories).map(k => [k, expenses.filter(e => e.category === k).reduce((s, e) => s + Number(e.amount), 0)])
+  )
+  const maxCat = Math.max(...Object.values(categoryTotals), 1)
+
   const sel = { fontSize: 13, border: '1px solid rgba(240,237,228,0.12)', borderRadius: 8, padding: '8px 12px', background: 'rgba(240,237,228,0.06)', color: 'rgba(240,237,228,0.7)', outline: 'none', fontFamily: 'DM Sans, sans-serif', colorScheme: 'dark', cursor: 'pointer' }
 
   return (
@@ -112,8 +127,43 @@ export default function ExpenseList({ session }) {
             {lang.allExpenses}
           </h1>
           {!loading && (
-            <div style={{ fontSize: 28, fontWeight: 600, color: '#e07070', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums', marginBottom: '1.75rem' }}>
-              −{fmt(total)} {lang.currency}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: '1.75rem', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 28, fontWeight: 600, color: '#e07070', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
+                −{fmt(total)} {lang.currency}
+              </div>
+              {filtered.length > 0 && (
+                <button
+                  onClick={downloadCSV}
+                  style={{ background: 'none', border: '1px solid rgba(240,237,228,0.12)', color: 'rgba(240,237,228,0.5)', fontFamily: 'DM Sans, sans-serif', fontSize: 12, padding: '5px 12px', borderRadius: 8, cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s' }}
+                  onMouseOver={e => { e.currentTarget.style.color = '#f0ede4'; e.currentTarget.style.borderColor = 'rgba(240,237,228,0.25)' }}
+                  onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.5)'; e.currentTarget.style.borderColor = 'rgba(240,237,228,0.12)' }}
+                >
+                  ↓ CSV
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Category chart */}
+          {!loading && total > 0 && (
+            <div style={{ background: '#161614', border: '1px solid rgba(240,237,228,0.07)', borderRadius: 12, padding: '1.25rem', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.8px', color: 'rgba(240,237,228,0.3)', marginBottom: '0.9rem' }}>
+                {language === 'bg' ? 'По категории' : 'By category'}
+              </div>
+              {Object.entries(categoryTotals)
+                .filter(([, v]) => v > 0)
+                .sort(([, a], [, b]) => b - a)
+                .map(([key, val]) => (
+                  <div key={key} style={{ marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(240,237,228,0.55)', marginBottom: 3 }}>
+                      <span>{lang.categories[key]}</span>
+                      <span style={{ color: '#e07070', fontVariantNumeric: 'tabular-nums' }}>−{fmt(val)} €</span>
+                    </div>
+                    <div style={{ height: 4, background: 'rgba(240,237,228,0.06)', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${(val / maxCat) * 100}%`, background: '#e07070', borderRadius: 4, opacity: 0.65 }} />
+                    </div>
+                  </div>
+                ))}
             </div>
           )}
 

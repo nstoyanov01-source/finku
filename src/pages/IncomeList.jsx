@@ -71,6 +71,16 @@ export default function IncomeList({ session }) {
 
   const total = income.reduce((s, e) => s + Number(e.amount), 0)
 
+  function downloadCSV() {
+    const rows = [['Date', 'Description', 'Client', 'Amount (€)']]
+    filtered.forEach(e => rows.push([e.date, `"${e.description.replace(/"/g, '""')}"`, `"${(e.client || '').replace(/"/g, '""')}"`, e.amount]))
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const a = document.createElement('a')
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
+    a.download = `finku-income-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+  }
+
   const sel = { fontSize: 13, border: '1px solid rgba(240,237,228,0.12)', borderRadius: 8, padding: '8px 12px', background: 'rgba(240,237,228,0.06)', color: 'rgba(240,237,228,0.7)', outline: 'none', fontFamily: 'DM Sans, sans-serif', colorScheme: 'dark', cursor: 'pointer' }
 
   return (
@@ -112,8 +122,20 @@ export default function IncomeList({ session }) {
             {lang.allIncome}
           </h1>
           {!loading && (
-            <div style={{ fontSize: 28, fontWeight: 600, color: '#c8f03a', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums', marginBottom: '1.75rem' }}>
-              +{fmt(total)} {lang.currency}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: '1.75rem', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 28, fontWeight: 600, color: '#c8f03a', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
+                +{fmt(total)} {lang.currency}
+              </div>
+              {filtered.length > 0 && (
+                <button
+                  onClick={downloadCSV}
+                  style={{ background: 'none', border: '1px solid rgba(240,237,228,0.12)', color: 'rgba(240,237,228,0.5)', fontFamily: 'DM Sans, sans-serif', fontSize: 12, padding: '5px 12px', borderRadius: 8, cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s' }}
+                  onMouseOver={e => { e.currentTarget.style.color = '#f0ede4'; e.currentTarget.style.borderColor = 'rgba(240,237,228,0.25)' }}
+                  onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.5)'; e.currentTarget.style.borderColor = 'rgba(240,237,228,0.12)' }}
+                >
+                  ↓ CSV
+                </button>
+              )}
             </div>
           )}
 

@@ -337,6 +337,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     <button onClick={() => { navigate('/profile'); setMobileMenuOpen(false) }}>{lang.navProfile}</button>
                     <button onClick={() => { navigate('/blog'); setMobileMenuOpen(false) }}>{lang.footerBlog}</button>
                     <button onClick={() => { navigate('/invoice/new'); setMobileMenuOpen(false) }}>+ {lang.navNewInvoice}</button>
+                    <button onClick={() => { navigate('/invoices'); setMobileMenuOpen(false) }}>{language === 'bg' ? 'Фактури' : 'Invoices'}</button>
                     <button className="dash-mobile-menu-logout" onClick={handleLogout}>{lang.logout}</button>
                   </div>
                 </>
@@ -604,6 +605,56 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 ))
               )}
             </div>
+
+            {/* ANNUAL TAX RETURN CARD — shown in Q4 or within 60 days of April 30 */}
+            {!loading && !isTracking && (() => {
+              const today = new Date()
+              const isQ4 = today.getMonth() >= 9
+              const apr30 = new Date(today.getFullYear() + (today.getMonth() >= 4 ? 1 : 0), 3, 30)
+              const daysToApr = Math.ceil((apr30 - today) / 86400000)
+              if (!isQ4 && daysToApr > 60) return null
+              return (
+                <div style={{ background: '#161614', border: '1px solid rgba(200,240,58,0.15)', borderRadius: 16, padding: '18px 20px', marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'rgba(200,240,58,0.5)', marginBottom: 8 }}>
+                    {language === 'bg' ? 'Годишна данъчна декларация' : 'Annual tax return'}
+                  </div>
+                  <div style={{ fontSize: 14, color: 'rgba(240,237,228,0.65)', lineHeight: 1.6, marginBottom: 10 }}>
+                    {language === 'bg'
+                      ? `До 30 април трябва да подадеш годишна данъчна декларация (чл. 50 ЗДДФЛ). Срокът е ${daysToApr} дни.`
+                      : `By April 30 you must file your annual tax return (Art. 50 ZDFL). That's ${daysToApr} days away.`}
+                  </div>
+                  <a href="/how-to-pay" style={{ fontSize: 13, color: '#c8f03a', textDecoration: 'none' }}>
+                    {language === 'bg' ? 'Как да платиш →' : 'How to pay →'}
+                  </a>
+                </div>
+              )
+            })()}
+
+            {/* ACCOUNTANT CTA */}
+            {!loading && totalIncome > 0 && (
+              <div style={{ background: '#161614', border: '0.5px solid rgba(240,237,228,0.07)', borderRadius: 16, padding: '18px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#f0ede4', marginBottom: 4 }}>
+                    {language === 'bg' ? 'Нужен ти е счетоводител?' : 'Need an accountant?'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)', lineHeight: 1.5 }}>
+                    {language === 'bg'
+                      ? 'Finku дава прогноза — счетоводителят прави официалното.'
+                      : 'Finku estimates — an accountant makes it official.'}
+                  </div>
+                </div>
+                <a
+                  href="https://nap.bg"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 12, color: 'rgba(240,237,228,0.5)', textDecoration: 'none', border: '1px solid rgba(240,237,228,0.12)', borderRadius: 8, padding: '7px 14px', whiteSpace: 'nowrap', transition: 'color 0.15s' }}
+                  onMouseOver={e => { e.currentTarget.style.color = '#f0ede4' }}
+                  onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.5)' }}
+                >
+                  {language === 'bg' ? 'НАП →' : 'NRA →'}
+                </a>
+              </div>
+            )}
 
             {!loading && (
               <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.15)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>

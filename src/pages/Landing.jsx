@@ -354,7 +354,15 @@ export default function Landing() {
                 <div style={{ fontSize: 48, fontWeight: 700, color: '#0e0e0c', lineHeight: 1, marginBottom: 10 }}>~321 €</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ background: 'rgba(0,0,0,0.1)', borderRadius: 100, padding: '4px 12px', fontSize: 12, color: '#0e0e0c' }}>
-                    {language === 'bg' ? 'До 31 юли · 51 дни' : 'By July 31 · 51 days'}
+                    {(() => {
+                      const today = new Date()
+                      const y = today.getFullYear()
+                      const deadlines = [new Date(y, 3, 30), new Date(y, 6, 31), new Date(y, 9, 31)]
+                      const next = deadlines.find(d => d > today) || new Date(y + 1, 3, 30)
+                      const days = Math.ceil((next - today) / 86400000)
+                      const label = next.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })
+                      return language === 'bg' ? `До ${label} · ${days} дни` : `By ${label} · ${days} days`
+                    })()}
                   </div>
                   <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}>
                     {language === 'bg' ? 'Как да платя?' : 'How to pay?'}
@@ -377,7 +385,13 @@ export default function Landing() {
                   </div>
                 </div>
                 <div style={{ background: 'rgba(245,158,11,0.15)', border: '0.5px solid rgba(245,158,11,0.3)', color: '#f59e0b', borderRadius: 100, padding: '4px 12px', fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' }}>
-                  {language === 'bg' ? 'До 25 юни' : 'By June 25'}
+                  {(() => {
+                    const today = new Date()
+                    const ins = today.getDate() < 25
+                      ? new Date(today.getFullYear(), today.getMonth(), 25)
+                      : new Date(today.getFullYear(), today.getMonth() + 1, 25)
+                    return ins.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })
+                  })()}
                 </div>
               </div>
 
