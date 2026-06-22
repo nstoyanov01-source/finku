@@ -11,7 +11,9 @@
       "Bash(npm install *)",
       "Bash(node *)",
       "Bash(grep -n \"income.length\\\\|entries-grid\\\\|welcome-card\\\\|\\)} $\\\\|\\)}\\\\s*$\" /Users/nikolastoyanov/Downloads/finku/src/pages/Dashboard.jsx)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "mcp__3d0c3656-1221-4cd6-9f44-40bb8090d9e1__list_projects",
+      "mcp__3d0c3656-1221-4cd6-9f44-40bb8090d9e1__list_deployments"
     ]
   }
 }
