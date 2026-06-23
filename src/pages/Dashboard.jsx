@@ -62,20 +62,18 @@ function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false, m
 
 function nextTaxDeadline() {
   const today = new Date()
-  const m = today.getMonth()
   const y = today.getFullYear()
-  const isQ4 = m >= 9
-
-  if (isQ4) {
-    const annualDecl = new Date(y + 1, 3, 30)
-    const days = Math.ceil((annualDecl - today) / 86400000)
-    return { date: annualDecl, days, isAnnual: true }
-  }
-
+  // Q4 (Oct-Dec) has no advance tax, but Oct 31 is still the Q3 deadline.
+  // So we only enter annual-declaration mode once all quarterly deadlines have passed.
   const quarters = [new Date(y, 3, 30), new Date(y, 6, 31), new Date(y, 9, 31)]
-  const next = quarters.find(d => d > today) || new Date(y + 1, 3, 30)
-  const days = Math.ceil((next - today) / 86400000)
-  return { date: next, days, isAnnual: false }
+  const next = quarters.find(d => d > today)
+  if (next) {
+    const days = Math.ceil((next - today) / 86400000)
+    return { date: next, days, isAnnual: false }
+  }
+  const annualDecl = new Date(y + 1, 3, 30)
+  const days = Math.ceil((annualDecl - today) / 86400000)
+  return { date: annualDecl, days, isAnnual: true }
 }
 
 function nextInsuranceDeadline() {
@@ -656,8 +654,17 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             {/* 3c. PAYMENT CHECKLIST */}
             {!loading && !isTracking && !isPastYear && (
               <div style={{ background: '#161614', border: '0.5px solid rgba(240,237,228,0.07)', borderRadius: 16, padding: '18px 20px', marginBottom: 20 }}>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'rgba(240,237,228,0.25)', fontWeight: 500, marginBottom: 12 }}>
-                  {lang.upcomingPayments}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'rgba(240,237,228,0.25)', fontWeight: 500 }}>
+                    {lang.upcomingPayments}
+                  </div>
+                </div>
+
+                {/* Bulgarian-client caveat */}
+                <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.3)', lineHeight: 1.55, marginBottom: 12, padding: '8px 10px', background: 'rgba(240,237,228,0.03)', borderRadius: 8 }}>
+                  {language === 'bg'
+                    ? 'Ако работиш с български фирми, те удържат и внасят данъка вместо теб — ти само подаваш годишна декларация. Ако работиш с чужди клиенти или физически лица, трябва сам да подадеш декларация по чл. 55 ЗДДФЛ и да внесеш авансовия данък.'
+                    : 'If your clients are Bulgarian companies, they withhold and remit the tax for you — you only file the annual return. If you work with foreign clients or individuals, you must file a чл. 55 declaration yourself and pay the advance tax.'}
                 </div>
 
                 {qData.map(q => {
@@ -670,9 +677,10 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     <div key={q.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '0.5px solid rgba(240,237,228,0.05)' }}>
                       <div>
                         <div style={{ fontSize: 13, color: isPaid ? 'rgba(240,237,228,0.35)' : '#f0ede4', textDecoration: isPaid ? 'line-through' : 'none' }}>
-                          {language === 'bg' ? `${q.label} авансов данък` : `${q.label} advance tax`}
+                          {language === 'bg' ? `${q.label} — декларирай и плати` : `${q.label} — declare & pay`}
                         </div>
                         <div style={{ fontSize: 11, color: isUrgent && !isPaid ? '#ffb400' : 'rgba(240,237,228,0.25)', marginTop: 2 }}>
+                          {language === 'bg' ? 'чл. 55 ЗДДФЛ · ' : 'Art. 55 ЗДДФЛ · '}
                           {q.due.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })}
                           {!isPaid && !isPast && ` · ${daysLeft} ${lang.daysAway}`}
                           {!isPaid && isPast && ` · ${language === 'bg' ? '⚠ просрочено' : '⚠ overdue'}`}
@@ -737,7 +745,16 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   )
                 })()}
 
-                <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(240,237,228,0.2)', lineHeight: 1.5 }}>
+                {/* Penalty callout */}
+                <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(224,112,112,0.05)', borderRadius: 8, borderLeft: '2px solid rgba(224,112,112,0.25)' }}>
+                  <div style={{ fontSize: 11, color: 'rgba(224,112,112,0.6)', lineHeight: 1.55 }}>
+                    {language === 'bg'
+                      ? 'Закъснялата декларация носи глоба до 500 лв. (чл. 80 ЗДДФЛ). Подавай навреме.'
+                      : 'Late filing carries a fine up to 500 лв / ~€255 (Art. 80 ЗДДФЛ). File on time.'}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(240,237,228,0.2)', lineHeight: 1.5 }}>
                   {lang.paymentDisclaimer}
                 </div>
               </div>
@@ -905,31 +922,48 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 </button>
                 {showNapRef && (
                   <div style={{ background: '#161614', border: '0.5px solid rgba(240,237,228,0.08)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '16px' }}>
-                    <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)', marginBottom: 12, lineHeight: 1.55 }}>
+                    <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.5)', lineHeight: 1.65, marginBottom: 14 }}>
                       {language === 'bg'
-                        ? 'Плащанията се правят към НАП по банков път. IBAN-ът варира според офиса, така че провери на сайта на НАП.'
-                        : 'Payments go to НАП by bank transfer. The IBAN varies by office, so check the НАП website.'}
+                        ? 'Декларацията по чл. 55 ЗДДФЛ се подава онлайн в портала на НАП с ПИК или КЕП. Плащането се прави по банков път — IBAN и вид плащане са налични в портала след влизане.'
+                        : 'The чл. 55 declaration is filed online via the НАП portal using ПИК or КЕП. Payment is by bank transfer — IBAN and payment type are shown in your НАП profile after login.'}
                     </div>
                     {[
-                      { code: '111213', label: language === 'bg' ? 'Авансов ДДФЛ' : 'Advance income tax (DDFL)' },
-                      { code: '551111', label: language === 'bg' ? 'ДОО (пенсионно)' : 'Pension insurance (ДОО)' },
-                      { code: '560000', label: language === 'bg' ? 'Здравно осигуряване' : 'Health insurance (ЗО)' },
-                    ].map(({ code, label }) => (
-                      <div key={code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '0.5px solid rgba(240,237,228,0.05)' }}>
-                        <span style={{ fontSize: 13, color: 'rgba(240,237,228,0.6)' }}>{label}</span>
-                        <span style={{ fontSize: 13, fontFamily: 'DM Mono, monospace', color: '#c8f03a', letterSpacing: '0.5px' }}>{code}</span>
+                      {
+                        label: language === 'bg' ? 'Подаване на декларация (чл. 55)' : 'File declaration (чл. 55)',
+                        sub: language === 'bg' ? 'Авансов данък върху дохода от дейността' : 'Advance income tax from self-employment',
+                      },
+                      {
+                        label: language === 'bg' ? 'Осигурителни вноски (ДОО + ЗО)' : 'Insurance contributions (ДОО + ЗО)',
+                        sub: language === 'bg' ? 'Пенсионно и здравно — плащат се отделно от данъка' : 'Pension and health — paid separately from income tax',
+                      },
+                    ].map(({ label, sub }) => (
+                      <div key={label} style={{ padding: '8px 0', borderBottom: '0.5px solid rgba(240,237,228,0.05)' }}>
+                        <div style={{ fontSize: 13, color: 'rgba(240,237,228,0.7)', marginBottom: 2 }}>{label}</div>
+                        <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.3)' }}>{sub}</div>
                       </div>
                     ))}
-                    <a
-                      href="https://nra.bg"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: 'rgba(200,240,58,0.6)', textDecoration: 'none', transition: 'color 0.15s' }}
-                      onMouseOver={e => { e.currentTarget.style.color = '#c8f03a' }}
-                      onMouseOut={e => { e.currentTarget.style.color = 'rgba(200,240,58,0.6)' }}
-                    >
-                      nra.bg →
-                    </a>
+                    <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <a
+                        href="https://inetdec.nra.bg"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 12, color: '#c8f03a', textDecoration: 'none', background: 'rgba(200,240,58,0.08)', border: '1px solid rgba(200,240,58,0.2)', borderRadius: 8, padding: '6px 12px', transition: 'background 0.15s' }}
+                        onMouseOver={e => { e.currentTarget.style.background = 'rgba(200,240,58,0.14)' }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'rgba(200,240,58,0.08)' }}
+                      >
+                        {language === 'bg' ? 'Портал НАП →' : 'НАП portal →'}
+                      </a>
+                      <a
+                        href="https://nra.bg"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)', textDecoration: 'none', background: 'rgba(240,237,228,0.04)', border: '1px solid rgba(240,237,228,0.1)', borderRadius: 8, padding: '6px 12px', transition: 'background 0.15s' }}
+                        onMouseOver={e => { e.currentTarget.style.background = 'rgba(240,237,228,0.08)' }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'rgba(240,237,228,0.04)' }}
+                      >
+                        nra.bg →
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
