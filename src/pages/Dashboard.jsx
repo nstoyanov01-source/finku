@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '../lib/LanguageContext'
 import LanguageToggle from '../components/LanguageToggle'
 import { useNavigate, Link } from 'react-router-dom'
@@ -143,6 +143,22 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
   const { toasts, showToast } = useToast()
   const [firstName, setFirstName] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [setAside, setSetAside] = useState(() => Number(localStorage.getItem('finku_set_aside') || 0))
+  const [editingSetAside, setEditingSetAside] = useState(false)
+  const [setAsideInput, setSetAsideInput] = useState('')
+  const [paidMap, setPaidMap] = useState(() => {
+    const map = {}
+    const y = new Date().getFullYear()
+    ;['q1','q2','q3'].forEach(q => { map[`${q}_${y}`] = localStorage.getItem(`finku_paid_${q}_${y}`) === 'true' })
+    const now = new Date()
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const k = `ins_${d.getFullYear()}_${String(d.getMonth()+1).padStart(2,'0')}`
+      map[k] = localStorage.getItem(`finku_paid_${k}`) === 'true'
+    }
+    return map
+  })
+  const [showNapRef, setShowNapRef] = useState(false)
 
   useEffect(() => {
     document.title = 'Dashboard · Finku'
@@ -151,6 +167,26 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
 
   useEffect(() => { fetchName() }, [])
   useEffect(() => { fetchData(selectedYear) }, [selectedYear])
+
+  const prevTotalRef = useRef(0)
+  useEffect(() => {
+    if (loading || totalIncome <= 0) return
+    const milestones = [1000, 5000, 10000, 25000, 50000, 100000]
+    const hit = milestones.find(m => prevTotalRef.current < m && totalIncome >= m)
+    if (hit) {
+      const isBg = language === 'bg'
+      const msgs = {
+        1000: isBg ? '€1,000 спечелени! Добро начало. 🌱' : '€1,000 earned! Strong start. 🌱',
+        5000: isBg ? '€5,000! Вечеря навън? 🍽' : '€5,000! Treat yourself tonight. 🍽',
+        10000: isBg ? '€10,000! Вече истински фрийлансър. 🎉' : "€10,000! You're officially freelancing. 🎉",
+        25000: isBg ? '€25,000! НАП те обича. 💚' : '€25,000! НАП loves you now. 💚',
+        50000: isBg ? '€50,000! Може би е момент за счетоводител. 😅' : '€50,000! Maybe time for an accountant. 😅',
+        100000: isBg ? '€100K! Легенда. 🏆' : '€100K! Absolute legend. 🏆',
+      }
+      setTimeout(() => showToast(msgs[hit] || `€${hit.toLocaleString()} milestone! 🎉`), 300)
+    }
+    prevTotalRef.current = totalIncome
+  }, [totalIncome, loading])
 
   async function fetchName() {
     const { data } = await supabase.from('profiles').select('first_name').eq('id', userId).single()
@@ -175,6 +211,29 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
     navigate('/')
   }
 
+  function saveSetAside() {
+    const val = Math.max(0, parseFloat(setAsideInput) || 0)
+    setSetAside(val)
+    localStorage.setItem('finku_set_aside', String(val))
+    setEditingSetAside(false)
+  }
+
+  function markPaid(key) {
+    setPaidMap(prev => ({ ...prev, [key]: true }))
+    localStorage.setItem(`finku_paid_${key}`, 'true')
+    const q = key.match(/^(q\d)/)
+    if (q) {
+      const msgs = {
+        q1: language === 'bg' ? 'Q1 платен! НАП е доволен. 💸' : 'Q1 paid! НАП is satisfied. 💸',
+        q2: language === 'bg' ? 'Q2 платен! Заслужена почивка. 🏖' : 'Q2 paid! You earned that break. 🏖',
+        q3: language === 'bg' ? 'Q3 платен! Само годишната остава. 🎯' : 'Q3 paid! Just the annual left. 🎯',
+      }
+      showToast(msgs[q[1]] || lang.markedPaid)
+    } else {
+      showToast(language === 'bg' ? 'Осигуровки платени. Бъдещото ти аз ти благодари. 🧓' : 'Insurance paid. Your future self thanks you. 🧓')
+    }
+  }
+
   const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0)
   const totalExpenses = expenses.reduce((s, r) => s + Number(r.amount), 0)
   const currentMonth = new Date().getMonth() + 1
@@ -189,6 +248,28 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
   const quarter = Math.floor(new Date().getMonth() / 3) + 1
   const insDue = nextInsuranceDeadline()
   const insDays = Math.ceil((insDue - new Date()) / 86400000)
+
+  const projection = !isPastYear && totalIncome > 0 && monthsElapsed > 0
+    ? Math.round((totalIncome / monthsElapsed) * 12)
+    : null
+
+  const totalOwedEst = tax?.total || 0
+  const coverageStatus = totalOwedEst <= 0 ? 'none'
+    : setAside >= totalOwedEst ? 'covered'
+    : setAside >= totalOwedEst * 0.75 ? 'almost'
+    : 'short'
+
+  const insNow = new Date()
+  const insMonthKey = `ins_${insNow.getFullYear()}_${String(insNow.getMonth()+1).padStart(2,'0')}`
+
+  const qData = [
+    { key: `q1_${selectedYear}`, label: 'Q1', due: new Date(selectedYear, 3, 30) },
+    { key: `q2_${selectedYear}`, label: 'Q2', due: new Date(selectedYear, 6, 31) },
+    { key: `q3_${selectedYear}`, label: 'Q3', due: new Date(selectedYear, 9, 31) },
+  ]
+
+  const todayMD = `${insNow.getMonth()}-${insNow.getDate()}`
+  const isDeadlineToday = ['3-30','6-31','9-31'].includes(todayMD)
 
   const tooltips = {
     incomeTax: language === 'bg'
@@ -263,6 +344,8 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
         .dash-mobile-menu button:hover { background: rgba(240,237,228,0.06); }
         .dash-mobile-menu-logout { color: rgba(220,90,90,0.85) !important; }
 
+        @keyframes pulse-red { 0%,100% { opacity:1 } 50% { opacity:0.6 } }
+        .urgent-pay { animation: pulse-red 1.4s ease-in-out infinite; }
         @keyframes shimmer {
           0%   { background-position: -800px 0 }
           100% { background-position: 800px 0 }
@@ -389,6 +472,23 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
               {loading ? <Skeleton height={14} radius={4} style={{ width: 180, marginTop: 6 }} /> : formatCurrentDate(language)}
             </div>
 
+            {/* Deadline today banner */}
+            {isDeadlineToday && !loading && (
+              <div style={{ background: 'rgba(224,112,112,0.1)', border: '1px solid rgba(224,112,112,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: '1rem', fontSize: 13, color: '#e07070', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>⚡</span>
+                <span>{language === 'bg' ? 'Данъчен срок е ДНЕС. Не бъди онзи човек.' : "Tax deadline is TODAY. Don't be that person."}</span>
+              </div>
+            )}
+
+            {/* Income projection */}
+            {projection && !loading && (
+              <div style={{ fontSize: 12, color: 'rgba(200,240,58,0.55)', marginBottom: '1.5rem', letterSpacing: '0.2px' }}>
+                {language === 'bg'
+                  ? `На път за ~€${fmt(projection)} тази година · ${monthsElapsed} ${monthsElapsed === 1 ? 'месец' : 'месеца'} досега`
+                  : `On track for ~€${fmt(projection)} this year · ${monthsElapsed} month${monthsElapsed !== 1 ? 's' : ''} in`}
+              </div>
+            )}
+
             {/* 2. HERO CARD — Income tax */}
             {loading ? (
               <Skeleton height={140} style={{ marginBottom: 12 }} />
@@ -483,6 +583,162 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   {language === 'bg'
                     ? `До ${formatDeadlineDate(insDue, language)} · ${insDays} дни`
                     : `Due ${formatDeadlineDate(insDue, language)} · ${insDays} days`}
+                </div>
+              </div>
+            )}
+
+            {/* 3b. ARE YOU COVERED? */}
+            {!loading && !isTracking && tax && totalOwedEst > 0 && (
+              <div style={{
+                background: '#161614',
+                border: `1px solid ${coverageStatus === 'covered' ? 'rgba(200,240,58,0.2)' : coverageStatus === 'almost' ? 'rgba(255,180,0,0.2)' : 'rgba(224,112,112,0.15)'}`,
+                borderRadius: 16, padding: '18px 20px', marginBottom: 12,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'rgba(240,237,228,0.3)', fontWeight: 500 }}>
+                    {language === 'bg' ? 'Покрито ли е?' : 'Are you covered?'}
+                  </span>
+                  <span style={{
+                    fontSize: 11, fontWeight: 500, borderRadius: 20, padding: '3px 10px',
+                    background: coverageStatus === 'covered' ? 'rgba(200,240,58,0.12)' : coverageStatus === 'almost' ? 'rgba(255,180,0,0.12)' : 'rgba(224,112,112,0.12)',
+                    color: coverageStatus === 'covered' ? '#c8f03a' : coverageStatus === 'almost' ? '#ffb400' : '#e07070',
+                    border: `1px solid ${coverageStatus === 'covered' ? 'rgba(200,240,58,0.3)' : coverageStatus === 'almost' ? 'rgba(255,180,0,0.3)' : 'rgba(224,112,112,0.25)'}`,
+                  }}>
+                    {coverageStatus === 'covered'
+                      ? (language === 'bg' ? '✓ Покрито' : '✓ Covered')
+                      : coverageStatus === 'almost'
+                        ? (language === 'bg' ? '⚠ Почти' : '⚠ Almost there')
+                        : (language === 'bg' ? '✗ Непокрито' : '✗ Not covered')}
+                  </span>
+                </div>
+
+                <div style={{ height: 6, background: 'rgba(240,237,228,0.06)', borderRadius: 6, overflow: 'hidden', marginBottom: 8 }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${Math.min(totalOwedEst > 0 ? (setAside / totalOwedEst) * 100 : 0, 100)}%`,
+                    background: coverageStatus === 'covered' ? '#c8f03a' : coverageStatus === 'almost' ? '#ffb400' : '#e07070',
+                    borderRadius: 6, transition: 'width 0.5s ease',
+                  }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(240,237,228,0.4)', marginBottom: 12 }}>
+                  <span>{language === 'bg' ? 'Заделено' : 'Set aside'}: <strong style={{ color: '#f0ede4' }}>€{fmt(setAside)}</strong></span>
+                  <span>{language === 'bg' ? 'Нужно ~' : 'Need ~'}<strong style={{ color: '#f0ede4' }}>€{fmt(totalOwedEst)}</strong></span>
+                </div>
+
+                {editingSetAside ? (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="number" min="0" placeholder="0"
+                      value={setAsideInput}
+                      onChange={e => setSetAsideInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && saveSetAside()}
+                      autoFocus
+                      style={{ flex: 1, background: 'rgba(240,237,228,0.06)', border: '1px solid rgba(240,237,228,0.15)', borderRadius: 8, padding: '7px 12px', fontSize: 14, color: '#f0ede4', fontFamily: 'DM Sans, sans-serif', outline: 'none' }}
+                    />
+                    <button onClick={saveSetAside} style={{ background: '#c8f03a', color: '#0e0e0c', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                      {language === 'bg' ? 'Запази' : 'Save'}
+                    </button>
+                    <button onClick={() => setEditingSetAside(false)} style={{ background: 'none', border: '1px solid rgba(240,237,228,0.12)', color: 'rgba(240,237,228,0.4)', borderRadius: 8, padding: '7px 10px', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>✕</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setSetAsideInput(String(setAside || '')); setEditingSetAside(true) }}
+                    style={{ background: 'none', border: '1px solid rgba(240,237,228,0.1)', color: 'rgba(240,237,228,0.4)', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', transition: 'color 0.15s, border-color 0.15s' }}
+                    onMouseOver={e => { e.currentTarget.style.color = '#f0ede4'; e.currentTarget.style.borderColor = 'rgba(240,237,228,0.25)' }}
+                    onMouseOut={e => { e.currentTarget.style.color = 'rgba(240,237,228,0.4)'; e.currentTarget.style.borderColor = 'rgba(240,237,228,0.1)' }}
+                  >
+                    ✎ {language === 'bg' ? 'Обнови заделеното' : 'Update set aside'}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 3c. PAYMENT CHECKLIST */}
+            {!loading && !isTracking && !isPastYear && (
+              <div style={{ background: '#161614', border: '0.5px solid rgba(240,237,228,0.07)', borderRadius: 16, padding: '18px 20px', marginBottom: 20 }}>
+                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'rgba(240,237,228,0.25)', fontWeight: 500, marginBottom: 12 }}>
+                  {lang.upcomingPayments}
+                </div>
+
+                {qData.map(q => {
+                  const isPaid = paidMap[q.key]
+                  const today = new Date()
+                  const daysLeft = Math.ceil((q.due - today) / 86400000)
+                  const isPast = q.due < today
+                  const isUrgent = !isPaid && daysLeft >= 0 && daysLeft <= 14
+                  return (
+                    <div key={q.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '0.5px solid rgba(240,237,228,0.05)' }}>
+                      <div>
+                        <div style={{ fontSize: 13, color: isPaid ? 'rgba(240,237,228,0.35)' : '#f0ede4', textDecoration: isPaid ? 'line-through' : 'none' }}>
+                          {language === 'bg' ? `${q.label} авансов данък` : `${q.label} advance tax`}
+                        </div>
+                        <div style={{ fontSize: 11, color: isUrgent && !isPaid ? '#ffb400' : 'rgba(240,237,228,0.25)', marginTop: 2 }}>
+                          {q.due.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })}
+                          {!isPaid && !isPast && ` · ${daysLeft} ${lang.daysAway}`}
+                          {!isPaid && isPast && ` · ${language === 'bg' ? '⚠ просрочено' : '⚠ overdue'}`}
+                        </div>
+                      </div>
+                      {isPaid ? (
+                        <span style={{ fontSize: 12, color: '#c8f03a' }}>✓ {lang.markedPaid}</span>
+                      ) : (
+                        <button
+                          onClick={() => markPaid(q.key)}
+                          className={isUrgent ? 'urgent-pay' : ''}
+                          style={{
+                            fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', borderRadius: 8, padding: '5px 12px',
+                            background: isPast ? 'rgba(255,150,0,0.1)' : isUrgent ? 'rgba(224,112,112,0.1)' : 'rgba(240,237,228,0.05)',
+                            border: `1px solid ${isPast ? 'rgba(255,150,0,0.3)' : isUrgent ? 'rgba(224,112,112,0.3)' : 'rgba(240,237,228,0.12)'}`,
+                            color: isPast ? '#ffa500' : isUrgent ? '#e07070' : 'rgba(240,237,228,0.5)',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {language === 'bg' ? 'Отбележи' : 'Mark paid'}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* Insurance — current month */}
+                {(() => {
+                  const isPaid = paidMap[insMonthKey]
+                  const daysLeft = Math.ceil((insDue - new Date()) / 86400000)
+                  const isUrgent = !isPaid && daysLeft <= 5
+                  return (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0' }}>
+                      <div>
+                        <div style={{ fontSize: 13, color: isPaid ? 'rgba(240,237,228,0.35)' : '#f0ede4', textDecoration: isPaid ? 'line-through' : 'none' }}>
+                          {language === 'bg'
+                            ? `Осигуровки · ${insDue.toLocaleDateString('bg-BG', { month: 'long' })}`
+                            : `Insurance · ${insDue.toLocaleDateString('en-GB', { month: 'long' })}`}
+                        </div>
+                        <div style={{ fontSize: 11, color: isUrgent && !isPaid ? '#ffb400' : 'rgba(240,237,228,0.25)', marginTop: 2 }}>
+                          {insDue.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })}
+                          {!isPaid && ` · ${daysLeft} ${lang.daysAway}`}
+                        </div>
+                      </div>
+                      {isPaid ? (
+                        <span style={{ fontSize: 12, color: '#c8f03a' }}>✓ {lang.markedPaid}</span>
+                      ) : (
+                        <button
+                          onClick={() => markPaid(insMonthKey)}
+                          className={isUrgent ? 'urgent-pay' : ''}
+                          style={{
+                            fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', borderRadius: 8, padding: '5px 12px',
+                            background: isUrgent ? 'rgba(224,112,112,0.1)' : 'rgba(240,237,228,0.05)',
+                            border: `1px solid ${isUrgent ? 'rgba(224,112,112,0.3)' : 'rgba(240,237,228,0.12)'}`,
+                            color: isUrgent ? '#e07070' : 'rgba(240,237,228,0.5)',
+                          }}
+                        >
+                          {language === 'bg' ? 'Отбележи' : 'Mark paid'}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
+
+                <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(240,237,228,0.2)', lineHeight: 1.5 }}>
+                  {lang.paymentDisclaimer}
                 </div>
               </div>
             )}
@@ -629,6 +885,55 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 </div>
               )
             })()}
+
+            {/* НАП PAYMENT REFERENCE — collapsible */}
+            {!loading && !isTracking && (
+              <div style={{ marginBottom: 20 }}>
+                <button
+                  onClick={() => setShowNapRef(r => !r)}
+                  style={{
+                    width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: 'none', border: '0.5px solid rgba(240,237,228,0.08)', borderRadius: showNapRef ? '12px 12px 0 0' : 12,
+                    padding: '12px 16px', cursor: 'pointer', color: 'rgba(240,237,228,0.4)',
+                    fontFamily: 'DM Sans, sans-serif', fontSize: 12, transition: 'border-color 0.15s, color 0.15s',
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.18)'; e.currentTarget.style.color = 'rgba(240,237,228,0.65)' }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.08)'; e.currentTarget.style.color = 'rgba(240,237,228,0.4)' }}
+                >
+                  <span>{language === 'bg' ? 'НАП — Как да платя?' : 'НАП — How to pay?'}</span>
+                  <span style={{ fontSize: 10, transition: 'transform 0.2s', display: 'inline-block', transform: showNapRef ? 'rotate(180deg)' : 'none' }}>▼</span>
+                </button>
+                {showNapRef && (
+                  <div style={{ background: '#161614', border: '0.5px solid rgba(240,237,228,0.08)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '16px' }}>
+                    <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)', marginBottom: 12, lineHeight: 1.55 }}>
+                      {language === 'bg'
+                        ? 'Плащанията се правят към НАП по банков път. IBAN-ът варира според офиса, така че провери на сайта на НАП.'
+                        : 'Payments go to НАП by bank transfer. The IBAN varies by office, so check the НАП website.'}
+                    </div>
+                    {[
+                      { code: '111213', label: language === 'bg' ? 'Авансов ДДФЛ' : 'Advance income tax (DDFL)' },
+                      { code: '551111', label: language === 'bg' ? 'ДОО (пенсионно)' : 'Pension insurance (ДОО)' },
+                      { code: '560000', label: language === 'bg' ? 'Здравно осигуряване' : 'Health insurance (ЗО)' },
+                    ].map(({ code, label }) => (
+                      <div key={code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '0.5px solid rgba(240,237,228,0.05)' }}>
+                        <span style={{ fontSize: 13, color: 'rgba(240,237,228,0.6)' }}>{label}</span>
+                        <span style={{ fontSize: 13, fontFamily: 'DM Mono, monospace', color: '#c8f03a', letterSpacing: '0.5px' }}>{code}</span>
+                      </div>
+                    ))}
+                    <a
+                      href="https://nra.bg"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: 'rgba(200,240,58,0.6)', textDecoration: 'none', transition: 'color 0.15s' }}
+                      onMouseOver={e => { e.currentTarget.style.color = '#c8f03a' }}
+                      onMouseOut={e => { e.currentTarget.style.color = 'rgba(200,240,58,0.6)' }}
+                    >
+                      nra.bg →
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             {!loading && (
               <p style={{ fontSize: 11, color: 'rgba(240,237,228,0.15)', textAlign: 'center', borderTop: '0.5px solid rgba(240,237,228,0.06)', paddingTop: '1rem' }}>
