@@ -16,9 +16,14 @@ function calcEstimate(totalEarned, legalForm) {
     const projected = Math.round((totalEarned / Math.max(currentMonth, 1)) * 12)
     return { earned: Math.round(totalEarned), taxable: 0, incomeTax: 0, insurance: 0, total: 0, projected }
   }
-  const taxable = legalForm === 'ET' ? totalEarned : totalEarned * 0.75
-  const incomeTax = Math.round(taxable * 0.15)
-  return { earned: Math.round(totalEarned), taxable: Math.round(taxable), incomeTax, insurance, total: incomeTax + insurance }
+  if (legalForm === 'ET') {
+    const taxable = totalEarned
+    const incomeTax = Math.round(taxable * 0.15)
+    return { earned: Math.round(totalEarned), taxable: Math.round(taxable), incomeTax, insurance, total: incomeTax + insurance, rate: 15 }
+  }
+  const taxable = Math.round(totalEarned * 0.75)
+  const incomeTax = Math.round(taxable * 0.10)
+  return { earned: Math.round(totalEarned), taxable, incomeTax, insurance, total: incomeTax + insurance, rate: 10 }
 }
 
 const NAP_PLATFORMS = [
@@ -364,9 +369,9 @@ export default function Landing() {
                       return language === 'bg' ? `До ${label} · ${days} дни` : `By ${label} · ${days} days`
                     })()}
                   </div>
-                  <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}>
-                    {language === 'bg' ? 'Как да платя?' : 'How to pay?'}
-                  </span>
+                  <Link to="/how-to-pay" style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)', textDecoration: 'none' }}>
+                    {language === 'bg' ? 'Как да платя? →' : 'How to pay? →'}
+                  </Link>
                 </div>
               </div>
 
@@ -527,14 +532,29 @@ export default function Landing() {
                       <span className="calc-row-label">{lang.calcTaxable}</span>
                       <span className="calc-row-val">{fmt(res.taxable)} €</span>
                     </div>
-                    <div className="calc-row">
-                      <span className="calc-row-label">{lang.calcIncomeTax}</span>
-                      <span className="calc-row-val">{fmt(res.incomeTax)} €</span>
+
+                    {/* Income tax block */}
+                    <div style={{ borderTop: '0.5px solid rgba(240,237,228,0.07)', marginTop: 4, paddingTop: 10 }}>
+                      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.8px', color: 'rgba(240,237,228,0.25)', marginBottom: 6 }}>
+                        {language === 'bg' ? `Данък върху дохода · ${res.rate}%` : `Income tax · ${res.rate}%`}
+                      </div>
+                      <div className="calc-row" style={{ padding: '4px 0' }}>
+                        <span className="calc-row-label">{language === 'bg' ? 'Дължимо' : 'Due'}</span>
+                        <span style={{ fontSize: 20, fontWeight: 600, color: '#f0ede4', fontVariantNumeric: 'tabular-nums' }}>{fmt(res.incomeTax)} €</span>
+                      </div>
                     </div>
-                    <div className="calc-row">
-                      <span className="calc-row-label">{lang.calcInsurance}</span>
-                      <span className="calc-row-val">~{fmt(res.insurance)} €</span>
+
+                    {/* Insurance block */}
+                    <div style={{ borderTop: '0.5px solid rgba(240,237,228,0.07)', marginTop: 8, paddingTop: 10 }}>
+                      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.8px', color: 'rgba(240,237,228,0.25)', marginBottom: 6 }}>
+                        {language === 'bg' ? 'Осигуровки · 153 €/месец' : 'Insurance · 153 €/month'}
+                      </div>
+                      <div className="calc-row" style={{ padding: '4px 0' }}>
+                        <span className="calc-row-label">{language === 'bg' ? 'Дължимо' : 'Due'}</span>
+                        <span style={{ fontSize: 20, fontWeight: 600, color: '#f0ede4', fontVariantNumeric: 'tabular-nums' }}>~{fmt(res.insurance)} €</span>
+                      </div>
                     </div>
+
                     <div className="calc-total-row">
                       <span className="calc-total-label">{lang.calcTotalOwed}</span>
                       <span className="calc-total-val">~{fmt(res.total)} €</span>
