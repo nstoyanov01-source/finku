@@ -166,6 +166,10 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
   useEffect(() => { fetchName() }, [])
   useEffect(() => { fetchData(selectedYear) }, [selectedYear])
 
+  // These must be defined before the milestone useEffect that reads them
+  const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0)
+  const totalExpenses = expenses.reduce((s, r) => s + Number(r.amount), 0)
+
   const prevTotalRef = useRef(0)
   useEffect(() => {
     if (loading || totalIncome <= 0) return
@@ -232,8 +236,6 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
     }
   }
 
-  const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0)
-  const totalExpenses = expenses.reduce((s, r) => s + Number(r.amount), 0)
   const currentMonth = new Date().getMonth() + 1
   const isPastYear = selectedYear < currentYear
   const monthsElapsed = isPastYear ? 12 : currentMonth
