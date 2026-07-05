@@ -9,6 +9,7 @@ import CSVImport from '../components/CSVImport'
 import Toast, { useToast } from '../components/Toast'
 import EntryDrawer from '../components/EntryDrawer'
 import { usePostHog } from '@posthog/react'
+import { getCountry } from '../countries/index.js'
 
 function greeting(lang) {
   const h = new Date().getHours()
@@ -19,6 +20,11 @@ function greeting(lang) {
 
 function fmt(n) {
   return Math.round(n).toLocaleString('en-US')
+}
+
+function fmtCurrency(n, currency) {
+  const s = fmt(n)
+  return currency.length === 1 ? `${currency}${s}` : `${s} ${currency}`
 }
 
 function formatDate(dateStr, language) {
@@ -35,55 +41,29 @@ function formatCurrentDate(language) {
   })
 }
 
-const INSURANCE_BY_YEAR = { 2024: 140, 2025: 147, 2026: 153.08 }
-
-function calcTax(totalIncome, totalExpenses, legalForm, useAuthorRate = false, monthsElapsed = null, insuranceRate = 153.08) {
-  if (legalForm === 'just_tracking') return null
-  if (monthsElapsed === null) monthsElapsed = new Date().getMonth() + 1
-  const insurancePerMonth = insuranceRate
-  const totalInsurance = insurancePerMonth * monthsElapsed
-
-  if (legalForm === 'ET') {
-    const profit = Math.max(0, totalIncome - totalExpenses)
-    const insuranceDeduction = Math.min(profit, totalInsurance)
-    const taxableBase = Math.max(0, profit - insuranceDeduction)
-    const incomeTax = taxableBase * 0.15
-    return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 15, nprRate: 0, profit, insuranceDeduction }
-  }
-
-  const nprRate = useAuthorRate ? 0.40 : 0.25
-  const npr = totalIncome * nprRate
-  const afterNPR = totalIncome - npr
-  const insuranceDeduction = Math.min(afterNPR, totalInsurance)
-  const taxableBase = Math.max(0, afterNPR - insuranceDeduction)
-  const incomeTax = taxableBase * 0.10
-  return { taxableBase, incomeTax, insurance: totalInsurance, total: incomeTax + totalInsurance, monthsElapsed, rate: 10, nprRate: nprRate * 100, npr, afterNPR, insuranceDeduction }
-}
-
-function nextTaxDeadline() {
+function nextTaxDeadline(quarterlyDeadlines) {
   const today = new Date()
   const y = today.getFullYear()
-  // Q4 (Oct-Dec) has no advance tax, but Oct 31 is still the Q3 deadline.
-  // So we only enter annual-declaration mode once all quarterly deadlines have passed.
-  const quarters = [new Date(y, 3, 30), new Date(y, 6, 31), new Date(y, 9, 31)]
-  const next = quarters.find(d => d > today)
+  const deadlines = quarterlyDeadlines || []
+  const next = deadlines.find(d => d > today)
   if (next) {
     const days = Math.ceil((next - today) / 86400000)
     return { date: next, days, isAnnual: false }
   }
+  // After last quarterly deadline: next is annual declaration (Apr 30 of next year)
   const annualDecl = new Date(y + 1, 3, 30)
   const days = Math.ceil((annualDecl - today) / 86400000)
   return { date: annualDecl, days, isAnnual: true }
 }
 
-function nextInsuranceDeadline() {
+function nextInsuranceDeadline(dueDay = 25) {
   const today = new Date()
   const day = today.getDate()
   const month = today.getMonth()
   const year = today.getFullYear()
-  return day < 25
-    ? new Date(year, month, 25)
-    : new Date(year, month + 1, 25)
+  return day < dueDay
+    ? new Date(year, month, dueDay)
+    : new Date(year, month + 1, dueDay)
 }
 
 function formatDeadlineDate(date, language) {
@@ -124,7 +104,7 @@ function Tooltip({ text }) {
   )
 }
 
-export default function Dashboard({ session, legalForm, authorRate, onLanguageChange }) {
+export default function Dashboard({ session, countryId = 'bg', legalForm, authorRate, onLanguageChange }) {
   const { language } = useLanguage()
   const lang = t[language]
   const posthog = usePostHog()
@@ -177,15 +157,17 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
     const hit = milestones.find(m => prevTotalRef.current < m && totalIncome >= m)
     if (hit) {
       const isBg = language === 'bg'
+      const cur = getCountry(countryId).currency || '€'
+      const m = (n) => cur.length === 1 ? `${cur}${n}` : `${n} ${cur}`
       const msgs = {
-        1000: isBg ? '€1,000 спечелени! Добро начало. 🌱' : '€1,000 earned! Strong start. 🌱',
-        5000: isBg ? '€5,000! Вечеря навън? 🍽' : '€5,000! Treat yourself tonight. 🍽',
-        10000: isBg ? '€10,000! Вече истински фрийлансър. 🎉' : "€10,000! You're officially freelancing. 🎉",
-        25000: isBg ? '€25,000! НАП те обича. 💚' : '€25,000! НАП loves you now. 💚',
-        50000: isBg ? '€50,000! Може би е момент за счетоводител. 😅' : '€50,000! Maybe time for an accountant. 😅',
-        100000: isBg ? '€100K! Легенда. 🏆' : '€100K! Absolute legend. 🏆',
+        1000: isBg ? `${m('1,000')} спечелени! Добро начало. 🌱` : `${m('1,000')} earned! Strong start. 🌱`,
+        5000: isBg ? `${m('5,000')}! Вечеря навън? 🍽` : `${m('5,000')}! Treat yourself tonight. 🍽`,
+        10000: isBg ? `${m('10,000')}! Вече истински фрийлансър. 🎉` : `${m('10,000')}! You're officially freelancing. 🎉`,
+        25000: isBg ? `${m('25,000')}! Данъчните те обичат. 💚` : `${m('25,000')}! Tax authority loves you now. 💚`,
+        50000: isBg ? `${m('50,000')}! Може би е момент за счетоводител. 😅` : `${m('50,000')}! Maybe time for an accountant. 😅`,
+        100000: isBg ? `${m('100K')}! Легенда. 🏆` : `${m('100K')}! Absolute legend. 🏆`,
       }
-      setTimeout(() => showToast(msgs[hit] || `€${hit.toLocaleString()} milestone! 🎉`), 300)
+      setTimeout(() => showToast(msgs[hit] || `${m(hit.toLocaleString())} milestone! 🎉`), 300)
     }
     prevTotalRef.current = totalIncome
   }, [totalIncome, loading])
@@ -225,8 +207,9 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
     localStorage.setItem(`finku_paid_${key}`, 'true')
     const q = key.match(/^(q\d)/)
     if (q) {
+      const ta = getCountry(countryId).taxAuthority?.name || 'Tax authority'
       const msgs = {
-        q1: language === 'bg' ? 'Q1 платен! НАП е доволен. 💸' : 'Q1 paid! НАП is satisfied. 💸',
+        q1: language === 'bg' ? `Q1 платен! ${ta} е доволен. 💸` : `Q1 paid! ${ta} is satisfied. 💸`,
         q2: language === 'bg' ? 'Q2 платен! Заслужена почивка. 🏖' : 'Q2 paid! You earned that break. 🏖',
         q3: language === 'bg' ? 'Q3 платен! Само годишната остава. 🎯' : 'Q3 paid! Just the annual left. 🎯',
       }
@@ -236,17 +219,32 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
     }
   }
 
+  // Country config — drives all tax calculations, currency, deadlines
+  const countryConfig = getCountry(countryId)
+  const currency = countryConfig.currency || '€'
+
   const currentMonth = new Date().getMonth() + 1
   const isPastYear = selectedYear < currentYear
   const monthsElapsed = isPastYear ? 12 : currentMonth
 
-  const legalFormEff = legalForm || 'svobodna_profesiya'
-  const isTracking = legalFormEff === 'just_tracking'
-  const insuranceRate = INSURANCE_BY_YEAR[selectedYear] || 153.08
-  const tax = calcTax(totalIncome, totalExpenses, legalFormEff, authorRate ?? false, monthsElapsed, insuranceRate)
-  const deadline = tax ? nextTaxDeadline() : null
+  const legalFormEff = legalForm || (countryConfig.legalForms?.[0]?.value || 'just_tracking')
+  const isTracking = legalFormEff === 'just_tracking' || !countryConfig.supportsFullTax
+  const insuranceRate = countryConfig.getInsuranceRate?.(selectedYear) || null
+
+  const tax = !isTracking && countryConfig.calcTax
+    ? countryConfig.calcTax(totalIncome, totalExpenses, legalFormEff, {
+        authorRate: authorRate ?? false,
+        monthsElapsed,
+        year: selectedYear,
+      })
+    : null
+
+  const quarterlyDates = countryConfig.getQuarterlyDeadlines?.(selectedYear) || []
+  const quarterlyDateObjects = quarterlyDates.map(q => q.date)
+  const deadline = tax ? nextTaxDeadline(quarterlyDateObjects) : null
   const quarter = Math.floor(new Date().getMonth() / 3) + 1
-  const insDue = nextInsuranceDeadline()
+  const insDueDay = countryConfig.getInsuranceDueDay?.() || 25
+  const insDue = nextInsuranceDeadline(insDueDay)
   const insDays = Math.ceil((insDue - new Date()) / 86400000)
 
   const projection = !isPastYear && totalIncome > 0 && monthsElapsed > 0
@@ -262,22 +260,25 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
   const insNow = new Date()
   const insMonthKey = `ins_${insNow.getFullYear()}_${String(insNow.getMonth()+1).padStart(2,'0')}`
 
-  const qData = [
-    { key: `q1_${selectedYear}`, label: 'Q1', due: new Date(selectedYear, 3, 30) },
-    { key: `q2_${selectedYear}`, label: 'Q2', due: new Date(selectedYear, 6, 31) },
-    { key: `q3_${selectedYear}`, label: 'Q3', due: new Date(selectedYear, 9, 31) },
-  ]
+  const qData = quarterlyDates.map((q, i) => ({
+    key: `q${i+1}_${selectedYear}`,
+    label: q.quarter,
+    due: q.date,
+  }))
 
   const todayMD = `${insNow.getMonth()}-${insNow.getDate()}`
-  const isDeadlineToday = ['3-30','6-31','9-31'].includes(todayMD)
+  const isDeadlineToday = qData.some(q => {
+    const d = q.due
+    return d.getMonth() === insNow.getMonth() && d.getDate() === insNow.getDate()
+  })
 
   const tooltips = {
     incomeTax: language === 'bg'
       ? 'Това е авансовият данък върху дохода ти за тримесечието. Формула: (приход × 75% - осигуровки) × 10%. Плаща се 3 пъти годишно.'
-      : 'This is your advance income tax payment for the quarter. Formula: (income × 75% − insurance) × 10%. Paid 3 times a year.',
+      : `This is your advance income tax estimate. Based on ${countryConfig.name} tax rules for your legal form. Paid quarterly.`,
     insurance: language === 'bg'
-      ? 'Фиксирана месечна вноска за пенсионно и здравно осигуряване. Минимум 153 €/месец независимо от дохода. Плаща се до 25-о всеки месец.'
-      : 'Fixed monthly contribution to pension and health insurance. Minimum 153 €/month regardless of income. Paid by the 25th of each month.',
+      ? `Фиксирана месечна вноска за пенсионно и здравно осигуряване. Плаща се до ${insDueDay}-о всеки месец.`
+      : `Monthly social insurance contribution. Paid by the ${insDueDay}th of each month.`,
     recentIncome: language === 'bg'
       ? 'Приходи от фактури или плащания от клиенти. Добавяй всяко плащане което получаваш.'
       : 'Income from invoices or client payments. Add each payment you receive.',
@@ -484,8 +485,8 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             {projection && !loading && (
               <div style={{ fontSize: 12, color: 'rgba(200,240,58,0.55)', marginBottom: '1.5rem', letterSpacing: '0.2px' }}>
                 {language === 'bg'
-                  ? `На път за ~€${fmt(projection)} тази година · ${monthsElapsed} ${monthsElapsed === 1 ? 'месец' : 'месеца'} досега`
-                  : `On track for ~€${fmt(projection)} this year · ${monthsElapsed} month${monthsElapsed !== 1 ? 's' : ''} in`}
+                  ? `На път за ~${fmtCurrency(projection, currency)} тази година · ${monthsElapsed} ${monthsElapsed === 1 ? 'месец' : 'месеца'} досега`
+                  : `On track for ~${fmtCurrency(projection, currency)} this year · ${monthsElapsed} month${monthsElapsed !== 1 ? 's' : ''} in`}
               </div>
             )}
 
@@ -518,14 +519,14 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   </span>
                 </div>
                 <div style={{ fontSize: 'clamp(28px, 7vw, 52px)', fontWeight: 600, color: '#0e0e0c', letterSpacing: -1.5, lineHeight: 1, marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
-                  ~{fmt(tax.incomeTax)} €
+                  ~{fmtCurrency(tax.incomeTax, currency)}
                 </div>
                 <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginBottom: 16 }}>
                   {tax.incomeTax === 0
                     ? lang.deductionsCover
                     : (language === 'bg'
-                        ? `Основа: ~${fmt(tax.taxableBase)} € × ${tax.rate}%`
-                        : `Base: ~${fmt(tax.taxableBase)} € × ${tax.rate}%`)}
+                        ? `Основа: ~${fmtCurrency(tax.taxableBase, currency)} × ${tax.rate}%`
+                        : `Base: ~${fmtCurrency(tax.taxableBase, currency)} × ${tax.rate}%`)}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {deadline && (
@@ -553,7 +554,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
             {/* 3. INSURANCE CARD */}
             {loading ? (
               <Skeleton height={88} style={{ marginBottom: 20 }} />
-            ) : !isTracking && (
+            ) : !isTracking && insuranceRate !== null && (
               <div style={{
                 background: '#161614', border: '0.5px solid rgba(255,255,255,0.08)',
                 borderRadius: 16, padding: '18px 20px', marginBottom: 20,
@@ -567,7 +568,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                     <Tooltip text={tooltips.insurance} />
                   </div>
                   <div style={{ fontSize: 28, fontWeight: 500, color: '#f0ede4', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
-                    {Math.round(insuranceRate)} €
+                    {fmtCurrency(insuranceRate, currency)}
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
                     {lang.insuranceFixedDesc}
@@ -621,8 +622,8 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   }} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(240,237,228,0.4)', marginBottom: 12 }}>
-                  <span>{language === 'bg' ? 'Заделено' : 'Set aside'}: <strong style={{ color: '#f0ede4' }}>€{fmt(setAside)}</strong></span>
-                  <span>{language === 'bg' ? 'Нужно ~' : 'Need ~'}<strong style={{ color: '#f0ede4' }}>€{fmt(totalOwedEst)}</strong></span>
+                  <span>{language === 'bg' ? 'Заделено' : 'Set aside'}: <strong style={{ color: '#f0ede4' }}>{fmtCurrency(setAside, currency)}</strong></span>
+                  <span>{language === 'bg' ? 'Нужно ~' : 'Need ~'}<strong style={{ color: '#f0ede4' }}>{fmtCurrency(totalOwedEst, currency)}</strong></span>
                 </div>
 
                 {editingSetAside ? (
@@ -662,12 +663,12 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   </div>
                 </div>
 
-                {/* Bulgarian-client caveat */}
-                <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.3)', lineHeight: 1.55, marginBottom: 12, padding: '8px 10px', background: 'rgba(240,237,228,0.03)', borderRadius: 8 }}>
-                  {language === 'bg'
-                    ? 'Ако работиш с български фирми, те удържат и внасят данъка вместо теб — ти само подаваш годишна декларация. Ако работиш с чужди клиенти или физически лица, трябва сам да подадеш декларация по чл. 55 ЗДДФЛ и да внесеш авансовия данък.'
-                    : 'If your clients are Bulgarian companies, they withhold and remit the tax for you — you only file the annual return. If you work with foreign clients or individuals, you must file a чл. 55 declaration yourself and pay the advance tax.'}
-                </div>
+                {/* Client withholding caveat */}
+                {countryConfig.clientWithholdingNote && (
+                  <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.3)', lineHeight: 1.55, marginBottom: 12, padding: '8px 10px', background: 'rgba(240,237,228,0.03)', borderRadius: 8 }}>
+                    {countryConfig.clientWithholdingNote[language] || countryConfig.clientWithholdingNote.en}
+                  </div>
+                )}
 
                 {qData.map(q => {
                   const isPaid = paidMap[q.key]
@@ -682,7 +683,8 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                           {language === 'bg' ? `${q.label} — декларирай и плати` : `${q.label} — declare & pay`}
                         </div>
                         <div style={{ fontSize: 11, color: isUrgent && !isPaid ? '#ffb400' : 'rgba(240,237,228,0.25)', marginTop: 2 }}>
-                          {language === 'bg' ? 'чл. 55 ЗДДФЛ · ' : 'Art. 55 ЗДДФЛ · '}
+                          {(countryConfig.declarationLaw?.[language] || countryConfig.declarationLaw?.en || '')}
+                          {countryConfig.declarationLaw ? ' · ' : ''}
                           {q.due.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })}
                           {!isPaid && !isPast && ` · ${daysLeft} ${lang.daysAway}`}
                           {!isPaid && isPast && ` · ${language === 'bg' ? '⚠ просрочено' : '⚠ overdue'}`}
@@ -748,13 +750,13 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                 })()}
 
                 {/* Penalty callout */}
-                <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(224,112,112,0.05)', borderRadius: 8, borderLeft: '2px solid rgba(224,112,112,0.25)' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(224,112,112,0.6)', lineHeight: 1.55 }}>
-                    {language === 'bg'
-                      ? 'Закъснялата декларация носи глоба до 500 лв. (чл. 80 ЗДДФЛ). Подавай навреме.'
-                      : 'Late filing carries a fine up to 500 лв / ~€255 (Art. 80 ЗДДФЛ). File on time.'}
+                {countryConfig.penaltyText && (
+                  <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(224,112,112,0.05)', borderRadius: 8, borderLeft: '2px solid rgba(224,112,112,0.25)' }}>
+                    <div style={{ fontSize: 11, color: 'rgba(224,112,112,0.6)', lineHeight: 1.55 }}>
+                      {countryConfig.penaltyText[language] || countryConfig.penaltyText.en}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(240,237,228,0.2)', lineHeight: 1.5 }}>
                   {lang.paymentDisclaimer}
@@ -832,7 +834,7 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                       <div className="entry-date">{formatDate(row.date, language)}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 500, color: '#c8f03a', flexShrink: 0, marginLeft: 12, fontVariantNumeric: 'tabular-nums' }}>
-                      +{fmt(row.amount)} {lang.currency}
+                      +{fmtCurrency(row.amount, currency)}
                     </div>
                   </div>
                 ))
@@ -874,20 +876,25 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                       <div className="entry-date">{formatDate(row.date, language)}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 500, color: '#e07070', flexShrink: 0, marginLeft: 12, fontVariantNumeric: 'tabular-nums' }}>
-                      −{fmt(row.amount)} {lang.currency}
+                      −{fmtCurrency(row.amount, currency)}
                     </div>
                   </div>
                 ))
               )}
             </div>
 
-            {/* ANNUAL TAX RETURN CARD — shown in Q4 or within 60 days of April 30 */}
-            {!loading && !isTracking && (() => {
+            {/* ANNUAL TAX RETURN CARD — shown in Q4 or within 60 days of the country's annual deadline */}
+            {!loading && !isTracking && countryConfig.getAnnualDeadline && (() => {
               const today = new Date()
+              const thisYear = today.getFullYear()
+              const annualDue = countryConfig.getAnnualDeadline(thisYear)
+              const nextAnnualDue = annualDue < today ? countryConfig.getAnnualDeadline(thisYear + 1) : annualDue
+              const daysToAnnual = Math.ceil((nextAnnualDue - today) / 86400000)
               const isQ4 = today.getMonth() >= 9
-              const apr30 = new Date(today.getFullYear() + (today.getMonth() >= 4 ? 1 : 0), 3, 30)
-              const daysToApr = Math.ceil((apr30 - today) / 86400000)
-              if (!isQ4 && daysToApr > 60) return null
+              if (!isQ4 && daysToAnnual > 60) return null
+              const annualLaw = countryConfig.annualDeclarationLaw?.[language] || countryConfig.annualDeclarationLaw?.en || ''
+              const dueDateStr = nextAnnualDue.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-GB', { day: 'numeric', month: 'long' })
+              const portalHref = countryConfig.taxAuthority?.portalUrl || '/how-to-pay'
               return (
                 <div style={{ background: '#161614', border: '1px solid rgba(200,240,58,0.15)', borderRadius: 16, padding: '18px 20px', marginBottom: 20 }}>
                   <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'rgba(200,240,58,0.5)', marginBottom: 8 }}>
@@ -895,18 +902,18 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   </div>
                   <div style={{ fontSize: 14, color: 'rgba(240,237,228,0.65)', lineHeight: 1.6, marginBottom: 10 }}>
                     {language === 'bg'
-                      ? `До 30 април трябва да подадеш годишна данъчна декларация (чл. 50 ЗДДФЛ). Срокът е ${daysToApr} дни.`
-                      : `By April 30 you must file your annual tax return (Art. 50 ZDFL). That's ${daysToApr} days away.`}
+                      ? `До ${dueDateStr} трябва да подадеш годишна данъчна декларация${annualLaw ? ` (${annualLaw})` : ''}. Срокът е ${daysToAnnual} дни.`
+                      : `By ${dueDateStr} you must file your annual tax return${annualLaw ? ` (${annualLaw})` : ''}. That's ${daysToAnnual} days away.`}
                   </div>
-                  <a href="/how-to-pay" style={{ fontSize: 13, color: '#c8f03a', textDecoration: 'none' }}>
-                    {language === 'bg' ? 'Как да платиш →' : 'How to pay →'}
+                  <a href={portalHref} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#c8f03a', textDecoration: 'none' }}>
+                    {language === 'bg' ? 'Как да платиш →' : 'How to file →'}
                   </a>
                 </div>
               )
             })()}
 
-            {/* НАП PAYMENT REFERENCE — collapsible */}
-            {!loading && !isTracking && (
+            {/* TAX AUTHORITY FILING REFERENCE — collapsible */}
+            {!loading && !isTracking && countryConfig.taxPortalHelp && countryConfig.taxAuthority && (
               <div style={{ marginBottom: 20 }}>
                 <button
                   onClick={() => setShowNapRef(r => !r)}
@@ -919,51 +926,48 @@ export default function Dashboard({ session, legalForm, authorRate, onLanguageCh
                   onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.18)'; e.currentTarget.style.color = 'rgba(240,237,228,0.65)' }}
                   onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(240,237,228,0.08)'; e.currentTarget.style.color = 'rgba(240,237,228,0.4)' }}
                 >
-                  <span>{language === 'bg' ? 'НАП — Как да платя?' : 'НАП — How to pay?'}</span>
+                  <span>
+                    {language === 'bg'
+                      ? `${countryConfig.taxAuthority.name} — Как да платя?`
+                      : `${countryConfig.taxAuthority.name} — How to file?`}
+                  </span>
                   <span style={{ fontSize: 10, transition: 'transform 0.2s', display: 'inline-block', transform: showNapRef ? 'rotate(180deg)' : 'none' }}>▼</span>
                 </button>
                 {showNapRef && (
                   <div style={{ background: '#161614', border: '0.5px solid rgba(240,237,228,0.08)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '16px' }}>
                     <div style={{ fontSize: 12, color: 'rgba(240,237,228,0.5)', lineHeight: 1.65, marginBottom: 14 }}>
-                      {language === 'bg'
-                        ? 'Декларацията по чл. 55 ЗДДФЛ се подава онлайн в портала на НАП с ПИК или КЕП. Плащането се прави по банков път — IBAN и вид плащане са налични в портала след влизане.'
-                        : 'The чл. 55 declaration is filed online via the НАП portal using ПИК or КЕП. Payment is by bank transfer — IBAN and payment type are shown in your НАП profile after login.'}
+                      {countryConfig.taxPortalHelp.desc?.[language] || countryConfig.taxPortalHelp.desc?.en}
                     </div>
-                    {[
-                      {
-                        label: language === 'bg' ? 'Подаване на декларация (чл. 55)' : 'File declaration (чл. 55)',
-                        sub: language === 'bg' ? 'Авансов данък върху дохода от дейността' : 'Advance income tax from self-employment',
-                      },
-                      {
-                        label: language === 'bg' ? 'Осигурителни вноски (ДОО + ЗО)' : 'Insurance contributions (ДОО + ЗО)',
-                        sub: language === 'bg' ? 'Пенсионно и здравно — плащат се отделно от данъка' : 'Pension and health — paid separately from income tax',
-                      },
-                    ].map(({ label, sub }) => (
-                      <div key={label} style={{ padding: '8px 0', borderBottom: '0.5px solid rgba(240,237,228,0.05)' }}>
-                        <div style={{ fontSize: 13, color: 'rgba(240,237,228,0.7)', marginBottom: 2 }}>{label}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.3)' }}>{sub}</div>
+                    {countryConfig.taxPortalHelp.items?.map(item => (
+                      <div key={item.label.en || item.label.bg} style={{ padding: '8px 0', borderBottom: '0.5px solid rgba(240,237,228,0.05)' }}>
+                        <div style={{ fontSize: 13, color: 'rgba(240,237,228,0.7)', marginBottom: 2 }}>
+                          {item.label[language] || item.label.en}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'rgba(240,237,228,0.3)' }}>
+                          {item.sub[language] || item.sub.en}
+                        </div>
                       </div>
                     ))}
                     <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                       <a
-                        href="https://inetdec.nra.bg"
+                        href={countryConfig.taxAuthority.portalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ fontSize: 12, color: '#c8f03a', textDecoration: 'none', background: 'rgba(200,240,58,0.08)', border: '1px solid rgba(200,240,58,0.2)', borderRadius: 8, padding: '6px 12px', transition: 'background 0.15s' }}
                         onMouseOver={e => { e.currentTarget.style.background = 'rgba(200,240,58,0.14)' }}
                         onMouseOut={e => { e.currentTarget.style.background = 'rgba(200,240,58,0.08)' }}
                       >
-                        {language === 'bg' ? 'Портал НАП →' : 'НАП portal →'}
+                        {language === 'bg' ? `Портал ${countryConfig.taxAuthority.name} →` : `${countryConfig.taxAuthority.name} portal →`}
                       </a>
                       <a
-                        href="https://nra.bg"
+                        href={countryConfig.taxAuthority.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ fontSize: 12, color: 'rgba(240,237,228,0.4)', textDecoration: 'none', background: 'rgba(240,237,228,0.04)', border: '1px solid rgba(240,237,228,0.1)', borderRadius: 8, padding: '6px 12px', transition: 'background 0.15s' }}
                         onMouseOver={e => { e.currentTarget.style.background = 'rgba(240,237,228,0.08)' }}
                         onMouseOut={e => { e.currentTarget.style.background = 'rgba(240,237,228,0.04)' }}
                       >
-                        nra.bg →
+                        {countryConfig.taxAuthority.name.toLowerCase()}.{countryConfig.taxAuthority.url.split('.').pop()} →
                       </a>
                     </div>
                   </div>

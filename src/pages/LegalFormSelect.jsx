@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabase'
 import { usePostHog } from '@posthog/react'
+import { getCountry } from '../countries/index.js'
 
-export default function LegalFormSelect({ userId, onComplete }) {
+export default function LegalFormSelect({ userId, countryId = 'bg', onComplete }) {
   const { language } = useLanguage()
   const [selected, setSelected] = useState(null)
   const [firstName, setFirstName] = useState('')
@@ -11,6 +12,14 @@ export default function LegalFormSelect({ userId, onComplete }) {
   const [loading, setLoading] = useState(false)
   const isBg = language === 'bg'
   const posthog = usePostHog()
+
+  const countryConfig = getCountry(countryId)
+  const options = countryConfig.legalForms || []
+
+  // Pick the display language: try the app language, fall back to 'en'
+  function label(field) {
+    return field?.[language] || field?.en || ''
+  }
 
   async function handleContinue() {
     if (!selected) return
@@ -20,31 +29,13 @@ export default function LegalFormSelect({ userId, onComplete }) {
     }
     setError('')
     setLoading(true)
-    await supabase.from('profiles').update({ legal_form: selected, onboarded: true, first_name: firstName.trim() }).eq('id', userId)
-    posthog?.capture('onboarding_completed', { legal_form: selected })
-    onComplete()
+    await supabase
+      .from('profiles')
+      .update({ legal_form: selected, onboarded: true, first_name: firstName.trim() })
+      .eq('id', userId)
+    posthog?.capture('onboarding_completed', { legal_form: selected, country: countryId })
+    onComplete(selected)
   }
-
-  const options = [
-    {
-      value: 'svobodna_profesiya',
-      label: isBg ? 'Свободна професия' : 'Freelancer',
-      sub: isBg ? 'Дизайнер, разработчик, консултант' : 'Designer, developer, consultant, creator',
-      desc: isBg ? 'Издаваш фактури директно на клиенти. Нямаш регистрирана фирма.' : 'You invoice clients directly. No registered company.',
-    },
-    {
-      value: 'ET',
-      label: isBg ? 'ЕТ' : 'Sole trader (ЕТ)',
-      sub: isBg ? 'Регистриран едноличен търговец' : 'Registered sole trader',
-      desc: isBg ? 'Имаш регистриран ЕТ с ЕИК номер от Търговския регистър.' : 'You have a registered business with an ЕИК number.',
-    },
-    {
-      value: 'just_tracking',
-      label: isBg ? 'Само проследяване' : 'Just tracking',
-      sub: isBg ? 'Искам само да проследявам приходи и разходи' : 'I just want to track income and expenses',
-      desc: isBg ? 'Не ми трябва данъчна прогноза — само проследяване на приходи и разходи.' : "I don't need tax estimates — just income and expense tracking.",
-    },
-  ]
 
   return (
     <>
@@ -63,7 +54,9 @@ export default function LegalFormSelect({ userId, onComplete }) {
       <div className="lang-page">
         <div style={{ width: '100%', maxWidth: 420 }}>
           <div className="lang-logo">Finku</div>
-          <p className="lang-sub">{isBg ? 'Как работите?' : 'How do you work?'}</p>
+          <p className="lang-sub">
+            {countryConfig.flag} {isBg ? 'Как работите?' : 'How do you work?'}
+          </p>
 
           <div style={{ marginBottom: '1.25rem' }}>
             <label style={{ display: 'block', fontSize: 12, color: 'rgba(240,237,228,0.45)', marginBottom: 6 }}>
@@ -80,7 +73,7 @@ export default function LegalFormSelect({ userId, onComplete }) {
               type="text"
               value={firstName}
               onChange={e => setFirstName(e.target.value)}
-              placeholder={isBg ? 'Иван' : 'Ivan'}
+              placeholder={isBg ? 'Иван' : 'Alex'}
               maxLength={100}
               autoComplete="given-name"
               autoFocus
@@ -96,9 +89,9 @@ export default function LegalFormSelect({ userId, onComplete }) {
                 className={`lang-option${selected === opt.value ? ' selected' : ''}`}
                 onClick={() => setSelected(opt.value)}
               >
-                <div className="lang-option-label">{opt.label}</div>
-                <div className="lang-option-sub">{opt.sub}</div>
-                <div className="lang-option-desc">{opt.desc}</div>
+                <div className="lang-option-label">{label(opt.label)}</div>
+                <div className="lang-option-sub">{label(opt.sub)}</div>
+                <div className="lang-option-desc">{label(opt.desc)}</div>
               </button>
             ))}
           </div>
@@ -119,7 +112,7 @@ export default function LegalFormSelect({ userId, onComplete }) {
           </button>
 
           <p style={{ fontSize: 12, color: 'rgba(240,237,228,0.25)', textAlign: 'center', marginTop: '1.25rem' }}>
-            {isBg ? 'Не си сигурен? Най-вероятно си Свободна професия.' : "Not sure? You're probably Freelancer."}
+            {isBg ? 'Не си сигурен? Най-вероятно си Свободна професия.' : "Not sure? Pick the first option."}
           </p>
         </div>
       </div>

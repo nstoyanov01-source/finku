@@ -6,6 +6,7 @@ import posthog from 'posthog-js'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import LanguageSelect from './pages/LanguageSelect'
+import CountrySelect from './pages/CountrySelect'
 import LegalFormSelect from './pages/LegalFormSelect'
 import Dashboard from './pages/Dashboard'
 import Privacy from './pages/Privacy'
@@ -26,8 +27,10 @@ export default function App() {
   const [session, setSession] = useState(null)
   const { language, setLanguage } = useLanguage()
   const [onboarded, setOnboarded] = useState(null)
+  const [country, setCountry] = useState(null)
   const [legalForm, setLegalForm] = useState(null)
   const [authorRate, setAuthorRate] = useState(false)
+  const [needsCountry, setNeedsCountry] = useState(false)
   const [needsLegalForm, setNeedsLegalForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [sessionWarning, setSessionWarning] = useState(false)
@@ -58,7 +61,8 @@ export default function App() {
         localStorage.removeItem('finku_visited')
         localStorage.removeItem('finku_tax_explained')
         Object.keys(localStorage).filter(k => k.startsWith('finku_paid_')).forEach(k => localStorage.removeItem(k))
-        setOnboarded(null); setLegalForm(null); setAuthorRate(false); setNeedsLegalForm(false); setLoading(false)
+        setOnboarded(null); setCountry(null); setLegalForm(null)
+        setAuthorRate(false); setNeedsCountry(false); setNeedsLegalForm(false); setLoading(false)
       }
     })
 
@@ -84,24 +88,34 @@ export default function App() {
   async function loadProfile(userId) {
     const { data } = await supabase
       .from('profiles')
-      .select('language, onboarded, legal_form, author_rate')
+      .select('language, onboarded, legal_form, author_rate, country')
       .eq('id', userId)
       .single()
     setLanguage(data?.language || 'bg')
     setOnboarded(data?.onboarded ?? false)
+    setCountry(data?.country || null)
     setLegalForm(data?.legal_form || null)
     setAuthorRate(data?.author_rate ?? false)
+    // Existing users without a country skip the country step (default to bg behaviour)
+    setNeedsCountry(data?.onboarded === true && !data?.country)
     setNeedsLegalForm(data?.onboarded === true && !data?.legal_form)
     setLoading(false)
   }
 
   async function handleLanguageSet(lang) {
     setLanguage(lang)
+    navigate('/country')
+  }
+
+  async function handleCountrySet(countryId) {
+    setCountry(countryId)
+    setNeedsCountry(false)
     navigate('/legal-form')
   }
 
-  async function handleLegalFormComplete() {
+  async function handleLegalFormComplete(legalFormValue) {
     setOnboarded(true)
+    setLegalForm(legalFormValue || legalForm)
     setNeedsLegalForm(false)
     navigate('/dashboard')
   }
@@ -114,6 +128,9 @@ export default function App() {
       </div>
     )
   }
+
+  // Effective country: use stored country, or default to 'bg' for existing users with no country
+  const effectiveCountry = country || 'bg'
 
   return (
     <>
@@ -145,15 +162,32 @@ export default function App() {
         !session ? <Navigate to="/auth" /> :
         <LanguageSelect userId={session.user.id} onLanguageSet={handleLanguageSet} />
       } />
+      <Route path="/country" element={
+        !session ? <Navigate to="/auth" /> :
+        <CountrySelect userId={session.user.id} onCountrySet={handleCountrySet} />
+      } />
       <Route path="/legal-form" element={
         !session ? <Navigate to="/auth" /> :
-        <LegalFormSelect userId={session.user.id} language={language || 'en'} onComplete={handleLegalFormComplete} />
+        <LegalFormSelect
+          userId={session.user.id}
+          language={language || 'en'}
+          countryId={effectiveCountry}
+          onComplete={handleLegalFormComplete}
+        />
       } />
       <Route path="/dashboard" element={
         !session ? <Navigate to="/auth" /> :
         !onboarded ? <Navigate to="/language" /> :
         needsLegalForm ? <Navigate to="/legal-form" /> :
-        <Dashboard session={session} language={language} legalForm={legalForm} authorRate={authorRate} onAuthorRateChange={setAuthorRate} onLanguageChange={setLanguage} />
+        <Dashboard
+          session={session}
+          language={language}
+          countryId={effectiveCountry}
+          legalForm={legalForm}
+          authorRate={authorRate}
+          onAuthorRateChange={setAuthorRate}
+          onLanguageChange={setLanguage}
+        />
       } />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
